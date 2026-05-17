@@ -6,7 +6,7 @@ const TodoRoutes = require('./src/routes/TodoRoutes');
 const connectToDB = require('./src/db/db');
 const port = 3000;
 
-app.use(cors({ origin: process.env.CORS_ORIGIN?.split() ?? true }));
+app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') ?? true }));
 app.use(express.json());
 connectToDB();
 
