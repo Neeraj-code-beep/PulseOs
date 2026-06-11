@@ -51,14 +51,17 @@ const Read = () => {
   // };
 
   return (
-    <ul>
+    <ul className="flex flex-col gap-2 text-fuchsia-500">
       {todos.map((todo) => {
         const id = todo._id || todo.id;
         return (
-          <li key={id}>
+          <li key={id} className="flex flex-row gap-2">
             {editId === id ? (
               <>
-                <input {...register('title')} />
+                <input
+                  {...register('title')}
+                  className="shadow-md shadow-emerald-300"
+                />
                 <button
                   type="submit"
                   onClick={handleSubmit(async (data) => {
@@ -74,7 +77,9 @@ const Read = () => {
               </>
             ) : (
               <>
-                {todo.title}
+                <div className="shadow-md shadow-cyan-400 p-1.5 hover:-translate-y-2 transition duration-300">
+                  {todo.title}
+                </div>
                 <button
                   onClick={() => {
                     setEditId(id);

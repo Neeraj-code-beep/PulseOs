@@ -6,6 +6,7 @@ router.post('/', async (req, res) => {
   try {
     const todo = await TodoModel.create({
       title: req.body.title,
+      remainderTime: req.body.remainderTime,
     });
     res.json('Todo created successfully');
   } catch (error) {
@@ -45,6 +46,9 @@ router.patch('/:id', async (req, res) => {
       },
       {
         title: req.body.title,
+      },
+      {
+        remainderTime: req.body.remainderTime,
       },
     );
     res.json('Todo updated successfully.');

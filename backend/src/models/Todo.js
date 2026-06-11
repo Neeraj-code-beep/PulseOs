@@ -10,6 +10,10 @@ const ToDoSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    remainderTime: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );

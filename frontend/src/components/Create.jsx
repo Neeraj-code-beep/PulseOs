@@ -69,15 +69,25 @@ const Create = () => {
         </h1>
       </div>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <input
-          {...register('title', { required: 'title can not be empty' })}
-          className="p-2 border-b w-full text-2xl font-thin outline-0"
-          // Removed two-way binding.
-          // onChange={(e) => settitle(e.target.value)}
-          // value={title}
-          type="text"
-          placeholder="Write Here..."
-        />
+        <div className="flex items-center justify-center gap-2">
+          <input
+            {...register('title', { required: 'Title can not be empty' })}
+            className="p-2 border-b active:text-blue-600 w-full text-2xl font-thin outline-0"
+            // Removed two-way binding.
+            // onChange={(e) => settitle(e.target.value)}
+            // value={title}
+            type="text"
+            placeholder="Enter your Todo"
+          />
+          <input
+            {...register('time', {
+              required: "time can't be empty",
+            })}
+            className=""
+            type="time"
+            placeholder="choose from here"
+          ></input>
+        </div>
         {/* {errors && errors.title && errors.title.message && (
           <small>{errors.title.message}</small>
         )} */}
@@ -87,7 +97,7 @@ const Create = () => {
         </small>
         <br /> <br />
         {/* <button style={buttoncss}>Create Todo</button>  for the reference for how to add inline css. */}
-        <button className="mt-5 text-xl px-10 py-2 border rounded">
+        <button className="mt-5 text-xl px-10 py-2 border rounded-2xl bg-blue-500 hover:bg-amber-50 hover:text-blue-600">
           Create Todo
         </button>
       </form>
