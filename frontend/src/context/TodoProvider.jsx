@@ -1,40 +1,116 @@
 import { useEffect, useState } from 'react';
-import { createContext } from 'react';
 import API from '../services/Api';
 import { toast } from 'react-toastify';
-
-// Creating context
-export const TodoContext = createContext(null);
+import { TodoContext } from './TodoContext';
 
 const TodoProvider = ({ children }) => {
   const [todos, settodos] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // GET todos
   const fetchTodos = async () => {
-    const res = await API.get('api/todos');
-    console.log('Backend Response:', res.data);
-    settodos(res.data);
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await API.get('api/todos');
+      if (res.data && res.data.success) {
+        settodos(res.data.data);
+      } else if (Array.isArray(res.data)) {
+        settodos(res.data);
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to fetch tasks';
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // ADD TODo
-  const addTodo = async (title) => {
-    if (!title) return;
-    await API.post('api/todos', { title });
-    fetchTodos();
+  // Synchronize local state when a reminder fires
+  const markReminderSentLocally = (id) => {
+    settodos((prev) =>
+      prev.map((t) =>
+        (t._id || t.id) === id ? { ...t, reminderSent: true } : t,
+      ),
+    );
   };
 
-  // Delete
+  // ADD Todo
+  const addTodo = async (taskData) => {
+    const payload = typeof taskData === 'string' ? { title: taskData } : { ...taskData };
+    if (!payload.title || !payload.title.trim()) return;
+
+    try {
+      const res = await API.post('api/todos', payload);
+      if (res.data && res.data.success && res.data.data) {
+        settodos((prev) => [res.data.data, ...prev]);
+        toast.success('Task Created');
+        return res.data.data;
+      } else {
+        fetchTodos();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to create task');
+      throw err;
+    }
+  };
+
+  // DELETE Todo
   const deleteTodo = async (id) => {
-    await API.delete(`api/todos/${id}`);
-    toast.success('Todo Deleted');
-    fetchTodos();
+    try {
+      const res = await API.delete(`api/todos/${id}`);
+      if (res.data && res.data.success) {
+        settodos((prev) => prev.filter((todo) => (todo._id || todo.id) !== id));
+        toast.success('Task Deleted');
+      } else {
+        fetchTodos();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete task');
+    }
   };
 
-  const updateTodo = async (id, title) => {
-    if (!title) return;
-    await API.patch(`api/todos/${id}`, { title });
-    toast.success('Todo Updated');
-    fetchTodos();
+  // UPDATE Todo
+  const updateTodo = async (id, updateFields, reminderTime, completed) => {
+    try {
+      let payload = {};
+      if (typeof updateFields === 'object' && updateFields !== null) {
+        payload = { ...updateFields };
+      } else {
+        if (updateFields !== undefined) payload.title = updateFields;
+        if (reminderTime !== undefined) payload.reminderTime = reminderTime;
+        if (completed !== undefined) payload.completed = completed;
+      }
+
+      const res = await API.patch(`api/todos/${id}`, payload);
+      if (res.data && res.data.success && res.data.data) {
+        settodos((prev) =>
+          prev.map((todo) =>
+            (todo._id || todo.id) === id ? res.data.data : todo,
+          ),
+        );
+        toast.success('Task Updated');
+        return res.data.data;
+      } else {
+        fetchTodos();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update task');
+      throw err;
+    }
+  };
+
+  // REPLACE single Todo in local state
+  const replaceTodo = (updatedTodo) => {
+    if (!updatedTodo || (!updatedTodo._id && !updatedTodo.id)) return;
+    const targetId = updatedTodo._id || updatedTodo.id;
+    settodos((prev) =>
+      prev.map((todo) =>
+        (todo._id || todo.id) === targetId ? updatedTodo : todo,
+      ),
+    );
   };
 
   useEffect(() => {
@@ -42,7 +118,19 @@ const TodoProvider = ({ children }) => {
   }, []);
 
   return (
-    <TodoContext.Provider value={{ todos, addTodo, deleteTodo, updateTodo }}>
+    <TodoContext.Provider
+      value={{
+        todos,
+        isLoading,
+        error,
+        fetchTodos,
+        addTodo,
+        deleteTodo,
+        updateTodo,
+        markReminderSentLocally,
+        replaceTodo,
+      }}
+    >
       {children}
     </TodoContext.Provider>
   );
