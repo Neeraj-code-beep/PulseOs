@@ -64,3 +64,12 @@ PulseOS is designed as a calm, precise, student-focused productivity instrument.
 - **`<Input>`**: Accessible text input with label and error state handling.
 - **`<Badge>`**: Semantic tags (`default`, `primary`, `accent`, `success`, `warning`, `danger`).
 - **`<ThemeToggle>`**: Icon toggle between Sun and Moon modes.
+
+---
+
+## 6. Analytics Visualization Standards
+- **Focus Trend Visualization**: Custom Recharts BarChart styled with Forest Green (`var(--focus)`), subtle grid lines, and custom warm tooltips. No blue/purple gradients.
+- **Metric Strip**: Single editorial surface with subtle vertical dividers displaying key focus and completion metrics.
+- **Task Performance Bar**: Comparative horizontal progress bar comparing planned task duration against actual recorded focus duration.
+- **Recent Session Log**: Clean activity log with mode tags and completion status pills.
+

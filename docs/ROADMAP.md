@@ -61,9 +61,20 @@
 
 ---
 
-## Phase 5B: Analytics Visualization & AI Task Planning (Next Phase)
-- Build full `/analytics` dashboard with charts (Recharts)
-- Daily/weekly focus trend visualization
-- Task performance gauges
+## Phase 5B.1: Productivity Insights Dashboard (Completed)
+- [x] Install `recharts` charting library
+- [x] Create `AnalyticsHeader.jsx` with 7D / 14D / 30D period selector
+- [x] Create `AnalyticsMetricStrip.jsx` with subtle dividers
+- [x] Create `FocusTrendChart.jsx` with Recharts, Forest Green styling, custom tooltip, zero-value day handling, and screen reader summary
+- [x] Create `TaskPerformance.jsx` with planned vs focused comparison bar
+- [x] Create `RecentFocusSessions.jsx` with session history log and status badges
+- [x] Create `InsightSummary.jsx` with deterministic UI rhythm observations
+- [x] Full `/analytics` page integration with independent error/loading states
+- [x] Analytics UI documentation (`docs/ANALYTICS-UI.md`)
+
+---
+
+## Phase 5C: Contextual AI Task Breakdown & Planning (Next Phase)
 - Integrate AI Task Breakdown and Time Estimation API endpoints
 - Build contextual AI Assistant drawer component
+- AI schedule proposal engine

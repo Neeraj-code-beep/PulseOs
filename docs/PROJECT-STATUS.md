@@ -6,11 +6,20 @@ The application is a full-stack MERN student productivity workspace featuring a 
 ---
 
 ## Completed Functionality
+- **Productivity Insights Dashboard (Phase 5B.1)**:
+  - Full `/analytics` workspace built with Recharts data visualization in Warm Editorial design language.
+  - `AnalyticsHeader.jsx`: Title, subtitle, and 7D / 14D / 30D period selector.
+  - `AnalyticsMetricStrip.jsx`: Single editorial surface with subtle vertical dividers displaying Focus today, Focus this week, Sessions, Tasks done, and Average block.
+  - `FocusTrendChart.jsx`: Recharts bar chart with Forest Green (`var(--focus)`) styling, custom warm tooltips, zero-value day handling, strongest day micro-summary, and screen reader summary text.
+  - `TaskPerformance.jsx`: Compact horizontal comparison bar for Planned vs Focused time and task completion rate percentage.
+  - `RecentFocusSessions.jsx`: Recent focus session history log (limit 10) with task title, mode badge, duration, relative date/time, and status pills.
+  - `InsightSummary.jsx`: Deterministic metric observations of user's study rhythm.
+  - Independent loading skeletons and error handling per section.
+  - Documentation: [docs/ANALYTICS-UI.md](file:///n:/Diwali/FullStack_ToDo_App/docs/ANALYTICS-UI.md).
 - **Analytics Data Foundation (Phase 5A)**:
   - Analytics service layer ([services/analytics.service.js](file:///n:/Diwali/FullStack_ToDo_App/backend/src/services/analytics.service.js)) with date boundary helpers, MongoDB `$facet` aggregation, and clean metric calculation functions.
   - Analytics controller ([controllers/analytics.controller.js](file:///n:/Diwali/FullStack_ToDo_App/backend/src/controllers/analytics.controller.js)) and routes ([routes/AnalyticsRoutes.js](file:///n:/Diwali/FullStack_ToDo_App/backend/src/routes/AnalyticsRoutes.js)) providing `GET /api/analytics/overview`, `GET /api/analytics/focus-trend`, and `GET /api/analytics/task-performance`.
   - `completedAt` field added to `Todo` model with reliable state-transition tracking.
-  - Frontend analytics API service ([analyticsApi.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/services/analyticsApi.jsx)) and verification UI in [Analytics.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/pages/Analytics.jsx).
   - Technical documentation ([docs/ANALYTICS-SYSTEM.md](file:///n:/Diwali/FullStack_ToDo_App/docs/ANALYTICS-SYSTEM.md)).
 - **Focus / Pomodoro Engine & Task Binding (Phase 4B)**:
   - Mongoose `FocusSession` model ([models/FocusSession.js](file:///n:/Diwali/FullStack_ToDo_App/backend/src/models/FocusSession.js)) with task title snapshot support.

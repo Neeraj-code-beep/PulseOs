@@ -15,11 +15,13 @@
     "framer-motion": "^12.43.0",
     "lucide-react": "^1.28.0",
     "nanoid": "^5.1.6",
+    "prop-types": "^15.8.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.71.1",
     "react-router-dom": "^7.18.2",
     "react-toastify": "^11.0.5",
+    "recharts": "^3.10.1",
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
