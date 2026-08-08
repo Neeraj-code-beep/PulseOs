@@ -1,18 +1,24 @@
 # PulseOS / Productive App - Project Status & Audit Report
 
 ## Current Known State
-The application is a full-stack MERN student productivity workspace featuring a working Focus/Pomodoro Engine with timestamp-based accuracy, task binding, atomic `focusTimeSpent` tracking, real-time Socket.IO todo reminders, background cron scheduler, contextual browser notification permissions, warm editorial visual language, full-page homepage product showcase, 2-zone desktop tasks workspace, responsive React 19 + Vite + React Router application shell, Express 5 + Node.js + MongoDB backend, and a **productivity analytics data foundation** with real-data overview metrics, focus trend, and task performance endpoints.
+The application is a full-stack MERN student productivity workspace featuring a working Focus/Pomodoro Engine with timestamp-based accuracy, task binding, atomic `focusTimeSpent` tracking, real-time Socket.IO todo reminders, background cron scheduler, contextual browser notification permissions, warm editorial visual language, full-page homepage product showcase, 2-zone desktop tasks workspace, responsive React 19 + Vite + React Router application shell, Express 5 + Node.js + MongoDB backend, productivity analytics data foundation, **AI Task Breakdown**, **AI Time Estimation**, and **Smart Schedule Proposals**.
 
 ---
 
 ## Completed Functionality
+- **AI Time Estimation & Smart Scheduling (Phase 5C.2 Complete)**:
+  - AI time estimation service (`estimateTaskTime`) with prompt engineering for realistic student work duration and response validation (positive integer, reason capped at 200 chars).
+  - Deterministic smart schedule algorithm (`generateScheduleBlocks`) — no LLM: splits work into 25–60m focus blocks with 5–10m breaks, validates against availability window, returns `fitsAvailability: false` when insufficient.
+  - Schedule proposal service (`proposeSchedule`) auto-estimates via AI if `estimatedMinutes` not provided.
+  - Express endpoints: `POST /api/ai/estimate` and `POST /api/ai/schedule`.
+  - Frontend UI: [TaskEstimatorPanel.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/components/ai/TaskEstimatorPanel.jsx) (estimate + reason + apply) and [ScheduleProposalPanel.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/components/ai/ScheduleProposalPanel.jsx) (availability form + timeline view + insufficient warning).
+  - `TaskEditor.jsx` refactored with unified PULSE ASSISTANT section: Break down / Estimate with Pulse / Smart Schedule.
+  - Backend test matrix expanded (23/23 tests passed — breakdown + estimation + scheduling).
 - **AI Task Breakdown Foundation (Phase 5C.1 Complete)**:
   - Provider abstraction ([integrations/ai/ai.provider.js](file:///n:/Diwali/FullStack_ToDo_App/backend/src/integrations/ai/ai.provider.js)) using official `@google/genai` SDK with backend-only API keys in `backend/.env`.
   - Service layer ([services/ai.service.js](file:///n:/Diwali/FullStack_ToDo_App/backend/src/services/ai.service.js)) with input validation (title required, max 500 chars), structured prompt engineering for 2–5 subtasks, JSON schema validation, and total duration sum recalculation.
   - Express controller & routes ([controllers/ai.controller.js](file:///n:/Diwali/FullStack_ToDo_App/backend/src/controllers/ai.controller.js) & [routes/AiRoutes.js](file:///n:/Diwali/FullStack_ToDo_App/backend/src/routes/AiRoutes.js)) exposing `POST /api/ai/breakdown`.
-  - Frontend API client ([services/aiApi.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/services/aiApi.jsx)) and UI component ([components/ai/TaskBreakdownPanel.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/components/ai/TaskBreakdownPanel.jsx)) with Initial, Loading ("Planning your focus blocks…"), Result, and Error states.
-  - Integrated into `TaskEditor.jsx` via "Break down with Pulse" CTA with Apply breakdown action updating task `estimatedMinutes`.
-  - Backend test matrix ([backend/src/tests/ai.test.js](file:///n:/Diwali/FullStack_ToDo_App/backend/src/tests/ai.test.js) — 8/8 passed).
+  - Frontend API client ([services/aiApi.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/services/aiApi.jsx)) and UI component ([components/ai/TaskBreakdownPanel.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/components/ai/TaskBreakdownPanel.jsx)) with Initial, Loading, Result, and Error states.
   - Technical documentation: [docs/AI-SYSTEM.md](file:///n:/Diwali/FullStack_ToDo_App/docs/AI-SYSTEM.md).
 - **Productivity Insights Dashboard & Polish (Phase 5B.1 & 5B.2 Complete)**:
   - Premium `/analytics` workspace built with Recharts data visualization in Warm Editorial design language.
@@ -47,5 +53,6 @@ The application is a full-stack MERN student productivity workspace featuring a 
 ## Verification Performed
 1. `npm run lint` (Frontend): **PASSED (0 errors, 0 warnings)**.
 2. `npm run build` (Frontend): **PASSED (Clean production bundle)**.
-3. Backend Analytics Test Matrix: **ALL 16 TESTS PASSED** (empty DB, sessions today/week, cancelled ignored, trend buckets, task completion, uncomplete, days validation, task performance metrics, week boundary).
-4. Backend Runtime & Import Validation: **PASSED (Analytics, Focus, Todo routes & models valid)**.
+3. Backend AI & Scheduling Test Matrix: **ALL 23 TESTS PASSED** (breakdown validation × 8, estimation validation × 7, schedule algorithm × 8 — including 30/60/90/135m tasks, break insertion, bounds safety, insufficient availability, no overlapping blocks).
+4. Backend Analytics Test Matrix: **ALL 16 TESTS PASSED** (requires MongoDB connection).
+5. Backend Runtime & Import Validation: **PASSED (AI, Analytics, Focus, Todo routes & models valid)**.

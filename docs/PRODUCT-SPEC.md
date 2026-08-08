@@ -48,7 +48,7 @@
 | :--- | :--- | :--- | :--- |
 | **Tasks** | Title, DueDate, Priority (Low/Med/High), EstimatedMinutes, ReminderTime | Subtasks, Tags | Multi-user Collaboration |
 | **Focus** | Pomodoro & Custom Timer, Task Binding, Auto Session Log | Ambient Sounds, Streak Tracking | Shared Study Rooms |
-| **AI** | Task Breakdown (Phase 5C.1 Active), Time Estimator, Smart Schedule Proposer | Contextual Focus Tips | Voice Assistant |
+| **AI** | Task Breakdown (5C.1), Time Estimator (5C.2), Smart Schedule Proposer (5C.2) | Contextual Focus Tips, Multi-day Scheduling | Voice Assistant |
 | **Analytics**| Overview Metrics (Today/Week), Focus Trend (7/14/30 days), Task Performance | Chart Visualization, Task Category Breakdown | Semester Goals |
 | **Reminders**| In-app Toast & Browser Notification API via Socket.IO | Web Push Service Worker | SMS/Email Alerts |
 

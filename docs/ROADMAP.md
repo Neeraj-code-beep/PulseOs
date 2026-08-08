@@ -83,7 +83,22 @@
 
 ---
 
-## Phase 5C.2: AI Time Estimation & Smart Scheduling (Next Phase)
-- AI Time Estimator for task duration suggestions based on title and subject
-- AI Schedule Proposal Engine for daily focus block recommendations
-- Contextual Assistant Drawer enhancement
+## Phase 5C.2: AI Time Estimation & Smart Scheduling (Completed)
+- [x] Extend `ai.service.js` with `estimateTaskTime()` — AI-powered realistic duration estimation with prompt engineering
+- [x] Extend `ai.service.js` with `proposeSchedule()` — deterministic focus-block scheduling algorithm (no LLM)
+- [x] Extend `ai.controller.js` with `POST /api/ai/estimate` and `POST /api/ai/schedule` endpoints
+- [x] Frontend API client extensions: `estimateTaskTimeApi()`, `proposeScheduleApi()`
+- [x] Build `TaskEstimatorPanel.jsx` — loading, result (duration + reason), and apply estimate UI
+- [x] Build `ScheduleProposalPanel.jsx` — availability form, timeline view, insufficient-availability warning
+- [x] Integrate `PULSE ASSISTANT` section in `TaskEditor.jsx` with Break down / Estimate / Schedule actions
+- [x] Backend AI test suite expanded (23/23 tests passed — estimation validation, schedule algorithm, bounds safety)
+- [x] Documentation updates (AI-SYSTEM.md, ARCHITECTURE.md, PRODUCT-SPEC.md, UX-FLOWS.md)
+
+---
+
+## Phase 5D: AI Planning Intelligence / Contextual Productivity Layer (Next Phase)
+- Multi-day scheduling across availability windows
+- Contextual focus tips based on task patterns
+- Schedule persistence and history
+- AI-powered daily planning recommendations
+

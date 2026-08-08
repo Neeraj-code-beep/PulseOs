@@ -6,6 +6,8 @@ import { Calendar, Bell, Flag, Clock, X, Sparkles } from 'lucide-react';
 import { useNotificationPermission } from '../../utils/useNotificationPermission';
 import { NotificationPermissionDialog } from '../notifications/NotificationPermissionDialog';
 import { TaskBreakdownPanel } from '../ai/TaskBreakdownPanel';
+import { TaskEstimatorPanel } from '../ai/TaskEstimatorPanel';
+import { ScheduleProposalPanel } from '../ai/ScheduleProposalPanel';
 
 export const TaskEditor = ({ task, onSave, onClose }) => {
   const { showDialog, checkAndPromptPermission, handleConfirmAllow, handleDismiss } =
@@ -25,7 +27,7 @@ export const TaskEditor = ({ task, onSave, onClose }) => {
     task.estimatedMinutes || '',
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [showAiPanel, setShowAiPanel] = useState(false);
+  const [aiMode, setAiMode] = useState(null); // null | 'breakdown' | 'estimate' | 'schedule'
 
   const executeSave = async () => {
     setIsLoading(true);
@@ -67,6 +69,12 @@ export const TaskEditor = ({ task, onSave, onClose }) => {
   const handleApplyBreakdown = (totalMins) => {
     if (totalMins) {
       setEstimatedMinutes(totalMins);
+    }
+  };
+
+  const handleApplyEstimate = (mins) => {
+    if (mins) {
+      setEstimatedMinutes(mins);
     }
   };
 
@@ -164,22 +172,67 @@ export const TaskEditor = ({ task, onSave, onClose }) => {
             </div>
           </div>
 
-          {/* AI Task Breakdown Section */}
-          {!showAiPanel ? (
-            <button
-              type="button"
-              onClick={() => setShowAiPanel(true)}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] transition-all cursor-pointer self-start shadow-xs hover:border-[var(--border-soft)]"
-            >
-              <Sparkles size={14} className="text-[var(--accent)]" />
-              <span>Break down with Pulse</span>
-            </button>
-          ) : (
+          {/* AI Productivity Engine Section */}
+          {aiMode === null && (
+            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-[var(--border-soft)]">
+              <span className="text-[10px] font-mono uppercase text-[var(--text-muted)] w-full tracking-wider">
+                PULSE ASSISTANT
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setAiMode('breakdown')}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] transition-all cursor-pointer shadow-xs hover:border-[var(--border-soft)]"
+              >
+                <Sparkles size={13} className="text-[var(--accent)]" />
+                <span>Break down</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAiMode('estimate')}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] transition-all cursor-pointer shadow-xs hover:border-[var(--border-soft)]"
+              >
+                <Clock size={13} className="text-[var(--accent)]" />
+                <span>Estimate with Pulse</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAiMode('schedule')}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] transition-all cursor-pointer shadow-xs hover:border-[var(--border-soft)]"
+              >
+                <Calendar size={13} className="text-[var(--accent)]" />
+                <span>Smart Schedule</span>
+              </button>
+            </div>
+          )}
+
+          {aiMode === 'breakdown' && (
             <TaskBreakdownPanel
               title={title}
               context={{ priority, dueDate, estimatedMinutes }}
               onApplyBreakdown={handleApplyBreakdown}
-              onClose={() => setShowAiPanel(false)}
+              onClose={() => setAiMode(null)}
+            />
+          )}
+
+          {aiMode === 'estimate' && (
+            <TaskEstimatorPanel
+              title={title}
+              context={{ priority, dueDate, estimatedMinutes }}
+              onApplyEstimate={handleApplyEstimate}
+              onClose={() => setAiMode(null)}
+            />
+          )}
+
+          {aiMode === 'schedule' && (
+            <ScheduleProposalPanel
+              taskId={task._id}
+              title={title}
+              estimatedMinutes={estimatedMinutes}
+              context={{ priority, dueDate }}
+              onClose={() => setAiMode(null)}
             />
           )}
 
@@ -215,3 +268,4 @@ TaskEditor.propTypes = {
   onSave: PropTypes.func.isRequired,
   onClose: PropTypes.func.isRequired,
 };
+

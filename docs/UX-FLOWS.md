@@ -52,9 +52,43 @@ Desktop view (≥ 1024px) utilizes a 2-zone desktop composition:
 ---
 
 ## 6. AI Task Breakdown Flow (Contextual Planning)
-1. **Trigger**: User opens `TaskEditor` modal for any task and clicks `Break down with Pulse` (Sparkles icon).
+1. **Trigger**: User opens `TaskEditor` modal for any task and clicks `Break down` under the PULSE ASSISTANT section.
 2. **Initial State**: `TaskBreakdownPanel` expands inside the editor modal explaining: *"Turn a large task into focused work blocks."*
 3. **Execution**: User clicks `Generate breakdown`. UI transitions to loading state: *"Planning your focus blocks…"* while backend calls `POST /api/ai/breakdown`.
 4. **Structured Result**: Renders AI summary and 2–5 numbered work blocks (01, 02, 03...) with estimated minutes per block and total duration.
 5. **Apply Action**: User clicks `Apply breakdown`. Updates `estimatedMinutes` field in `TaskEditor` form. User clicks `Save changes` to persist to database.
 6. **Error Grace**: If AI API fails or key is missing, displays user-friendly error *"Pulse couldn't create a breakdown right now."* with `Try again` and `Close` options without exposing server stack traces.
+
+---
+
+## 7. AI Time Estimation Flow (Phase 5C.2)
+1. **Trigger**: User opens `TaskEditor` modal and clicks `Estimate with Pulse` under PULSE ASSISTANT section.
+2. **Initial State**: `TaskEstimatorPanel` expands explaining: *"How long will this realistically take?"*
+3. **Execution**: User clicks `Estimate time`. Loading state shows: *"Estimating a realistic focus time…"* while backend calls `POST /api/ai/estimate`.
+4. **Result**: Displays estimated focus duration (e.g. `90 min`) with a concise explanation.
+5. **Apply Action**: User clicks `Use 90 min`. Updates `estimatedMinutes` field in editor. Task is NOT modified until user saves.
+6. **Dismiss**: User can dismiss without applying the estimate.
+
+---
+
+## 8. Smart Schedule Proposal Flow (Phase 5C.2)
+1. **Trigger**: User opens `TaskEditor` modal and clicks `Smart Schedule` under PULSE ASSISTANT section.
+2. **Initial State**: `ScheduleProposalPanel` shows availability form with Date, Start Time, and End Time fields.
+3. **Execution**: User fills availability (e.g. 4:00 PM – 8:00 PM) and clicks `Build schedule`. Backend calls `POST /api/ai/schedule`.
+4. **Result (fits)**: Displays `YOUR PROPOSED FOCUS PLAN` with chronological focus blocks and short breaks. Shows total focus and break minutes.
+5. **Result (insufficient)**: If task needs more time than available, shows warning: *"This task needs more time than the selected availability."* with `Adjust window` option.
+6. **Actions**: `Use this plan` navigates to Focus page with the task selected. `Adjust` returns to the availability form. `Dismiss` closes the panel.
+7. **No Database Mutation**: Schedule proposals are preview-only. No schedule records are persisted.
+
+---
+
+## 9. Integrated AI Productivity Workflow
+The complete PLAN → FOCUS → IMPROVE workflow from TaskEditor:
+```
+Tasks → Edit task → PULSE ASSISTANT
+         ├── Break down   → Generate work blocks → Apply breakdown
+         ├── Estimate      → Get AI estimate → Use estimate
+         └── Smart Schedule → Set availability → Build schedule → Focus
+```
+Each action is independent. A user can break down, estimate, or schedule in any order.
+
