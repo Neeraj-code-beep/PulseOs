@@ -1,9 +1,11 @@
+import PropTypes from 'prop-types';
 import { useState } from 'react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
-import { Calendar, Bell, Flag, Clock, X } from 'lucide-react';
+import { Calendar, Bell, Flag, Clock, X, Sparkles } from 'lucide-react';
 import { useNotificationPermission } from '../../utils/useNotificationPermission';
 import { NotificationPermissionDialog } from '../notifications/NotificationPermissionDialog';
+import { TaskBreakdownPanel } from '../ai/TaskBreakdownPanel';
 
 export const TaskEditor = ({ task, onSave, onClose }) => {
   const { showDialog, checkAndPromptPermission, handleConfirmAllow, handleDismiss } =
@@ -23,6 +25,7 @@ export const TaskEditor = ({ task, onSave, onClose }) => {
     task.estimatedMinutes || '',
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [showAiPanel, setShowAiPanel] = useState(false);
 
   const executeSave = async () => {
     setIsLoading(true);
@@ -46,7 +49,7 @@ export const TaskEditor = ({ task, onSave, onClose }) => {
     e.preventDefault();
     if (!title || !title.trim()) return;
 
-    // Check if reminderTime was changed (new or different from original)
+    // Check if reminderTime was changed
     const originalReminder = task.reminderTime
       ? new Date(task.reminderTime).toISOString().slice(0, 16)
       : '';
@@ -61,16 +64,22 @@ export const TaskEditor = ({ task, onSave, onClose }) => {
     }
   };
 
+  const handleApplyBreakdown = (totalMins) => {
+    if (totalMins) {
+      setEstimatedMinutes(totalMins);
+    }
+  };
+
   return (
     <>
       <div
-        className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xs flex items-center justify-center p-4"
+        className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
         onClick={onClose}
       >
         <form
           onSubmit={handleSubmit}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-md bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-5 shadow-2xl flex flex-col gap-4"
+          className="w-full max-w-md bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-5 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
         >
           <div className="flex items-center justify-between border-b border-[var(--border-soft)] pb-3">
             <h2 className="text-sm font-bold font-sans">Edit Task</h2>
@@ -155,6 +164,25 @@ export const TaskEditor = ({ task, onSave, onClose }) => {
             </div>
           </div>
 
+          {/* AI Task Breakdown Section */}
+          {!showAiPanel ? (
+            <button
+              type="button"
+              onClick={() => setShowAiPanel(true)}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] transition-all cursor-pointer self-start shadow-xs hover:border-[var(--border-soft)]"
+            >
+              <Sparkles size={14} className="text-[var(--accent)]" />
+              <span>Break down with Pulse</span>
+            </button>
+          ) : (
+            <TaskBreakdownPanel
+              title={title}
+              context={{ priority, dueDate, estimatedMinutes }}
+              onApplyBreakdown={handleApplyBreakdown}
+              onClose={() => setShowAiPanel(false)}
+            />
+          )}
+
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-[var(--border-soft)]">
             <Button type="button" variant="ghost" size="sm" onClick={onClose}>
               Cancel
@@ -173,4 +201,17 @@ export const TaskEditor = ({ task, onSave, onClose }) => {
       />
     </>
   );
+};
+
+TaskEditor.propTypes = {
+  task: PropTypes.shape({
+    _id: PropTypes.string,
+    title: PropTypes.string,
+    dueDate: PropTypes.string,
+    reminderTime: PropTypes.string,
+    priority: PropTypes.string,
+    estimatedMinutes: PropTypes.number,
+  }).isRequired,
+  onSave: PropTypes.func.isRequired,
+  onClose: PropTypes.func.isRequired,
 };

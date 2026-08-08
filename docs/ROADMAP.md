@@ -71,9 +71,19 @@
 - [x] Page entrance animation, reduced-motion compliance, dark mode contrast audit
 - [x] Documentation updates (`docs/DESIGN-SYSTEM.md`)
 
+## Phase 5C.1: AI Task Breakdown Foundation (Completed)
+- [x] Create AI provider abstraction (`integrations/ai/ai.provider.js`) with `@google/genai` SDK
+- [x] Create AI service (`services/ai.service.js`) with validation, prompt engineering, and output parsing
+- [x] Create AI controller (`controllers/ai.controller.js`) and routes (`routes/AiRoutes.js`) providing `POST /api/ai/breakdown`
+- [x] Create frontend API client (`services/aiApi.jsx`)
+- [x] Build `TaskBreakdownPanel.jsx` component with Initial, Loading, Result, and Error states
+- [x] Integrate "Break down with Pulse" CTA into `TaskEditor.jsx` with Apply breakdown functionality
+- [x] Backend AI test suite (`backend/src/tests/ai.test.js` — 8/8 passed)
+- [x] Technical documentation (`docs/AI-SYSTEM.md`)
+
 ---
 
-## Phase 5C: Contextual AI Productivity Layer (Next Phase)
-- Integrate AI Task Breakdown and Time Estimation API endpoints
-- Build contextual AI Assistant drawer component
-- AI schedule proposal engine
+## Phase 5C.2: AI Time Estimation & Smart Scheduling (Next Phase)
+- AI Time Estimator for task duration suggestions based on title and subject
+- AI Schedule Proposal Engine for daily focus block recommendations
+- Contextual Assistant Drawer enhancement

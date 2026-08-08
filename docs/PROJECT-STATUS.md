@@ -6,6 +6,14 @@ The application is a full-stack MERN student productivity workspace featuring a 
 ---
 
 ## Completed Functionality
+- **AI Task Breakdown Foundation (Phase 5C.1 Complete)**:
+  - Provider abstraction ([integrations/ai/ai.provider.js](file:///n:/Diwali/FullStack_ToDo_App/backend/src/integrations/ai/ai.provider.js)) using official `@google/genai` SDK with backend-only API keys in `backend/.env`.
+  - Service layer ([services/ai.service.js](file:///n:/Diwali/FullStack_ToDo_App/backend/src/services/ai.service.js)) with input validation (title required, max 500 chars), structured prompt engineering for 2–5 subtasks, JSON schema validation, and total duration sum recalculation.
+  - Express controller & routes ([controllers/ai.controller.js](file:///n:/Diwali/FullStack_ToDo_App/backend/src/controllers/ai.controller.js) & [routes/AiRoutes.js](file:///n:/Diwali/FullStack_ToDo_App/backend/src/routes/AiRoutes.js)) exposing `POST /api/ai/breakdown`.
+  - Frontend API client ([services/aiApi.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/services/aiApi.jsx)) and UI component ([components/ai/TaskBreakdownPanel.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/components/ai/TaskBreakdownPanel.jsx)) with Initial, Loading ("Planning your focus blocks…"), Result, and Error states.
+  - Integrated into `TaskEditor.jsx` via "Break down with Pulse" CTA with Apply breakdown action updating task `estimatedMinutes`.
+  - Backend test matrix ([backend/src/tests/ai.test.js](file:///n:/Diwali/FullStack_ToDo_App/backend/src/tests/ai.test.js) — 8/8 passed).
+  - Technical documentation: [docs/AI-SYSTEM.md](file:///n:/Diwali/FullStack_ToDo_App/docs/AI-SYSTEM.md).
 - **Productivity Insights Dashboard & Polish (Phase 5B.1 & 5B.2 Complete)**:
   - Premium `/analytics` workspace built with Recharts data visualization in Warm Editorial design language.
   - `AnalyticsHeader.jsx`: Editorial title, subtitle ("Your study rhythm, measured."), fetch timestamp metadata, and compact 7D / 14D / 30D control pills.

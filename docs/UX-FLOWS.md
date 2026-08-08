@@ -48,3 +48,13 @@ The Product Home `/app` operates as a hybrid personal dashboard and product show
 Desktop view (≥ 1024px) utilizes a 2-zone desktop composition:
 - **Left Main Workspace (70%)**: Task quick add composer, filter tabs (`Today`, `Upcoming`, `All Tasks`, `Completed`), and single-container list surface (`TaskList`).
 - **Right Planning Rail (30%)**: Workload summary box displaying tasks due today, total estimated workload in hours/minutes, next scheduled reminder (filters out past & sent reminders), and focus CTA.
+
+---
+
+## 6. AI Task Breakdown Flow (Contextual Planning)
+1. **Trigger**: User opens `TaskEditor` modal for any task and clicks `Break down with Pulse` (Sparkles icon).
+2. **Initial State**: `TaskBreakdownPanel` expands inside the editor modal explaining: *"Turn a large task into focused work blocks."*
+3. **Execution**: User clicks `Generate breakdown`. UI transitions to loading state: *"Planning your focus blocks…"* while backend calls `POST /api/ai/breakdown`.
+4. **Structured Result**: Renders AI summary and 2–5 numbered work blocks (01, 02, 03...) with estimated minutes per block and total duration.
+5. **Apply Action**: User clicks `Apply breakdown`. Updates `estimatedMinutes` field in `TaskEditor` form. User clicks `Save changes` to persist to database.
+6. **Error Grace**: If AI API fails or key is missing, displays user-friendly error *"Pulse couldn't create a breakdown right now."* with `Try again` and `Close` options without exposing server stack traces.

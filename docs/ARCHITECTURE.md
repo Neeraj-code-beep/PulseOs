@@ -31,6 +31,11 @@ PulseOS is a single-user full-stack task management and productivity application
             │ HTTP REST (JSON)        Socket.IO (WebSocket)
             ▼                         ▼
 [ Express 5 Node.js Server + Socket.IO ]
+  ├── AI Routes, Controller, Service & Provider (Phase 5C.1)
+  │     ├── POST /api/ai/breakdown (Generates structured task subtasks & total duration estimate)
+  │     ├── Controller: controllers/ai.controller.js
+  │     ├── Service: services/ai.service.js (input validation, prompt engineering, output validation)
+  │     └── Provider: integrations/ai/ai.provider.js (Google Gemini @google/genai SDK integration)
   ├── Analytics Routes, Controller & Service
   │     ├── GET /api/analytics/overview        (Productivity overview metrics)
   │     ├── GET /api/analytics/focus-trend     (Daily focus trend for 7/14/30 days)
