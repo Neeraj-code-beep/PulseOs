@@ -37,6 +37,8 @@
 | `estimatedMinutes` | Number | Positive number (min: 1) representing estimated duration | `null` |
 | `reminderTime` | Date | "When should PulseOS notify me?" | `null` |
 | `reminderSent` | Boolean | Managed by backend reminder scheduler | `false` |
+| `focusTimeSpent` | Number | Accumulated focus minutes from completed sessions | `0` |
+| `completedAt` | Date | Set when `completed` transitions `false → true`; cleared on uncomplete | `null` |
 
 ---
 
@@ -47,7 +49,7 @@
 | **Tasks** | Title, DueDate, Priority (Low/Med/High), EstimatedMinutes, ReminderTime | Subtasks, Tags | Multi-user Collaboration |
 | **Focus** | Pomodoro & Custom Timer, Task Binding, Auto Session Log | Ambient Sounds, Streak Tracking | Shared Study Rooms |
 | **AI** | Task Breakdown, Time Estimator, Smart Schedule Proposer | Contextual Focus Tips | Voice Assistant |
-| **Analytics**| Daily/Weekly Focus Hours, Completion Rate, Trend Chart | Task Category Breakdown | Semester Goals |
+| **Analytics**| Overview Metrics (Today/Week), Focus Trend (7/14/30 days), Task Performance | Chart Visualization, Task Category Breakdown | Semester Goals |
 | **Reminders**| In-app Toast & Browser Notification API via Socket.IO | Web Push Service Worker | SMS/Email Alerts |
 
 ---

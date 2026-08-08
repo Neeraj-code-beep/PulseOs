@@ -1,7 +1,7 @@
 # PulseOS / Productive App - Current Architecture & System Design
 
 ## Overview
-PulseOS is a single-user full-stack task management and productivity application. This document details the **CURRENT** system architecture following Phase 4B Focus/Pomodoro Engine & Task Binding.
+PulseOS is a single-user full-stack task management and productivity application. This document details the **CURRENT** system architecture following Phase 5A Analytics Data Foundation.
 
 ---
 
@@ -26,11 +26,16 @@ PulseOS is a single-user full-stack task management and productivity application
   │     ├── TodoProvider & TodoContext (with replaceTodo for instant state updates)
   │     ├── SocketProvider & SocketContext
   │     └── FocusProvider & useFocus (Timestamp-based timer state machine)
-  └── Services (focusApi.jsx & Api.jsx)
+  └── Services (focusApi.jsx, analyticsApi.jsx & Api.jsx)
             │
             │ HTTP REST (JSON)        Socket.IO (WebSocket)
             ▼                         ▼
 [ Express 5 Node.js Server + Socket.IO ]
+  ├── Analytics Routes, Controller & Service
+  │     ├── GET /api/analytics/overview        (Productivity overview metrics)
+  │     ├── GET /api/analytics/focus-trend     (Daily focus trend for 7/14/30 days)
+  │     └── GET /api/analytics/task-performance (Planned vs actual & completion rate)
+  │     └── Service: analytics.service.js (date boundaries, MongoDB aggregation, metric calculations)
   ├── Focus Routes & Controller (routes/FocusRoutes.js & controllers/focus.controller.js)
   │     ├── POST /api/focus/sessions (Creates session & increments Todo.focusTimeSpent via $inc)
   │     ├── GET  /api/focus/sessions (Paginated recent sessions list)
@@ -40,7 +45,7 @@ PulseOS is a single-user full-stack task management and productivity application
             │
             ▼
 [ MongoDB Database ]
-  ├── Collection: todos (Schema extended with focusTimeSpent)
+  ├── Collection: todos (Schema: title, completed, completedAt, dueDate, priority, estimatedMinutes, reminderTime, reminderSent, focusTimeSpent)
   └── Collection: focussessions (Schema: taskId, taskTitle, mode, plannedMinutes, actualSeconds, status, startedAt, endedAt)
 ```
 

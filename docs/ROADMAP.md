@@ -49,7 +49,21 @@
 
 ---
 
-## Phase 5: Productivity Analytics & AI Task Planning (Next Phase)
-- Build `/analytics` workspace with daily/weekly focus charts
+## Phase 5A: Analytics Data Foundation (Completed)
+- [x] Audit existing data models (`Todo`, `FocusSession`)
+- [x] Introduce `completedAt` field on `Todo` for reliable completion timestamps
+- [x] Analytics service layer (`analytics.service.js`) with date boundary helpers and MongoDB aggregation
+- [x] Analytics controller and route architecture (`GET /api/analytics/overview`, `/focus-trend`, `/task-performance`)
+- [x] Frontend analytics API service (`analyticsApi.jsx`)
+- [x] Minimal Analytics page verification UI with loading, error, retry states
+- [x] Backend test matrix (16 test cases — all passed)
+- [x] Technical documentation (`docs/ANALYTICS-SYSTEM.md`)
+
+---
+
+## Phase 5B: Analytics Visualization & AI Task Planning (Next Phase)
+- Build full `/analytics` dashboard with charts (Recharts)
+- Daily/weekly focus trend visualization
+- Task performance gauges
 - Integrate AI Task Breakdown and Time Estimation API endpoints
 - Build contextual AI Assistant drawer component

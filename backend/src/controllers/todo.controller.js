@@ -136,7 +136,14 @@ const updateTodo = async (req, res) => {
     }
 
     if (req.body.completed !== undefined) {
-      updates.completed = Boolean(req.body.completed);
+      const isCompleted = Boolean(req.body.completed);
+      updates.completed = isCompleted;
+      // Set completedAt timestamp when transitioning to completed, clear it when uncompleted
+      if (isCompleted && !existingTodo.completed) {
+        updates.completedAt = new Date();
+      } else if (!isCompleted && existingTodo.completed) {
+        updates.completedAt = null;
+      }
     }
 
     if (req.body.dueDate !== undefined) {

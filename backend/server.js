@@ -5,6 +5,7 @@ const express = require('express');
 const http = require('http');
 const TodoRoutes = require('./src/routes/TodoRoutes');
 const FocusRoutes = require('./src/routes/FocusRoutes');
+const AnalyticsRoutes = require('./src/routes/AnalyticsRoutes');
 const connectToDB = require('./src/db/db');
 const { initializeSocket } = require('./src/sockets/socket');
 const { startReminderScheduler } = require('./src/scheduler/reminder.scheduler');
@@ -27,6 +28,7 @@ app.use(express.json());
 // Routes
 app.use('/api/todos', TodoRoutes);
 app.use('/api/focus', FocusRoutes);
+app.use('/api/analytics', AnalyticsRoutes);
 
 // Create single HTTP server
 const server = http.createServer(app);

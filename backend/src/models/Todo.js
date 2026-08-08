@@ -45,6 +45,11 @@ const ToDoSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+
+    completedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );
