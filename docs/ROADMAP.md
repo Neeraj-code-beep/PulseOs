@@ -61,20 +61,19 @@
 
 ---
 
-## Phase 5B.1: Productivity Insights Dashboard (Completed)
-- [x] Install `recharts` charting library
-- [x] Create `AnalyticsHeader.jsx` with 7D / 14D / 30D period selector
-- [x] Create `AnalyticsMetricStrip.jsx` with subtle dividers
-- [x] Create `FocusTrendChart.jsx` with Recharts, Forest Green styling, custom tooltip, zero-value day handling, and screen reader summary
-- [x] Create `TaskPerformance.jsx` with planned vs focused comparison bar
-- [x] Create `RecentFocusSessions.jsx` with session history log and status badges
-- [x] Create `InsightSummary.jsx` with deterministic UI rhythm observations
-- [x] Full `/analytics` page integration with independent error/loading states
-- [x] Analytics UI documentation (`docs/ANALYTICS-UI.md`)
+## Phase 5B.2: Analytics Premium Polish & UX Refinement (Completed)
+- [x] Refine `AnalyticsHeader.jsx` with editorial title, fetch timestamp metadata, and compact 7D/14D/30D segmented pills
+- [x] Refine `AnalyticsMetricStrip.jsx` with 28–36px font-mono number dominance and clean 2-column mobile stacking
+- [x] Refine `FocusTrendChart.jsx` with 320px height, Forest Green styling, interactive bar hover emphasis, subtle zero-day bars, warm tooltip, and peak performance summary
+- [x] Refine `TaskPerformance.jsx` with unified `PLANNING VS EXECUTION` header, comparative bars, explanatory note, and completion rate indicator
+- [x] Refine `RecentFocusSessions.jsx` with `RECENT FOCUS` header, status dot indicators, duration font-mono, relative timestamps, and hover row transitions
+- [x] Refine `InsightSummary.jsx` titled `YOUR RHYTHM` with clean metric observations (no AI buzzwords or sparkle icons)
+- [x] Page entrance animation, reduced-motion compliance, dark mode contrast audit
+- [x] Documentation updates (`docs/DESIGN-SYSTEM.md`)
 
 ---
 
-## Phase 5C: Contextual AI Task Breakdown & Planning (Next Phase)
+## Phase 5C: Contextual AI Productivity Layer (Next Phase)
 - Integrate AI Task Breakdown and Time Estimation API endpoints
 - Build contextual AI Assistant drawer component
 - AI schedule proposal engine

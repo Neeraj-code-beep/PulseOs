@@ -44,7 +44,7 @@ export const InsightSummary = ({ overview, performance, trendData }) => {
       } else if (rate < 40) {
         list.push('Try planning fewer tasks and finishing them before adding more.');
       } else {
-        list.push(`Your task completion rate is at ${rate}%.`);
+        list.push(`Your task completion rate is currently ${rate}%.`);
       }
     }
 
@@ -62,16 +62,16 @@ export const InsightSummary = ({ overview, performance, trendData }) => {
           <Compass size={16} />
         </div>
         <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider font-mono">
-          YOUR RHYTHM OBSERVATIONS
+          YOUR RHYTHM
         </span>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 pt-1">
         {insights.map((text, idx) => (
-          <p key={idx} className="text-xs text-[var(--text-secondary)] leading-relaxed flex items-start gap-2">
+          <div key={idx} className="text-xs text-[var(--text-secondary)] leading-relaxed flex items-start gap-2.5">
             <span className="text-[var(--focus)] font-bold mt-0.5">•</span>
             <span>{text}</span>
-          </p>
+          </div>
         ))}
       </div>
     </div>

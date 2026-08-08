@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { motion as Motion, useReducedMotion } from 'framer-motion';
 import { getAnalyticsOverviewApi, getFocusTrendApi, getTaskPerformanceApi } from '../services/analyticsApi';
 import { getFocusSessionsApi } from '../services/focusApi';
 import { AnalyticsHeader } from '../components/analytics/AnalyticsHeader';
@@ -9,8 +10,11 @@ import { RecentFocusSessions } from '../components/analytics/RecentFocusSessions
 import { InsightSummary } from '../components/analytics/InsightSummary';
 
 export const Analytics = () => {
+  const shouldReduceMotion = useReducedMotion();
+
   // Period state for trend chart (7, 14, 30 days)
   const [period, setPeriod] = useState(7);
+  const [lastUpdated, setLastUpdated] = useState(false);
 
   // Section states
   const [overview, setOverview] = useState(null);
@@ -37,11 +41,12 @@ export const Analytics = () => {
       const res = await getAnalyticsOverviewApi();
       if (res.success && res.data) {
         setOverview(res.data);
+        setLastUpdated(true);
       } else {
-        setOverviewError(res.message || 'Failed to load overview data.');
+        setOverviewError(res.message || 'Unable to load productivity overview.');
       }
     } catch (err) {
-      setOverviewError(err.response?.data?.message || err.message || 'Network error.');
+      setOverviewError(err.response?.data?.message || err.message || 'Unable to connect to analytics service.');
     } finally {
       setOverviewLoading(false);
     }
@@ -56,10 +61,10 @@ export const Analytics = () => {
       if (res.success && res.data) {
         setTrendData(res.data);
       } else {
-        setTrendError(res.message || 'Failed to load focus trend.');
+        setTrendError(res.message || 'Unable to load study rhythm chart.');
       }
     } catch (err) {
-      setTrendError(err.response?.data?.message || err.message || 'Network error.');
+      setTrendError(err.response?.data?.message || err.message || 'Unable to connect to trend service.');
     } finally {
       setTrendLoading(false);
     }
@@ -74,10 +79,10 @@ export const Analytics = () => {
       if (res.success && res.data) {
         setPerformance(res.data);
       } else {
-        setPerformanceError(res.message || 'Failed to load task performance.');
+        setPerformanceError(res.message || 'Unable to load workload performance metrics.');
       }
     } catch (err) {
-      setPerformanceError(err.response?.data?.message || err.message || 'Network error.');
+      setPerformanceError(err.response?.data?.message || err.message || 'Unable to connect to performance service.');
     } finally {
       setPerformanceLoading(false);
     }
@@ -92,10 +97,10 @@ export const Analytics = () => {
       if (res.success && Array.isArray(res.data)) {
         setSessions(res.data);
       } else {
-        setSessionsError(res.message || 'Failed to load recent sessions.');
+        setSessionsError(res.message || 'Unable to load recent focus activity.');
       }
     } catch (err) {
-      setSessionsError(err.response?.data?.message || err.message || 'Network error.');
+      setSessionsError(err.response?.data?.message || err.message || 'Unable to connect to focus service.');
     } finally {
       setSessionsLoading(false);
     }
@@ -114,9 +119,18 @@ export const Analytics = () => {
   }, [period, fetchTrend]);
 
   return (
-    <div className="flex flex-col gap-6 max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-      {/* Header with period toggle */}
-      <AnalyticsHeader period={period} onPeriodChange={setPeriod} />
+    <Motion.div
+      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: 'easeOut' }}
+      className="flex flex-col gap-6 max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8"
+    >
+      {/* Header with period toggle & fetch indicator */}
+      <AnalyticsHeader
+        period={period}
+        onPeriodChange={setPeriod}
+        lastUpdated={lastUpdated}
+      />
 
       {/* Top Metric Strip */}
       <AnalyticsMetricStrip
@@ -157,6 +171,6 @@ export const Analytics = () => {
         performance={performance}
         trendData={trendData}
       />
-    </div>
+    </Motion.div>
   );
 };

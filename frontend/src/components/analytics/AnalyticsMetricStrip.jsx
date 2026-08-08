@@ -19,7 +19,8 @@ export const AnalyticsMetricStrip = ({ overview, loading, error }) => {
         {[...Array(5)].map((_, i) => (
           <div key={i} className="flex flex-col gap-2">
             <div className="h-3 w-16 bg-[var(--border-soft)] rounded" />
-            <div className="h-7 w-20 bg-[var(--border)] rounded" />
+            <div className="h-8 w-24 bg-[var(--border)] rounded" />
+            <div className="h-3 w-20 bg-[var(--border-soft)] rounded" />
           </div>
         ))}
       </div>
@@ -31,11 +32,11 @@ export const AnalyticsMetricStrip = ({ overview, loading, error }) => {
   }
 
   const metrics = [
-    { label: 'FOCUS TODAY', value: formatDuration(overview.focusTodayMinutes), sub: `${overview.sessionsToday} sessions today` },
+    { label: 'FOCUS TODAY', value: formatDuration(overview.focusTodayMinutes), sub: `${overview.sessionsToday || 0} session(s) today` },
     { label: 'FOCUS THIS WEEK', value: formatDuration(overview.focusWeekMinutes), sub: 'Mon – Sun total' },
     { label: 'SESSIONS', value: overview.sessionsWeek || 0, sub: 'this week' },
     { label: 'TASKS DONE', value: overview.completedTasksWeek || 0, sub: 'completed this week' },
-    { label: 'AVERAGE BLOCK', value: formatDuration(overview.averageSessionMinutes), sub: 'per focus session' },
+    { label: 'AVERAGE BLOCK', value: formatDuration(overview.averageSessionMinutes), sub: 'per session' },
   ];
 
   const containerVariants = {
@@ -45,7 +46,7 @@ export const AnalyticsMetricStrip = ({ overview, loading, error }) => {
       y: 0,
       transition: {
         duration: 0.25,
-        staggerChildren: 0.04,
+        staggerChildren: 0.05,
       },
     },
   };
@@ -71,7 +72,7 @@ export const AnalyticsMetricStrip = ({ overview, loading, error }) => {
           <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider font-mono">
             {item.label}
           </span>
-          <span className="text-2xl font-bold tracking-tight text-[var(--text-primary)] font-mono">
+          <span className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text-primary)] font-mono">
             {item.value}
           </span>
           <span className="text-[11px] text-[var(--text-secondary)]">

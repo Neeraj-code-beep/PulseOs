@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { Clock, RefreshCw, AlertCircle } from 'lucide-react';
+import { Clock, AlertCircle } from 'lucide-react';
 
 const formatDuration = (sec) => {
   if (!sec || sec <= 0) return '0m';
@@ -36,10 +36,10 @@ const formatRelativeTime = (dateInput) => {
 export const RecentFocusSessions = ({ sessions, loading, error, onRetry }) => {
   if (loading) {
     return (
-      <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-5 sm:p-6 shadow-xs flex flex-col gap-4">
-        <div className="h-4 w-36 bg-[var(--border-soft)] rounded animate-pulse" />
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="h-12 bg-[var(--border-soft)] rounded animate-pulse" />
+      <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-5 sm:p-6 shadow-xs flex flex-col gap-4 animate-pulse">
+        <div className="h-4 w-36 bg-[var(--border-soft)] rounded" />
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-10 bg-[var(--border-soft)] rounded" />
         ))}
       </div>
     );
@@ -70,7 +70,7 @@ export const RecentFocusSessions = ({ sessions, loading, error, onRetry }) => {
       <div className="flex items-center justify-between border-b border-[var(--border-soft)] pb-3">
         <div>
           <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider font-mono">
-            RECENT ACTIVITY
+            RECENT FOCUS
           </span>
           <h2 className="text-base font-bold text-[var(--text-primary)] mt-0.5">
             Focus session log
@@ -86,11 +86,11 @@ export const RecentFocusSessions = ({ sessions, loading, error, onRetry }) => {
           <div className="p-2 bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] rounded-full">
             <Clock size={18} />
           </div>
-          <span className="text-xs font-bold text-[var(--text-primary)]">
+          <span className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider font-mono">
             YOUR FOCUS HISTORY
           </span>
-          <p className="text-xs text-[var(--text-muted)] max-w-xs">
-            No sessions yet. Your completed focus blocks will appear here.
+          <p className="text-xs text-[var(--text-muted)] max-w-xs leading-relaxed">
+            No completed focus blocks yet. Start a focus session and your rhythm will appear here.
           </p>
         </div>
       ) : (
@@ -100,16 +100,24 @@ export const RecentFocusSessions = ({ sessions, loading, error, onRetry }) => {
             return (
               <div
                 key={session._id}
-                className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3 text-xs"
+                className="py-2.5 px-2 -mx-2 rounded-[var(--radius-sm)] flex items-center justify-between gap-3 text-xs transition-colors hover:bg-[var(--bg-surface-elevated)]"
               >
-                <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className="font-medium text-[var(--text-primary)] truncate">
-                    {session.taskTitle || 'Unbound focus block'}
-                  </span>
-                  <div className="flex items-center gap-2 text-[11px] text-[var(--text-secondary)]">
-                    <span className="capitalize font-mono">{session.mode || 'pomodoro'}</span>
-                    <span>·</span>
-                    <span>{formatRelativeTime(session.startedAt)}</span>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {/* Status Indicator Dot */}
+                  <span
+                    className={`w-2 h-2 rounded-full shrink-0 ${
+                      isCompleted ? 'bg-[var(--focus)]' : 'bg-[var(--text-muted)]'
+                    }`}
+                  />
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <span className="font-medium text-[var(--text-primary)] truncate">
+                      {session.taskTitle || 'Unbound focus block'}
+                    </span>
+                    <div className="flex items-center gap-2 text-[11px] text-[var(--text-secondary)]">
+                      <span className="capitalize font-mono">{session.mode || 'pomodoro'}</span>
+                      <span>·</span>
+                      <span>{formatRelativeTime(session.startedAt)}</span>
+                    </div>
                   </div>
                 </div>
 
@@ -117,13 +125,7 @@ export const RecentFocusSessions = ({ sessions, loading, error, onRetry }) => {
                   <span className="font-mono font-bold text-[var(--text-primary)]">
                     {formatDuration(session.actualSeconds)}
                   </span>
-                  <span
-                    className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border ${
-                      isCompleted
-                        ? 'bg-[var(--focus-soft)] text-[var(--focus)] border-[var(--focus)]/20'
-                        : 'bg-[var(--border-soft)] text-[var(--text-muted)] border-[var(--border)]'
-                    }`}
-                  >
+                  <span className="text-[11px] font-medium text-[var(--text-muted)] capitalize">
                     {isCompleted ? 'Completed' : 'Cancelled'}
                   </span>
                 </div>

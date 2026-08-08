@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { RefreshCw, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 const formatDuration = (mins) => {
   if (!mins || mins <= 0) return '0m';
@@ -13,10 +13,10 @@ const formatDuration = (mins) => {
 export const TaskPerformance = ({ performance, loading, error, onRetry }) => {
   if (loading) {
     return (
-      <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-5 sm:p-6 shadow-xs flex flex-col gap-4">
-        <div className="h-4 w-32 bg-[var(--border-soft)] rounded animate-pulse" />
-        <div className="h-20 bg-[var(--border-soft)] rounded animate-pulse" />
-        <div className="h-12 bg-[var(--border-soft)] rounded animate-pulse" />
+      <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-5 sm:p-6 shadow-xs flex flex-col gap-4 animate-pulse">
+        <div className="h-4 w-36 bg-[var(--border-soft)] rounded" />
+        <div className="h-28 bg-[var(--border-soft)] rounded" />
+        <div className="h-16 bg-[var(--border-soft)] rounded" />
       </div>
     );
   }
@@ -26,7 +26,7 @@ export const TaskPerformance = ({ performance, loading, error, onRetry }) => {
       <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-5 sm:p-6 shadow-xs flex flex-col items-center justify-center gap-2 text-center">
         <AlertCircle size={20} className="text-red-500" />
         <span className="text-xs font-bold text-[var(--text-primary)]">
-          Could not load task performance
+          Could not load workload comparison
         </span>
         <p className="text-[11px] text-[var(--text-secondary)]">{error}</p>
         <button
@@ -44,7 +44,7 @@ export const TaskPerformance = ({ performance, loading, error, onRetry }) => {
   const completionRate = performance?.completionRate || 0;
   const ratio = performance?.plannedVsActualRatio || 0;
 
-  // Max value for comparative progress bar width calculation
+  // Comparative bar width calculations
   const maxVal = Math.max(planned, focused, 1);
   const plannedPercent = Math.min(Math.round((planned / maxVal) * 100), 100);
   const focusedPercent = Math.min(Math.round((focused / maxVal) * 100), 100);
@@ -62,15 +62,16 @@ export const TaskPerformance = ({ performance, loading, error, onRetry }) => {
 
       {/* Comparison Visual */}
       {planned === 0 ? (
-        <div className="p-4 bg-[var(--bg-surface-elevated)] border border-[var(--border-soft)] rounded-[var(--radius-md)] text-xs text-[var(--text-muted)] text-center">
-          No planned estimates set on tasks yet.
+        <div className="p-4 bg-[var(--bg-surface-elevated)] border border-[var(--border-soft)] rounded-[var(--radius-md)] text-xs text-[var(--text-muted)] text-center flex flex-col gap-1">
+          <span className="font-semibold text-[var(--text-secondary)]">No planned estimates set on tasks yet.</span>
+          <span className="text-[11px]">Add estimated minutes when creating tasks to see workload comparisons.</span>
         </div>
       ) : (
         <div className="flex flex-col gap-3 p-4 bg-[var(--bg-surface-elevated)] border border-[var(--border-soft)] rounded-[var(--radius-md)]">
           {/* Planned bar */}
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between text-xs font-medium">
-              <span className="text-[var(--text-secondary)] font-mono">PLANNED</span>
+              <span className="text-[var(--text-secondary)] font-mono">PLANNED WORKLOAD</span>
               <span className="text-[var(--text-primary)] font-bold font-mono">{formatDuration(planned)}</span>
             </div>
             <div className="w-full h-2.5 bg-[var(--border-soft)] rounded-full overflow-hidden">
@@ -84,7 +85,7 @@ export const TaskPerformance = ({ performance, loading, error, onRetry }) => {
           {/* Focused bar */}
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between text-xs font-medium">
-              <span className="text-[var(--text-secondary)] font-mono">FOCUSED</span>
+              <span className="text-[var(--text-secondary)] font-mono">FOCUSED EXECUTION</span>
               <span className="text-[var(--focus)] font-bold font-mono">{formatDuration(focused)}</span>
             </div>
             <div className="w-full h-2.5 bg-[var(--border-soft)] rounded-full overflow-hidden">
@@ -95,10 +96,15 @@ export const TaskPerformance = ({ performance, loading, error, onRetry }) => {
             </div>
           </div>
 
-          {/* Ratio badge */}
-          <div className="pt-2 border-t border-[var(--border-soft)] flex items-center justify-between text-[11px]">
-            <span className="text-[var(--text-muted)]">Planned vs Actual ratio:</span>
-            <span className="font-bold font-mono text-[var(--text-primary)]">{ratio}x</span>
+          {/* Ratio & Note */}
+          <div className="pt-2 border-t border-[var(--border-soft)] flex flex-col gap-0.5 text-[11px]">
+            <div className="flex items-center justify-between">
+              <span className="text-[var(--text-muted)]">Planned vs Actual ratio:</span>
+              <span className="font-bold font-mono text-[var(--text-primary)]">{ratio}x</span>
+            </div>
+            <span className="text-[10px] text-[var(--text-muted)] italic">
+              Recorded focus time against estimated workload.
+            </span>
           </div>
         </div>
       )}
@@ -109,9 +115,9 @@ export const TaskPerformance = ({ performance, loading, error, onRetry }) => {
           <span className="text-2xl font-bold font-mono text-[var(--text-primary)]">
             {completionRate}%
           </span>
-          <span className="text-xs text-[var(--text-secondary)]">Overall task completion rate</span>
+          <span className="text-xs text-[var(--text-secondary)]">Task completion rate</span>
         </div>
-        <div className="w-16 h-2 bg-[var(--border-soft)] rounded-full overflow-hidden">
+        <div className="w-20 h-2 bg-[var(--border-soft)] rounded-full overflow-hidden">
           <div
             className="h-full bg-[var(--primary)] rounded-full transition-all duration-500"
             style={{ width: `${completionRate}%` }}

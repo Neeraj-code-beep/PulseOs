@@ -6,14 +6,14 @@ The application is a full-stack MERN student productivity workspace featuring a 
 ---
 
 ## Completed Functionality
-- **Productivity Insights Dashboard (Phase 5B.1)**:
-  - Full `/analytics` workspace built with Recharts data visualization in Warm Editorial design language.
-  - `AnalyticsHeader.jsx`: Title, subtitle, and 7D / 14D / 30D period selector.
-  - `AnalyticsMetricStrip.jsx`: Single editorial surface with subtle vertical dividers displaying Focus today, Focus this week, Sessions, Tasks done, and Average block.
-  - `FocusTrendChart.jsx`: Recharts bar chart with Forest Green (`var(--focus)`) styling, custom warm tooltips, zero-value day handling, strongest day micro-summary, and screen reader summary text.
-  - `TaskPerformance.jsx`: Compact horizontal comparison bar for Planned vs Focused time and task completion rate percentage.
-  - `RecentFocusSessions.jsx`: Recent focus session history log (limit 10) with task title, mode badge, duration, relative date/time, and status pills.
-  - `InsightSummary.jsx`: Deterministic metric observations of user's study rhythm.
+- **Productivity Insights Dashboard & Polish (Phase 5B.1 & 5B.2 Complete)**:
+  - Premium `/analytics` workspace built with Recharts data visualization in Warm Editorial design language.
+  - `AnalyticsHeader.jsx`: Editorial title, subtitle ("Your study rhythm, measured."), fetch timestamp metadata, and compact 7D / 14D / 30D control pills.
+  - `AnalyticsMetricStrip.jsx`: Single editorial surface with subtle vertical dividers, 28–36px font-mono numeric values, 10–11px uppercase tracking labels, and clean 2-column mobile layout.
+  - `FocusTrendChart.jsx`: Recharts bar chart with Forest Green (`var(--focus)`) styling, 320px container height, interactive bar hover emphasis (`brightness(1.12)`), subtle zero-day bars, warm custom tooltip, strongest day micro-summary, and screen reader text summary.
+  - `TaskPerformance.jsx`: `PLANNING VS EXECUTION` header, comparative horizontal bars for Planned vs Focused time, neutral explanatory note, and completion rate indicator.
+  - `RecentFocusSessions.jsx`: `RECENT FOCUS` header, status dot indicators (`var(--focus)` completed / `var(--text-muted)` cancelled), hover row transitions, duration font-mono, and relative timestamps.
+  - `InsightSummary.jsx`: `YOUR RHYTHM` observation card providing deterministic observations from actual metrics.
   - Independent loading skeletons and error handling per section.
   - Documentation: [docs/ANALYTICS-UI.md](file:///n:/Diwali/FullStack_ToDo_App/docs/ANALYTICS-UI.md).
 - **Analytics Data Foundation (Phase 5A)**:

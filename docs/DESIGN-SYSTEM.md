@@ -67,9 +67,11 @@ PulseOS is designed as a calm, precise, student-focused productivity instrument.
 
 ---
 
-## 6. Analytics Visualization Standards
-- **Focus Trend Visualization**: Custom Recharts BarChart styled with Forest Green (`var(--focus)`), subtle grid lines, and custom warm tooltips. No blue/purple gradients.
-- **Metric Strip**: Single editorial surface with subtle vertical dividers displaying key focus and completion metrics.
-- **Task Performance Bar**: Comparative horizontal progress bar comparing planned task duration against actual recorded focus duration.
-- **Recent Session Log**: Clean activity log with mode tags and completion status pills.
+## 6. Analytics Visualization & Hierarchy Standards
+- **Focus Trend Visualization**: Custom Recharts BarChart styled with Forest Green (`var(--focus)`), 320px container height, rounded top bar radii (`4px`), subtle zero-day bars, and interactive hover emphasis (`brightness(1.12)`). No blue/purple gradients or bouncing animations.
+- **Warm Tooltip**: Tooltip styled with `--bg-surface-elevated`, thin warm border, small shadow, displaying uppercase date, formatted duration (`1h 25m focused`), and session count.
+- **Metric Strip Hierarchy**: Single editorial surface with subtle vertical dividers (`divide-x`), 28–36px font-mono numbers for value dominance, and 10–11px uppercase tracking labels.
+- **Task Performance Visual**: Comparative horizontal progress bar comparing PLANNED workload (warm neutral `var(--border)`) against FOCUSED duration (Forest Green `var(--focus)`), accompanied by a neutral explanatory note ("Recorded focus time against estimated workload.") and task completion percentage.
+- **Recent Focus Activity**: Clean log rows with status dot indicators (`var(--focus)` completed / `var(--text-muted)` cancelled), hover background transitions, relative timestamps (`Today · 11:05 AM`), and text metadata.
+- **Deterministic Observations**: `YOUR RHYTHM` observation card providing clean bullet points calculated strictly from live metrics without AI terminology, chatbot badges, or sparkle icons.
 
