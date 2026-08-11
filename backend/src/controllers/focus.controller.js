@@ -2,11 +2,19 @@ const FocusSessionModel = require('../models/FocusSession');
 const TodoModel = require('../models/Todo');
 const mongoose = require('mongoose');
 
-// @desc    Create/Complete a Focus Session
+// @desc    Create/Complete a Focus Session (Scoped to authenticated user)
 // @route   POST /api/focus/sessions
 const createFocusSession = async (req, res) => {
   try {
-    const { taskId, mode, plannedMinutes, actualSeconds, status, startedAt, endedAt } = req.body;
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized access.',
+      });
+    }
+
+    const { taskId, mode, plannedMinutes, actualSeconds, status, startedAt, endedAt } = req.body || {};
 
     // Validate mode
     if (!mode || !['pomodoro', 'custom'].includes(mode)) {
@@ -62,7 +70,7 @@ const createFocusSession = async (req, res) => {
     let existingTodo = null;
     let taskTitleSnapshot = null;
 
-    // Validate taskId if provided
+    // Validate taskId if provided — MUST belong to current authenticated user
     if (taskId) {
       if (!mongoose.Types.ObjectId.isValid(taskId)) {
         return res.status(400).json({
@@ -71,7 +79,7 @@ const createFocusSession = async (req, res) => {
         });
       }
 
-      existingTodo = await TodoModel.findById(taskId);
+      existingTodo = await TodoModel.findOne({ _id: taskId, userId });
       if (!existingTodo) {
         return res.status(404).json({
           success: false,
@@ -81,8 +89,9 @@ const createFocusSession = async (req, res) => {
       taskTitleSnapshot = existingTodo.title;
     }
 
-    // Create FocusSession document
+    // Create FocusSession document with user ownership
     const newSession = await FocusSessionModel.create({
+      userId,
       taskId: taskId || null,
       taskTitle: taskTitleSnapshot,
       mode,
@@ -95,12 +104,12 @@ const createFocusSession = async (req, res) => {
 
     let updatedTodo = null;
 
-    // If completed and task exists, increment focusTimeSpent atomically
+    // If completed and task exists, increment focusTimeSpent atomically on user's task
     if (status === 'completed' && taskId && existingTodo) {
       const creditedMinutes = Math.max(1, Math.round(parsedActual / 60));
       try {
-        updatedTodo = await TodoModel.findByIdAndUpdate(
-          taskId,
+        updatedTodo = await TodoModel.findOneAndUpdate(
+          { _id: taskId, userId },
           { $inc: { focusTimeSpent: creditedMinutes } },
           { new: true },
         );
@@ -125,15 +134,23 @@ const createFocusSession = async (req, res) => {
   }
 };
 
-// @desc    Get Recent Focus Sessions
+// @desc    Get Recent Focus Sessions for current user
 // @route   GET /api/focus/sessions
 const getFocusSessions = async (req, res) => {
   try {
-    let limit = Number(req.query.limit) || 10;
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized access.',
+      });
+    }
+
+    let limit = Number(req.query?.limit) || 10;
     if (limit < 1) limit = 10;
     if (limit > 50) limit = 50;
 
-    const sessions = await FocusSessionModel.find()
+    const sessions = await FocusSessionModel.find({ userId })
       .sort({ createdAt: -1 })
       .limit(limit);
 
@@ -150,17 +167,28 @@ const getFocusSessions = async (req, res) => {
   }
 };
 
-// @desc    Get Focus Summary (Today & All-Time)
+// @desc    Get Focus Summary (Today & All-Time) for current user
 // @route   GET /api/focus/summary
 const getFocusSummary = async (req, res) => {
   try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized access.',
+      });
+    }
+
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
 
     const endOfToday = new Date();
     endOfToday.setHours(23, 59, 59, 999);
 
-    const completedSessions = await FocusSessionModel.find({ status: 'completed' });
+    const completedSessions = await FocusSessionModel.find({
+      userId,
+      status: 'completed',
+    });
 
     let focusSecondsToday = 0;
     let completedSessionsToday = 0;

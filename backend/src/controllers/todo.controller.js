@@ -1,11 +1,19 @@
 const TodoModel = require('../models/Todo');
 const mongoose = require('mongoose');
 
-// @desc    Create a new Todo
+// @desc    Create a new Todo (Scoped to authenticated user)
 // @route   POST /api/todos
 const createTodo = async (req, res) => {
   try {
-    const { title, reminderTime, dueDate, priority, estimatedMinutes } = req.body;
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized access.',
+      });
+    }
+
+    const { title, reminderTime, dueDate, priority, estimatedMinutes } = req.body || {};
 
     if (!title || typeof title !== 'string' || !title.trim()) {
       return res.status(400).json({
@@ -61,7 +69,9 @@ const createTodo = async (req, res) => {
       parsedEstMinutes = Math.round(num);
     }
 
+    // Always derive userId strictly from authenticated JWT context
     const newTodo = await TodoModel.create({
+      userId,
       title: title.trim(),
       dueDate: parsedDueDate,
       priority: parsedPriority,
@@ -84,11 +94,19 @@ const createTodo = async (req, res) => {
   }
 };
 
-// @desc    Get all Todos
+// @desc    Get all Todos for current authenticated user
 // @route   GET /api/todos
 const getTodos = async (req, res) => {
   try {
-    const todos = await TodoModel.find().sort({ createdAt: -1 });
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized access.',
+      });
+    }
+
+    const todos = await TodoModel.find({ userId }).sort({ createdAt: -1 });
     return res.status(200).json({
       success: true,
       message: 'Todos retrieved successfully.',
@@ -102,10 +120,18 @@ const getTodos = async (req, res) => {
   }
 };
 
-// @desc    Update a Todo
+// @desc    Update a Todo owned by current authenticated user
 // @route   PATCH /api/todos/:id
 const updateTodo = async (req, res) => {
   try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized access.',
+      });
+    }
+
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -115,7 +141,8 @@ const updateTodo = async (req, res) => {
       });
     }
 
-    const existingTodo = await TodoModel.findById(id);
+    // Scope query by both taskId AND authenticated userId
+    const existingTodo = await TodoModel.findOne({ _id: id, userId });
     if (!existingTodo) {
       return res.status(404).json({
         success: false,
@@ -138,7 +165,6 @@ const updateTodo = async (req, res) => {
     if (req.body.completed !== undefined) {
       const isCompleted = Boolean(req.body.completed);
       updates.completed = isCompleted;
-      // Set completedAt timestamp when transitioning to completed, clear it when uncompleted
       if (isCompleted && !existingTodo.completed) {
         updates.completedAt = new Date();
       } else if (!isCompleted && existingTodo.completed) {
@@ -199,15 +225,15 @@ const updateTodo = async (req, res) => {
           });
         }
         updates.reminderTime = dateVal;
-        // Reset reminderSent when reminderTime is updated or cleared
         updates.reminderSent = false;
       }
     }
 
-    const updatedTodo = await TodoModel.findByIdAndUpdate(id, updates, {
-      new: true,
-      runValidators: true,
-    });
+    const updatedTodo = await TodoModel.findOneAndUpdate(
+      { _id: id, userId },
+      updates,
+      { new: true, runValidators: true }
+    );
 
     return res.status(200).json({
       success: true,
@@ -222,10 +248,18 @@ const updateTodo = async (req, res) => {
   }
 };
 
-// @desc    Delete a Todo
+// @desc    Delete a Todo owned by current authenticated user
 // @route   DELETE /api/todos/:id
 const deleteTodo = async (req, res) => {
   try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized access.',
+      });
+    }
+
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -235,7 +269,7 @@ const deleteTodo = async (req, res) => {
       });
     }
 
-    const deletedTodo = await TodoModel.findByIdAndDelete(id);
+    const deletedTodo = await TodoModel.findOneAndDelete({ _id: id, userId });
     if (!deletedTodo) {
       return res.status(404).json({
         success: false,

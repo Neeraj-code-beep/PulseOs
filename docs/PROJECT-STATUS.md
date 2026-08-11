@@ -6,6 +6,17 @@ The application is a full-stack MERN student productivity workspace featuring a 
 ---
 
 ## Completed Functionality
+- **Authentication & User Data Ownership (Phase 5D Complete)**:
+  - User model schema (`User.js`) with email normalization, unique index, bcryptjs password hashing, and timestamps.
+  - Auth service & controller (`auth.service.js`, `auth.controller.js`) providing `POST /api/auth/register`, `POST /api/auth/login`, and `GET /api/auth/me`.
+  - JWT authentication middleware (`auth.middleware.js`) populating `req.user.userId`.
+  - Frontend Auth layer (`AuthProvider`, `AuthContext`, `useAuth`, `authApi.jsx`) with automatic session restoration and token persistence in localStorage.
+  - Protected route component (`ProtectedRoute.jsx`) securing `/app`, `/tasks`, `/focus`, `/analytics`.
+  - Warm Editorial Auth UI (`Login.jsx`, `Register.jsx`) adhering to design system.
+  - User Data Ownership scoping on `Todo` model (`userId`), `FocusSession` model (`userId`), CRUD controllers, and Analytics aggregations.
+  - Backend test matrices: `auth.test.js` (9/9 passed), `ownership.test.js` (10/10 passed).
+  - Technical documentation: `docs/AUTH-SYSTEM.md`.
+
 - **AI Time Estimation & Smart Scheduling (Phase 5C.2 Complete)**:
   - AI time estimation service (`estimateTaskTime`) with prompt engineering for realistic student work duration and response validation (positive integer, reason capped at 200 chars).
   - Deterministic smart schedule algorithm (`generateScheduleBlocks`) — no LLM: splits work into 25–60m focus blocks with 5–10m breaks, validates against availability window, returns `fitsAvailability: false` when insufficient.

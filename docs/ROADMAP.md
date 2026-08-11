@@ -94,11 +94,15 @@
 - [x] Backend AI test suite expanded (23/23 tests passed — estimation validation, schedule algorithm, bounds safety)
 - [x] Documentation updates (AI-SYSTEM.md, ARCHITECTURE.md, PRODUCT-SPEC.md, UX-FLOWS.md)
 
----
+## Phase 5D: Authentication & User Data Ownership (Completed)
+- [x] User model schema (`models/User.js`) with email normalization, unique index, bcryptjs password hashing, and timestamps
+- [x] Auth service & controller (`auth.service.js`, `auth.controller.js`) for `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`
+- [x] JWT authentication middleware (`auth.middleware.js`) populating `req.user.userId`
+- [x] Frontend Auth layer (`AuthProvider`, `AuthContext`, `useAuth`, `authApi.jsx`) with automatic session restoration and token persistence
+- [x] Protected route component (`ProtectedRoute.jsx`) securing `/app`, `/tasks`, `/focus`, `/analytics`
+- [x] Warm Editorial Auth UI (`Login.jsx`, `Register.jsx`) with DM Sans typography, coral CTAs, and error handling
+- [x] User Data Ownership scoping on `Todo` model (`userId`), `FocusSession` model (`userId`), CRUD controllers, and Analytics aggregations
+- [x] Backend test matrices (`auth.test.js` 9/9 passed, `ownership.test.js` 10/10 passed)
+- [x] Technical documentation (`docs/AUTH-SYSTEM.md`)
 
-## Phase 5D: AI Planning Intelligence / Contextual Productivity Layer (Next Phase)
-- Multi-day scheduling across availability windows
-- Contextual focus tips based on task patterns
-- Schedule persistence and history
-- AI-powered daily planning recommendations
 

@@ -1,10 +1,18 @@
 const analyticsService = require('../services/analytics.service');
 
-// @desc    Get productivity overview metrics
+// @desc    Get productivity overview metrics for authenticated user
 // @route   GET /api/analytics/overview
 const getOverview = async (req, res) => {
   try {
-    const data = await analyticsService.getOverview();
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized access.',
+      });
+    }
+
+    const data = await analyticsService.getOverview(userId);
     return res.status(200).json({
       success: true,
       message: 'Analytics overview retrieved successfully.',
@@ -18,15 +26,22 @@ const getOverview = async (req, res) => {
   }
 };
 
-// @desc    Get focus session trends for past N days (7, 14, 30)
+// @desc    Get focus session trends for past N days (7, 14, 30) for authenticated user
 // @route   GET /api/analytics/focus-trend
 const getFocusTrend = async (req, res) => {
   try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized access.',
+      });
+    }
+
     const daysQuery = req.query.days;
     let days = 7; // Default value
 
     if (daysQuery !== undefined) {
-      // Validate that days is an integer and one of [7, 14, 30]
       const parsedDays = Number(daysQuery);
       if (!Number.isInteger(parsedDays) || ![7, 14, 30].includes(parsedDays)) {
         return res.status(400).json({
@@ -37,7 +52,7 @@ const getFocusTrend = async (req, res) => {
       days = parsedDays;
     }
 
-    const data = await analyticsService.getFocusTrend(days);
+    const data = await analyticsService.getFocusTrend(userId, days);
     return res.status(200).json({
       success: true,
       message: 'Focus trend retrieved successfully.',
@@ -51,11 +66,19 @@ const getFocusTrend = async (req, res) => {
   }
 };
 
-// @desc    Get task performance metrics (planned vs focused minutes & completion rate)
+// @desc    Get task performance metrics for authenticated user
 // @route   GET /api/analytics/task-performance
 const getTaskPerformance = async (req, res) => {
   try {
-    const data = await analyticsService.getTaskPerformance();
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized access.',
+      });
+    }
+
+    const data = await analyticsService.getTaskPerformance(userId);
     return res.status(200).json({
       success: true,
       message: 'Task performance metrics retrieved successfully.',

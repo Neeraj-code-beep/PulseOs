@@ -1,7 +1,7 @@
 # PulseOS / Productive App - Current Architecture & System Design
 
 ## Overview
-PulseOS is a single-user full-stack task management and productivity application. This document details the **CURRENT** system architecture following Phase 5A Analytics Data Foundation.
+PulseOS is a multi-user full-stack task management and productivity application featuring JWT authentication and user-scoped productivity data isolation. This document details the **CURRENT** system architecture following Phase 5D Authentication & User Data Ownership.
 
 ---
 
@@ -9,51 +9,37 @@ PulseOS is a single-user full-stack task management and productivity application
 
 ```
 [ React 19 Client (Vite + React Router 7) ]
-  ├── Router & Application Shell (AppLayout.jsx)
-  │     ├── Top Desktop Header (Active Focus Indicator) + Mobile Bottom Nav
-  │     └── Routes: /app (Today), /tasks (Tasks), /focus (Focus), /analytics (Analytics)
-  ├── Focus Components (src/components/focus/)
-  │     ├── TimerDisplay.jsx (SVG circular progress + font-timer numerals)
-  │     ├── TimerControls.jsx (IDLE, RUNNING, PAUSED, COMPLETED controls)
-  │     ├── FocusModeSelector.jsx (Pomodoro 25m vs Custom duration choices)
-  │     ├── FocusTaskSelector.jsx (Incomplete task binding + snapshot details)
-  │     └── SessionComplete.jsx (Restrained completion feedback + mark task complete)
-  ├── Task Components (src/components/tasks/)
-  │     ├── TaskItem.jsx (Task card with focusTimeSpent metadata & deep link)
-  │     └── ...
+  ├── Router & Application Shell (AppLayout.jsx + ProtectedRoute.jsx)
+  │     ├── Public Routes: /login, /register
+  │     ├── Protected Routes: /app (Today), /tasks (Tasks), /focus (Focus), /analytics (Analytics)
+  │     └── Top Desktop Header (User Profile + Logout) + Mobile Bottom Nav
   ├── Context Layer
   │     ├── ThemeProvider & useTheme
-  │     ├── TodoProvider & TodoContext (with replaceTodo for instant state updates)
+  │     ├── AuthProvider & useAuth (JWT token restoration, login, register, logout)
+  │     ├── TodoProvider & TodoContext (User-scoped tasks)
   │     ├── SocketProvider & SocketContext
   │     └── FocusProvider & useFocus (Timestamp-based timer state machine)
-  └── Services (focusApi.jsx, analyticsApi.jsx & Api.jsx)
+  └── Services (authApi.jsx, focusApi.jsx, analyticsApi.jsx, aiApi.jsx & Api.jsx with JWT Bearer interceptor)
             │
             │ HTTP REST (JSON)        Socket.IO (WebSocket)
             ▼                         ▼
 [ Express 5 Node.js Server + Socket.IO ]
-  ├── AI Routes, Controller, Service & Provider (Phase 5C.1 + 5C.2)
-  │     ├── POST /api/ai/breakdown  (Structured task subtasks & total duration estimate)
-  │     ├── POST /api/ai/estimate   (AI-powered realistic task duration estimate)
-  │     ├── POST /api/ai/schedule   (Deterministic focus-block schedule proposal)
-  │     ├── Controller: controllers/ai.controller.js
-  │     ├── Service: services/ai.service.js (validation, prompt engineering, output validation, schedule algorithm)
-  │     └── Provider: integrations/ai/ai.provider.js (Google Gemini @google/genai SDK integration)
-  ├── Analytics Routes, Controller & Service
-  │     ├── GET /api/analytics/overview        (Productivity overview metrics)
-  │     ├── GET /api/analytics/focus-trend     (Daily focus trend for 7/14/30 days)
-  │     └── GET /api/analytics/task-performance (Planned vs actual & completion rate)
-  │     └── Service: analytics.service.js (date boundaries, MongoDB aggregation, metric calculations)
-  ├── Focus Routes & Controller (routes/FocusRoutes.js & controllers/focus.controller.js)
-  │     ├── POST /api/focus/sessions (Creates session & increments Todo.focusTimeSpent via $inc)
-  │     ├── GET  /api/focus/sessions (Paginated recent sessions list)
-  │     └── GET  /api/focus/summary  (Today & all-time focus statistics)
-  ├── Todo Routes & Controller (routes/TodoRoutes.js & controllers/todo.controller.js)
+  ├── Auth Routes, Controller, Service & Middleware (Phase 5D)
+  │     ├── POST /api/auth/register (Account registration & password hashing with bcryptjs)
+  │     ├── POST /api/auth/login    (Authentication & JWT token generation)
+  │     ├── GET  /api/auth/me       (Token validation & user profile retrieval)
+  │     └── auth.middleware.js      (Verifies Bearer JWT & populates req.user.userId)
+  ├── AI Routes & Controller (Secured with authMiddleware)
+  ├── Analytics Routes, Controller & Service (User-scoped aggregations via req.user.userId)
+  ├── Focus Routes & Controller (User-scoped session logging & task binding)
+  ├── Todo Routes & Controller (User-scoped CRUD)
   └── Reminder Scheduler (scheduler/reminder.scheduler.js)
             │
             ▼
 [ MongoDB Database ]
-  ├── Collection: todos (Schema: title, completed, completedAt, dueDate, priority, estimatedMinutes, reminderTime, reminderSent, focusTimeSpent)
-  └── Collection: focussessions (Schema: taskId, taskTitle, mode, plannedMinutes, actualSeconds, status, startedAt, endedAt)
+  ├── Collection: users (Schema: name, email, passwordHash, timestamps)
+  ├── Collection: todos (Schema: userId, title, completed, completedAt, dueDate, priority, estimatedMinutes, reminderTime, reminderSent, focusTimeSpent)
+  └── Collection: focussessions (Schema: userId, taskId, taskTitle, mode, plannedMinutes, actualSeconds, status, startedAt, endedAt)
 ```
 
 ---
@@ -62,10 +48,12 @@ PulseOS is a single-user full-stack task management and productivity application
 
 ```
 ThemeProvider
-  └── TodoProvider
-        └── SocketProvider
-              └── FocusProvider
-                    ├── ReminderListener (headless)
-                    ├── App (routes + pages)
-                    └── ToastContainer
+  └── AuthProvider
+        └── TodoProvider
+              └── SocketProvider
+                    └── FocusProvider
+                          ├── ReminderListener (headless)
+                          ├── App (routes + pages)
+                          └── ToastContainer
 ```
+

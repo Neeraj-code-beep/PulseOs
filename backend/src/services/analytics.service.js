@@ -1,5 +1,6 @@
 const TodoModel = require('../models/Todo');
 const FocusSessionModel = require('../models/FocusSession');
+const mongoose = require('mongoose');
 
 /**
  * Returns the start of today (00:00:00.000) in local server timezone.
@@ -50,21 +51,24 @@ const formatLocalDateString = (date) => {
 };
 
 /**
- * Gets overview productivity metrics using FocusSession and Todo data.
+ * Gets overview productivity metrics using FocusSession and Todo data scoped to userId.
  */
-const getOverview = async () => {
+const getOverview = async (userId) => {
+  const userObjectId = typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId;
+
   const startOfToday = getStartOfToday();
   const startOfTomorrow = getStartOfTomorrow();
   const startOfWeek = getStartOfCurrentWeek();
   const startOfNextWeek = getStartOfNextWeek();
 
-  // Aggregate FocusSession metrics for Today, This Week, and All-Time
+  // Aggregate FocusSession metrics for Today, This Week, and All-Time scoped to userObjectId
   const [focusStats] = await FocusSessionModel.aggregate([
     {
       $facet: {
         today: [
           {
             $match: {
+              userId: userObjectId,
               status: 'completed',
               startedAt: { $gte: startOfToday, $lt: startOfTomorrow },
             },
@@ -80,6 +84,7 @@ const getOverview = async () => {
         week: [
           {
             $match: {
+              userId: userObjectId,
               status: 'completed',
               startedAt: { $gte: startOfWeek, $lt: startOfNextWeek },
             },
@@ -95,6 +100,7 @@ const getOverview = async () => {
         allTime: [
           {
             $match: {
+              userId: userObjectId,
               status: 'completed',
             },
           },
@@ -110,17 +116,19 @@ const getOverview = async () => {
     },
   ]);
 
-  const todayStats = focusStats.today[0] || { totalSeconds: 0, sessionCount: 0 };
-  const weekStats = focusStats.week[0] || { totalSeconds: 0, sessionCount: 0 };
-  const allTimeStats = focusStats.allTime[0] || { totalSeconds: 0, sessionCount: 0 };
+  const todayStats = focusStats?.today[0] || { totalSeconds: 0, sessionCount: 0 };
+  const weekStats = focusStats?.week[0] || { totalSeconds: 0, sessionCount: 0 };
+  const allTimeStats = focusStats?.allTime[0] || { totalSeconds: 0, sessionCount: 0 };
 
-  // Count completed tasks for today and this week using completedAt
+  // Count completed tasks for today and this week scoped to userObjectId
   const completedTasksToday = await TodoModel.countDocuments({
+    userId: userObjectId,
     completed: true,
     completedAt: { $gte: startOfToday, $lt: startOfTomorrow },
   });
 
   const completedTasksWeek = await TodoModel.countDocuments({
+    userId: userObjectId,
     completed: true,
     completedAt: { $gte: startOfWeek, $lt: startOfNextWeek },
   });
@@ -147,9 +155,11 @@ const getOverview = async () => {
 };
 
 /**
- * Gets daily focus session trends for the specified number of days (7, 14, or 30).
+ * Gets daily focus session trends for the specified number of days (7, 14, or 30) scoped to userId.
  */
-const getFocusTrend = async (days) => {
+const getFocusTrend = async (userId, days) => {
+  const userObjectId = typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId;
+
   const startOfToday = getStartOfToday();
   const startOfTomorrow = getStartOfTomorrow();
 
@@ -157,8 +167,9 @@ const getFocusTrend = async (days) => {
   const startOfRange = new Date(startOfToday);
   startOfRange.setDate(startOfRange.getDate() - (days - 1));
 
-  // Query completed sessions within range
+  // Query completed sessions within range scoped to userId
   const sessions = await FocusSessionModel.find({
+    userId: userObjectId,
     status: 'completed',
     startedAt: { $gte: startOfRange, $lt: startOfTomorrow },
   }).lean();
@@ -201,13 +212,16 @@ const getFocusTrend = async (days) => {
 };
 
 /**
- * Gets overall task performance and focus completion metrics.
+ * Gets overall task performance and focus completion metrics scoped to userId.
  */
-const getTaskPerformance = async () => {
-  // Sum estimated minutes for all tasks with planned estimatedMinutes
+const getTaskPerformance = async (userId) => {
+  const userObjectId = typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId;
+
+  // Sum estimated minutes for all user tasks with planned estimatedMinutes
   const plannedAggregate = await TodoModel.aggregate([
     {
       $match: {
+        userId: userObjectId,
         estimatedMinutes: { $ne: null, $gt: 0 },
       },
     },
@@ -221,10 +235,11 @@ const getTaskPerformance = async () => {
 
   const plannedMinutes = plannedAggregate[0]?.totalPlannedMinutes || 0;
 
-  // Sum total focused minutes across all completed focus sessions
+  // Sum total focused minutes across all completed focus sessions for user
   const focusAggregate = await FocusSessionModel.aggregate([
     {
       $match: {
+        userId: userObjectId,
         status: 'completed',
       },
     },
@@ -239,9 +254,9 @@ const getTaskPerformance = async () => {
   const totalFocusSeconds = focusAggregate[0]?.totalSeconds || 0;
   const focusedMinutes = Math.round(totalFocusSeconds / 60);
 
-  // Calculate task completion rate
-  const totalTasks = await TodoModel.countDocuments();
-  const completedTasks = await TodoModel.countDocuments({ completed: true });
+  // Calculate task completion rate scoped to user
+  const totalTasks = await TodoModel.countDocuments({ userId: userObjectId });
+  const completedTasks = await TodoModel.countDocuments({ userId: userObjectId, completed: true });
 
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 

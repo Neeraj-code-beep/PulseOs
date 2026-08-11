@@ -12,8 +12,15 @@ const runAuthTests = async () => {
   await mongoose.connect(mongoUri);
   console.log('Connected to DB for Auth test suite.');
 
-  // Clean User collection before running tests
+  // Clean User collection & sync indexes before running tests
+  try {
+    await UserModel.collection.dropIndexes();
+  } catch {
+    // ignore if collection didn't exist
+  }
+  await UserModel.syncIndexes();
   await UserModel.deleteMany({});
+
 
   console.log('\n--- Running Backend Auth Test Matrix (9/9) ---\n');
 

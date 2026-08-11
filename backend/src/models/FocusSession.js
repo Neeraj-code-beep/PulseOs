@@ -2,6 +2,13 @@ const mongoose = require('mongoose');
 
 const FocusSessionSchema = new mongoose.Schema(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true,
+    },
+
     taskId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'ToDo',
