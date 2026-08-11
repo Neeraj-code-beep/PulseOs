@@ -8,17 +8,20 @@ import {
   Sparkles,
   Plus,
   X,
+  LogOut,
 } from 'lucide-react';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { Button } from '../components/ui/Button';
 import { Footer } from '../components/layout/Footer';
 import { useFocus } from '../context/useFocus';
+import { useAuth } from '../context/useAuth';
 
 export const AppLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isAiOpen, setIsAiOpen] = useState(false);
   const { timerState } = useFocus();
+  const { user, logout } = useAuth();
   const isFocusActive = timerState === 'RUNNING';
 
   const navItems = [
@@ -93,6 +96,26 @@ export const AppLayout = ({ children }) => {
               <span>Ask Pulse</span>
             </button>
             <ThemeToggle />
+
+            {/* Authenticated User pill & Logout button */}
+            {user && (
+              <div className="hidden sm:flex items-center gap-1.5 pl-2 border-l border-[var(--border-soft)]">
+                <span
+                  title={user.email}
+                  className="w-7 h-7 rounded-full bg-[var(--primary-soft)] text-[var(--primary)] font-bold text-xs flex items-center justify-center font-mono"
+                >
+                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                </span>
+                <button
+                  onClick={logout}
+                  title="Logout of PulseOS"
+                  className="p-1.5 text-[var(--text-muted)] hover:text-[var(--danger)] rounded-[var(--radius-md)] hover:bg-[var(--bg-surface-elevated)] transition-colors cursor-pointer"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+            )}
+
             <Button
               variant="primary"
               size="sm"
@@ -105,6 +128,7 @@ export const AppLayout = ({ children }) => {
           </div>
         </div>
       </header>
+
 
       {/* Main Content Workspace */}
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 md:px-6 py-6 pb-24 md:pb-12">
