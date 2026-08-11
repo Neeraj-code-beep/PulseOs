@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 const express = require('express');
 const http = require('http');
+const AuthRoutes = require('./src/routes/AuthRoutes');
 const TodoRoutes = require('./src/routes/TodoRoutes');
 const FocusRoutes = require('./src/routes/FocusRoutes');
 const AnalyticsRoutes = require('./src/routes/AnalyticsRoutes');
@@ -27,10 +28,12 @@ app.use(
 app.use(express.json());
 
 // Routes
+app.use('/api/auth', AuthRoutes);
 app.use('/api/todos', TodoRoutes);
 app.use('/api/focus', FocusRoutes);
 app.use('/api/analytics', AnalyticsRoutes);
 app.use('/api/ai', AiRoutes);
+
 
 // Create single HTTP server
 const server = http.createServer(app);
