@@ -15,4 +15,7 @@ router.post('/estimate', aiController.estimateTaskTime);
 // POST /api/ai/schedule
 router.post('/schedule', aiController.proposeSchedule);
 
+// POST /api/ai/daily-plan
+router.post('/daily-plan', aiController.getDailyPlan);
+
 module.exports = router;

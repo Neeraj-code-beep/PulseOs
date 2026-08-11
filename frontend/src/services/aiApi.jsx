@@ -32,3 +32,12 @@ export const proposeScheduleApi = async (payload) => {
   return res.data;
 };
 
+/**
+ * Calls backend POST /api/ai/daily-plan to generate daily recommendations synthesizing tasks, focus history, completion rates & availability.
+ * @param {Object} [availability] - Optional availability window { startTime, endTime }.
+ * @returns {Promise<Object>} API response payload { success, message, data }.
+ */
+export const getDailyPlanApi = async (availability) => {
+  const res = await API.post('api/ai/daily-plan', { availability });
+  return res.data;
+};

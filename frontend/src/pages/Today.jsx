@@ -2,6 +2,7 @@ import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TodoContext } from '../context/TodoContext';
 import { HeroWorkspace } from '../components/home/HeroWorkspace';
+import { DailyPlanCard } from '../components/ai/DailyPlanCard';
 import { DailyWorkspace } from '../components/home/DailyWorkspace';
 import { Methodology } from '../components/home/Methodology';
 import { FocusPreview } from '../components/home/FocusPreview';
@@ -41,7 +42,10 @@ export const Today = () => {
         onFocusClick={() => navigate('/focus')}
       />
 
-      {/* 2. Daily Execution Workspace */}
+      {/* 2. AI Daily Focus Recommendations Card */}
+      <DailyPlanCard />
+
+      {/* 3. Daily Execution Workspace */}
       <DailyWorkspace
         todos={todos}
         isLoading={isLoading}
@@ -49,19 +53,19 @@ export const Today = () => {
         nextReminderTodo={nextReminderTodo}
       />
 
-      {/* 3. Methodology Story (Dark Contrast Section) */}
+      {/* 4. Methodology Story (Dark Contrast Section) */}
       <Methodology />
 
-      {/* 4. Focus Preview */}
+      {/* 5. Focus Preview */}
       <FocusPreview />
 
-      {/* 5. Smart Planning Preview */}
+      {/* 6. Smart Planning Preview */}
       <PlanningPreview />
 
-      {/* 6. Productivity Insights Preview */}
+      {/* 7. Productivity Insights Preview */}
       <InsightsPreview />
 
-      {/* 7. Final Action Call */}
+      {/* 8. Final Action Call */}
       <FinalCTA />
     </div>
   );
