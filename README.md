@@ -1,224 +1,172 @@
 # PulseOS
 
-PulseOS is a modern, full-stack productivity operating system built with Node.js, Express, MongoDB, React, and Socket.IO. It combines task management, Pomodoro focus tracking, real-time productivity synchronization, user-scoped data security, analytical insights, and Google Gemini AI features into a unified workspace.
+> A real-time, AI-assisted productivity workspace designed to unify task planning, focus tracking, and workload analytics.
+
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=flat-square&logo=vite&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express-5.0-000000?style=flat-square&logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-9.0-47A248?style=flat-square&logo=mongodb&logoColor=white)
+![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8-010101?style=flat-square&logo=socket.io&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Google_Gemini-2.0-8E75B2?style=flat-square&logo=googlegemini&logoColor=white)
 
 ---
 
-## 📌 Project Overview
+## 📌 Why PulseOS?
 
-PulseOS provides a complete productivity workflow for managing tasks, executing focus sessions, tracking habits and metrics, and generating AI-assisted task schedules.
-
-### Key Capabilities
-- **JWT Authentication & Security**: End-to-end user isolation securing all endpoints, database records, and Socket.IO rooms.
-- **Task Management**: Full task CRUD supporting priority scoring, estimated duration, due dates, and custom reminder scheduling.
-- **Real-Time Synchronized Reminders**: Socket.IO room messaging (`user:<userId>`) combined with background cron scheduling (`node-cron`) and native browser notification integration.
-- **Focus Engine**: Dynamic Pomodoro and Custom focus session timer with task binding, persistence (`FocusSession`), and instant metric updates.
-- **Productivity Analytics**: Analytics dashboard tracking streak counts, focus time trends (7, 14, 30 days), and planned vs. actual task performance metrics.
-- **AI Productivity Suite**: Google Gemini 2.0 (`@google/genai`) integration offering task breakdown, time estimation, smart availability scheduling, and structured daily focus planning.
+Most todo applications suffer from context fragmentation—tasks live in one list, timers in another app, and productivity analytics in spreadsheets. PulseOS integrates task management, Pomodoro focus tracking, background reminder scheduling, and AI-assisted workflow optimization into a single, user-isolated system.
 
 ---
 
-## 🛠️ Architecture & Tech Stack
+## ⚡ Core Experience
 
-### Frontend
-- **Framework**: React 19 (Vite)
-- **Styling**: Vanilla CSS (Design Tokens, HSL Color Palette, Modern Typography, Responsive Flex/Grid Layouts, Dark/Light Themes)
-- **State & Communication**: Axios, Socket.IO Client, React Router DOM v7, Lucide Icons
+### Tasks & Workspace
+Full-lifecycle task CRUD with priority scoring, estimated duration, due dates, and customizable reminder triggers. All task states are bound to authenticated user accounts.
 
-### Backend
-- **Runtime & Server**: Node.js, Express 5
-- **Database & ORM**: MongoDB, Mongoose 9
-- **Real-Time Messaging**: Socket.IO 4
-- **Task Scheduler**: node-cron 4
-- **Authentication**: JSON Web Tokens (`jsonwebtoken`), `bcryptjs`
-- **AI Provider**: Google Gemini SDK (`@google/genai`)
+### Focus Engine
+Configurable Pomodoro and Custom focus timers integrated with task binding. Completed focus intervals are automatically saved to `FocusSession` history and reflected in real-time metrics.
 
-```
-PulseOS Architecture Architecture:
-Routes -> Controllers -> Services -> Models / Integrations
-                             │
-                             ├── Socket.IO & Cron Scheduler
-                             └── Gemini AI Provider Integration
-```
+### Real-Time Reminders
+Socket.IO room messaging (`user:<userId>`) coupled with a background cron scheduler (`node-cron`) to deliver isolated, real-time client alerts and trigger native browser notifications.
+
+### Productivity Analytics
+Analytical dashboard displaying streak counters, 7/14/30-day focus time trends, and planned vs. actual time performance metrics.
+
+### AI Assistant
+Backend-integrated Google Gemini 2.0 (`@google/genai`) service supporting subtask breakdown, time estimation, availability scheduling, and structured daily plan synthesis.
 
 ---
 
-## 📂 Repository Structure
+## 🏗 System Architecture
 
-```bash
-PulseOS/
-├── backend/
-│   ├── server.js               # Server entry point & socket/scheduler initialization
-│   ├── src/
-│   │   ├── app.js              # Express app setup
-│   │   ├── controllers/        # Route handlers (auth, todo, focus, analytics, ai)
-│   │   ├── services/           # Core domain & business logic
-│   │   ├── models/             # Mongoose schemas (User, Todo, FocusSession)
-│   │   ├── middleware/         # Auth verification & error handling
-│   │   ├── routes/             # REST route declarations
-│   │   ├── sockets/            # Socket.IO connection & user room management
-│   │   ├── scheduler/          # Background cron reminder dispatcher
-│   │   ├── integrations/ai/    # Gemini 2.0 API provider integration
-│   │   └── tests/              # Test suites (auth, ownership, analytics, socket, ai)
-│   └── package.json
-│
-├── frontend/
-│   ├── src/
-│   │   ├── components/         # UI components (tasks, focus, analytics, ai, auth, layout)
-│   │   ├── context/            # React context providers (AuthContext, SocketContext, ThemeContext)
-│   │   ├── pages/              # Application views (Today, Tasks, Focus, Analytics, Login, Register)
-│   │   ├── services/           # API HTTP clients & notification utilities
-│   │   └── styles/             # CSS design tokens & theme declarations
-│   ├── package.json
-│   └── vite.config.js
-│
-├── docs/                       # System specification & architectural documentation
-└── README.md
+```mermaid
+flowchart TD
+    subgraph Client ["React 19 Frontend (Vite)"]
+        UI[App Workspace UI]
+        SocketClient[Socket.IO Client]
+        AuthContext[Auth & Theme Context]
+    end
+
+    subgraph Server ["Node.js / Express 5 Backend"]
+        AuthMiddleware[JWT Middleware]
+        Routes[API Router]
+        Services[Service Layer]
+        SocketServer[Socket.IO Server]
+        Scheduler[node-cron Scheduler]
+    end
+
+    subgraph Data ["Database & External Services"]
+        MongoDB[(MongoDB / Mongoose)]
+        Gemini[Google Gemini 2.0 API]
+    end
+
+    UI --> AuthMiddleware
+    AuthMiddleware --> Routes
+    Routes --> Services
+    Services --> MongoDB
+    Services --> Gemini
+    Scheduler --> SocketServer
+    SocketServer <-->|user:userId room| SocketClient
 ```
 
 ---
 
-## ⚙️ Environment Variables
+## 🛠 Tech Stack
 
-### Backend Configuration (`backend/.env`)
-
-Configure the following environment variables in `backend/.env`:
-
-| Variable | Description | Default / Example |
-| :--- | :--- | :--- |
-| `PORT` | Server listening port | `3000` |
-| `MONGO_URL` | MongoDB connection URI | `mongodb://localhost:27017/pulseos` |
-| `CORS_ORIGIN` | Allowed client origin(s) | `http://localhost:5173` |
-| `JWT_SECRET` | Secret key for signing JWT tokens | `your_jwt_secret_key_here` |
-| `JWT_EXPIRES_IN` | Token expiration duration | `7d` |
-| `GEMINI_API_KEY` | Google Gemini API key (backend-only) | `your_gemini_api_key_here` |
-| `AI_MODEL` | Gemini model name | `gemini-2.0-flash` |
-
-*Note: Frontend environment configuration can optionally override the API endpoint via `VITE_API_URL` and `VITE_SOCKET_URL` (defaults to `http://localhost:3000`).*
+- **Frontend**: React 19, Vite, Vanilla CSS Design System, Axios, React Router v7, Lucide Icons
+- **Backend**: Node.js, Express 5, JWT (`jsonwebtoken`), `bcryptjs`
+- **Database**: MongoDB, Mongoose 9
+- **Realtime & Jobs**: Socket.IO 4, node-cron 4
+- **AI Integration**: Google Gemini SDK (`@google/genai`)
 
 ---
 
-## 🔧 Installation & Setup
+## ⚙️ Setup & Environment Configuration
 
 ### Prerequisites
-- **Node.js**: v18.0.0 or higher
-- **MongoDB**: Local MongoDB instance or MongoDB Atlas URI
+- Node.js v18.0.0+
+- Local MongoDB or MongoDB Atlas instance
 
-### 1. Clone Repository
-
-```bash
-git clone https://github.com/Neeraj-code-beep/PulseOs.git
-cd PulseOs
-```
-
-### 2. Backend Setup
+### Backend Setup
 
 ```bash
 cd backend
 npm install
-
-# Create environment file based on example template
 cp .env.example .env
-# Set your MONGO_URL, JWT_SECRET, and GEMINI_API_KEY inside backend/.env
-
-# Start development server
 npm run dev
 ```
-*Backend server runs at: `http://localhost:3000`*
 
-### 3. Frontend Setup
+Configure `backend/.env`:
 
-In a new terminal window:
+| Environment Variable | Purpose | Default / Example |
+| :--- | :--- | :--- |
+| `PORT` | Listening port | `3000` |
+| `MONGO_URL` | MongoDB connection URI | `mongodb://localhost:27017/pulseos` |
+| `CORS_ORIGIN` | Allowed CORS origin | `http://localhost:5173` |
+| `JWT_SECRET` | Secret for signing JWTs | `your_jwt_secret_key_here` |
+| `JWT_EXPIRES_IN` | Token expiration duration | `7d` |
+| `GEMINI_API_KEY` | Backend-only Gemini key | `your_gemini_api_key_here` |
+| `AI_MODEL` | Gemini model target | `gemini-2.0-flash` |
+
+*Backend server runs at `http://localhost:3000`.*
+
+### Frontend Setup
 
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-*Frontend client runs at: `http://localhost:5173`*
+
+*Frontend client runs at `http://localhost:5173`.*
 
 ---
 
-## 🌐 REST API Endpoints
+## 🌐 API Overview
 
-All endpoints except `/api/auth/register` and `/api/auth/login` require a valid JWT Bearer token in the `Authorization` header (`Authorization: Bearer <token>`).
+All protected routes require `Authorization: Bearer <token>`.
 
-### Authentication (`/api/auth`)
-- `POST /api/auth/register` - Create user account
-- `POST /api/auth/login` - Authenticate user & receive JWT
-- `GET /api/auth/me` - Fetch authenticated user profile
-
-### Todos (`/api/todos`)
-- `GET /api/todos` - Retrieve user's todo list
-- `POST /api/todos` - Create a new todo
-- `PATCH /api/todos/:id` - Update an existing todo
-- `DELETE /api/todos/:id` - Delete a todo
-
-### Focus Sessions (`/api/focus`)
-- `POST /api/focus/sessions` - Record completed focus session
-- `GET /api/focus/sessions` - Retrieve focus session history
-- `GET /api/focus/summary` - Get total focus metrics summary
-
-### Analytics (`/api/analytics`)
-- `GET /api/analytics/overview` - Today metrics, streak counts, summary stats
-- `GET /api/analytics/focus-trend` - Historical focus trend (7, 14, 30 days)
-- `GET /api/analytics/task-performance` - Estimated vs. actual focus time performance
-
-### AI Assistant (`/api/ai`)
-- `POST /api/ai/breakdown` - Break down task into structured subtasks
-- `POST /api/ai/estimate` - Estimate task completion time
-- `POST /api/ai/schedule` - Propose focus schedule blocks within availability
-- `POST /api/ai/daily-plan` - Synthesize user data into a daily focus plan
+| Module | Method | Endpoint | Description |
+| :--- | :--- | :--- | :--- |
+| **Auth** | `POST` | `/api/auth/register` | User account registration |
+| | `POST` | `/api/auth/login` | Account login & JWT issuance |
+| | `GET` | `/api/auth/me` | Current user profile |
+| **Todos** | `GET` | `/api/todos` | List user tasks |
+| | `POST` | `/api/todos` | Create task |
+| | `PATCH` | `/api/todos/:id` | Update task status or fields |
+| | `DELETE` | `/api/todos/:id` | Delete task |
+| **Focus** | `POST` | `/api/focus/sessions` | Record focus session |
+| | `GET` | `/api/focus/sessions` | Fetch session history |
+| | `GET` | `/api/focus/summary` | Fetch focus metrics |
+| **Analytics** | `GET` | `/api/analytics/overview` | Overview & streak metrics |
+| | `GET` | `/api/analytics/focus-trend` | Focus trend (7, 14, 30 days) |
+| | `GET` | `/api/analytics/task-performance` | Estimated vs actual focus ratio |
+| **AI** | `POST` | `/api/ai/breakdown` | Generate subtasks |
+| | `POST` | `/api/ai/estimate` | Estimate duration |
+| | `POST` | `/api/ai/schedule` | Propose schedule blocks |
+| | `POST` | `/api/ai/daily-plan` | Generate daily plan synthesis |
 
 ---
 
-## 🧪 Verification & Testing
+## 🧪 Verification & Test Quality
 
-### Running Backend Unit & Integration Tests
-
-```bash
-cd backend
-node src/tests/auth.test.js
-node src/tests/ownership.test.js
-node src/tests/analytics.test.js
-node src/tests/socket.test.js
-node src/tests/ai.test.js
-node src/tests/aiPlan.test.js
-```
-
-### Running Frontend Validation
-
-```bash
-cd frontend
-
-# Code style & ESLint check
-npm run lint
-
-# Production build verification
-npm run build
-```
+- **Backend Integration Tests**: `64 / 64 PASSED` (Auth, Data Ownership Isolation, Analytics, Sockets, AI Breakdown/Schedule/Plan)
+- **Frontend Code Quality**: `0 ESLint errors, 0 warnings`
+- **Production Build**: `Vite build completed successfully` (`15.09s`)
 
 ---
 
-## ✨ Implemented vs. Future Scope
+## 🚀 Future Roadmap
 
-### Implemented Features
-- User registration, login, and JWT session handling
-- Task CRUD with priority, due date, duration, and reminders
-- Background reminder cron job & Socket.IO real-time client alerts
-- Pomodoro timer with task binding & FocusSession history
-- Analytics dashboard (streaks, focus trends, task performance)
-- Gemini AI task breakdown, time estimation, smart scheduling, and daily planning
-- Responsive Warm Editorial design system with dark/light themes
-
-### Future Improvements
-- Multi-device push notification service worker (WebPush API)
-- Google Calendar / iCal bi-directional synchronization
-- Collaborative shared workspace & team task delegation
-- Voice input assistant for rapid task creation
+- Web Push service worker integration for background device notifications.
+- Bi-directional Google Calendar and iCal synchronization.
+- Team workspaces and shared task delegation.
+- Voice-assisted task capture.
 
 ---
 
-## 📜 License
+## 👨‍💻 Author
 
-This project is open-source and available under the [MIT License](LICENSE).
+**Neeraj Mishra**
+Full Stack Developer
+GitHub: [https://github.com/Neeraj-code-beep](https://github.com/Neeraj-code-beep)
