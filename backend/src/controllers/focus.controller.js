@@ -118,6 +118,16 @@ const createFocusSession = async (req, res) => {
       }
     }
 
+    // Emit realtime productivity:updated event to user room
+    try {
+      const { getIO } = require('../sockets/socket');
+      getIO()
+        .to(`user:${userId}`)
+        .emit('productivity:updated', { type: status === 'completed' ? 'focus_completed' : 'focus_updated' });
+    } catch {
+      // Non-blocking socket emission fail-safe
+    }
+
     return res.status(201).json({
       success: true,
       message: 'Focus session created successfully.',
@@ -126,6 +136,7 @@ const createFocusSession = async (req, res) => {
         task: updatedTodo || existingTodo || null,
       },
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,

@@ -235,6 +235,16 @@ const updateTodo = async (req, res) => {
       { new: true, runValidators: true }
     );
 
+    // Emit realtime productivity:updated event to user room
+    try {
+      const { getIO } = require('../sockets/socket');
+      getIO()
+        .to(`user:${userId}`)
+        .emit('productivity:updated', { type: updates.completed ? 'task_completed' : 'task_updated' });
+    } catch {
+      // Non-blocking socket emission fail-safe
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Todo updated successfully.',
@@ -275,6 +285,14 @@ const deleteTodo = async (req, res) => {
         success: false,
         message: 'Todo not found.',
       });
+    }
+
+    // Emit realtime productivity:updated event to user room
+    try {
+      const { getIO } = require('../sockets/socket');
+      getIO().to(`user:${userId}`).emit('productivity:updated', { type: 'task_deleted' });
+    } catch {
+      // Non-blocking socket emission fail-safe
     }
 
     return res.status(200).json({

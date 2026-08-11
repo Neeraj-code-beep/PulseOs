@@ -92,3 +92,12 @@ Tasks → Edit task → PULSE ASSISTANT
 ```
 Each action is independent. A user can break down, estimate, or schedule in any order.
 
+---
+
+## 10. Real-Time User-Scoped Socket & Realtime Analytics Synchronization Flow (Phase 5E)
+1. **Authenticated Socket Connection**: When a user logs in, `SocketProvider` passes the JWT token in the WebSocket handshake. The server verifies the token and joins room `user:<userId>`.
+2. **User-Scoped Reminder Delivery**: When a scheduled reminder is due, `reminder.scheduler.js` emits `todo:reminder` specifically to room `user:<userId>`. No cross-user leakage or global broadcasts occur.
+3. **Event Trigger**: When a focus session is saved or a task is updated/completed, the backend emits `productivity:updated` (payload `{ type: 'focus_completed' | 'task_completed' | 'task_updated' }`) to room `user:<userId>`.
+4. **Analytics Refetch**: The `Analytics` page socket listener catches `productivity:updated` and executes a debounced (300ms) refetch of overview metrics, trend charts, task performance, and recent focus sessions without requiring manual browser page refresh.
+
+

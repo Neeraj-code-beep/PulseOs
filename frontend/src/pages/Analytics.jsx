@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion as Motion, useReducedMotion } from 'framer-motion';
 import { getAnalyticsOverviewApi, getFocusTrendApi, getTaskPerformanceApi } from '../services/analyticsApi';
 import { getFocusSessionsApi } from '../services/focusApi';
+import { useSocket } from '../context/useSocket';
 import { AnalyticsHeader } from '../components/analytics/AnalyticsHeader';
 import { AnalyticsMetricStrip } from '../components/analytics/AnalyticsMetricStrip';
 import { FocusTrendChart } from '../components/analytics/FocusTrendChart';
@@ -11,6 +12,7 @@ import { InsightSummary } from '../components/analytics/InsightSummary';
 
 export const Analytics = () => {
   const shouldReduceMotion = useReducedMotion();
+  const { socket } = useSocket();
 
   // Period state for trend chart (7, 14, 30 days)
   const [period, setPeriod] = useState(7);
@@ -32,6 +34,8 @@ export const Analytics = () => {
   const [sessions, setSessions] = useState([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [sessionsError, setSessionsError] = useState(null);
+
+  const debounceTimerRef = useRef(null);
 
   // Fetch Overview
   const fetchOverview = useCallback(async () => {
@@ -117,6 +121,34 @@ export const Analytics = () => {
   useEffect(() => {
     fetchTrend(period);
   }, [period, fetchTrend]);
+
+  // Realtime Socket.IO listener for productivity:updated event
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleProductivityUpdate = () => {
+      // Small debounce (300ms) to prevent multiple rapid network requests
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+
+      debounceTimerRef.current = setTimeout(() => {
+        fetchOverview();
+        fetchTrend(period);
+        fetchPerformance();
+        fetchSessions();
+      }, 300);
+    };
+
+    socket.on('productivity:updated', handleProductivityUpdate);
+
+    return () => {
+      socket.off('productivity:updated', handleProductivityUpdate);
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [socket, period, fetchOverview, fetchTrend, fetchPerformance, fetchSessions]);
 
   return (
     <Motion.div

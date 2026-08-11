@@ -1,4 +1,5 @@
 const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
 
 let io = null;
 
@@ -15,22 +16,51 @@ function initializeSocket(server, options = {}) {
     ...options,
   });
 
-  io.on('connection', (socket) => {
-    console.log(`Socket connected: ${socket.id}`);
+  // Middleware to authenticate incoming socket connections via JWT
+  io.use((socket, next) => {
+    const token =
+      socket.handshake.auth?.token ||
+      (socket.handshake.headers?.authorization
+        ? socket.handshake.headers.authorization.replace('Bearer ', '')
+        : null);
 
-    // Immediate catch-up: deliver any pending due reminders on reconnect
-    // Use lazy require to avoid circular dependency with reminder.scheduler.js
+    if (!token) {
+      return next(new Error('Authentication token missing'));
+    }
+
+    try {
+      const secret = process.env.JWT_SECRET || 'fallback_secret_key_pulseos';
+      const decoded = jwt.verify(token, secret);
+
+      if (!decoded || !decoded.userId) {
+        return next(new Error('Invalid token payload'));
+      }
+
+      // Attach verified userId to socket
+      socket.userId = decoded.userId.toString();
+      next();
+    } catch (err) {
+      return next(new Error('Authentication failed: ' + err.message));
+    }
+  });
+
+  io.on('connection', (socket) => {
+    const userRoom = `user:${socket.userId}`;
+    socket.join(userRoom);
+    console.log(`Authenticated socket connected: ${socket.id} (Joined room: ${userRoom})`);
+
+    // Immediate catch-up: deliver any pending due reminders for this specific user on connect
     setTimeout(() => {
       try {
         const { processDueReminders } = require('../scheduler/reminder.scheduler');
-        processDueReminders();
+        processDueReminders(socket.userId);
       } catch (err) {
         console.error('Catch-up reminder processing error:', err.message);
       }
     }, 1000);
 
     socket.on('disconnect', () => {
-      console.log(`Socket disconnected: ${socket.id}`);
+      console.log(`Socket disconnected: ${socket.id} (User: ${socket.userId})`);
     });
   });
 
@@ -49,8 +79,20 @@ function getConnectedClientCount() {
   return io.sockets.sockets.size;
 }
 
+function getConnectedUserCount() {
+  if (!io) return 0;
+  const userRooms = new Set();
+  for (const socket of io.sockets.sockets.values()) {
+    if (socket.userId) {
+      userRooms.add(socket.userId);
+    }
+  }
+  return userRooms.size;
+}
+
 module.exports = {
   initializeSocket,
   getIO,
   getConnectedClientCount,
+  getConnectedUserCount,
 };
