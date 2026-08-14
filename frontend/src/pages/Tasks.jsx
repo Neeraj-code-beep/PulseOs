@@ -175,6 +175,7 @@ export const Tasks = () => {
               onAddClick={() => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
+              onClearFilters={() => setActiveFilter('all')}
             />
           ) : (
             <TaskList

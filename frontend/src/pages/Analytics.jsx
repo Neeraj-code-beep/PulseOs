@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion as Motion, useReducedMotion } from 'framer-motion';
-import { getAnalyticsOverviewApi, getFocusTrendApi, getTaskPerformanceApi } from '../services/analyticsApi';
-import { getFocusSessionsApi } from '../services/focusApi';
+import { getAnalyticsDashboardApi } from '../services/analyticsApi';
 import { useSocket } from '../context/useSocket';
 import { AnalyticsHeader } from '../components/analytics/AnalyticsHeader';
 import { AnalyticsMetricStrip } from '../components/analytics/AnalyticsMetricStrip';
@@ -18,109 +17,43 @@ export const Analytics = () => {
   const [period, setPeriod] = useState(7);
   const [lastUpdated, setLastUpdated] = useState(false);
 
-  // Section states
+  // Section states derived from consolidated dashboard endpoint
   const [overview, setOverview] = useState(null);
-  const [overviewLoading, setOverviewLoading] = useState(true);
-  const [overviewError, setOverviewError] = useState(null);
-
   const [trendData, setTrendData] = useState(null);
-  const [trendLoading, setTrendLoading] = useState(true);
-  const [trendError, setTrendError] = useState(null);
-
   const [performance, setPerformance] = useState(null);
-  const [performanceLoading, setPerformanceLoading] = useState(true);
-  const [performanceError, setPerformanceError] = useState(null);
-
   const [sessions, setSessions] = useState([]);
-  const [sessionsLoading, setSessionsLoading] = useState(true);
-  const [sessionsError, setSessionsError] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const debounceTimerRef = useRef(null);
 
-  // Fetch Overview
-  const fetchOverview = useCallback(async () => {
+  // Fetch Consolidated Dashboard
+  const fetchDashboard = useCallback(async (days) => {
     try {
-      setOverviewLoading(true);
-      setOverviewError(null);
-      const res = await getAnalyticsOverviewApi();
+      setLoading(true);
+      setError(null);
+      const res = await getAnalyticsDashboardApi(days);
       if (res.success && res.data) {
-        setOverview(res.data);
+        setOverview(res.data.overview || null);
+        setTrendData({ days, points: res.data.trend || [] });
+        setPerformance(res.data.taskPerformance || null);
+        setSessions(res.data.recentSessions || []);
         setLastUpdated(true);
       } else {
-        setOverviewError(res.message || 'Unable to load productivity overview.');
+        setError(res.message || 'Unable to load analytics dashboard.');
       }
     } catch (err) {
-      setOverviewError(err.response?.data?.message || err.message || 'Unable to connect to analytics service.');
+      setError(err.response?.data?.message || err.message || 'Unable to connect to analytics service.');
     } finally {
-      setOverviewLoading(false);
+      setLoading(false);
     }
   }, []);
 
-  // Fetch Focus Trend for current period
-  const fetchTrend = useCallback(async (days) => {
-    try {
-      setTrendLoading(true);
-      setTrendError(null);
-      const res = await getFocusTrendApi(days);
-      if (res.success && res.data) {
-        setTrendData(res.data);
-      } else {
-        setTrendError(res.message || 'Unable to load study rhythm chart.');
-      }
-    } catch (err) {
-      setTrendError(err.response?.data?.message || err.message || 'Unable to connect to trend service.');
-    } finally {
-      setTrendLoading(false);
-    }
-  }, []);
-
-  // Fetch Task Performance
-  const fetchPerformance = useCallback(async () => {
-    try {
-      setPerformanceLoading(true);
-      setPerformanceError(null);
-      const res = await getTaskPerformanceApi();
-      if (res.success && res.data) {
-        setPerformance(res.data);
-      } else {
-        setPerformanceError(res.message || 'Unable to load workload performance metrics.');
-      }
-    } catch (err) {
-      setPerformanceError(err.response?.data?.message || err.message || 'Unable to connect to performance service.');
-    } finally {
-      setPerformanceLoading(false);
-    }
-  }, []);
-
-  // Fetch Recent Sessions
-  const fetchSessions = useCallback(async () => {
-    try {
-      setSessionsLoading(true);
-      setSessionsError(null);
-      const res = await getFocusSessionsApi(10);
-      if (res.success && Array.isArray(res.data)) {
-        setSessions(res.data);
-      } else {
-        setSessionsError(res.message || 'Unable to load recent focus activity.');
-      }
-    } catch (err) {
-      setSessionsError(err.response?.data?.message || err.message || 'Unable to connect to focus service.');
-    } finally {
-      setSessionsLoading(false);
-    }
-  }, []);
-
-  // Initial mount data fetching
+  // Fetch dashboard when period changes or on mount
   useEffect(() => {
-    fetchOverview();
-    fetchPerformance();
-    fetchSessions();
-  }, [fetchOverview, fetchPerformance, fetchSessions]);
-
-  // Refetch trend whenever period changes
-  useEffect(() => {
-    fetchTrend(period);
-  }, [period, fetchTrend]);
+    fetchDashboard(period);
+  }, [period, fetchDashboard]);
 
   // Realtime Socket.IO listener for productivity:updated event
   useEffect(() => {
@@ -133,10 +66,7 @@ export const Analytics = () => {
       }
 
       debounceTimerRef.current = setTimeout(() => {
-        fetchOverview();
-        fetchTrend(period);
-        fetchPerformance();
-        fetchSessions();
+        fetchDashboard(period);
       }, 300);
     };
 
@@ -148,7 +78,7 @@ export const Analytics = () => {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [socket, period, fetchOverview, fetchTrend, fetchPerformance, fetchSessions]);
+  }, [socket, period, fetchDashboard]);
 
   return (
     <Motion.div
@@ -167,33 +97,33 @@ export const Analytics = () => {
       {/* Top Metric Strip */}
       <AnalyticsMetricStrip
         overview={overview}
-        loading={overviewLoading}
-        error={overviewError}
+        loading={loading}
+        error={error}
       />
 
       {/* Main Focus Trend Visualization */}
       <FocusTrendChart
         trendData={trendData}
         period={period}
-        loading={trendLoading}
-        error={trendError}
-        onRetry={() => fetchTrend(period)}
+        loading={loading}
+        error={error}
+        onRetry={() => fetchDashboard(period)}
       />
 
       {/* Secondary Insight Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TaskPerformance
           performance={performance}
-          loading={performanceLoading}
-          error={performanceError}
-          onRetry={fetchPerformance}
+          loading={loading}
+          error={error}
+          onRetry={() => fetchDashboard(period)}
         />
 
         <RecentFocusSessions
           sessions={sessions}
-          loading={sessionsLoading}
-          error={sessionsError}
-          onRetry={fetchSessions}
+          loading={loading}
+          error={error}
+          onRetry={() => fetchDashboard(period)}
         />
       </div>
 

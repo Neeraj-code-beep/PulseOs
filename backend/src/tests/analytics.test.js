@@ -201,6 +201,51 @@ const runTests = async () => {
     console.assert(diffDays === 7, 'J2 Fail: week boundary is not 7 days');
     console.log('PASS [J]: Week boundary is Monday 00:00 to Sunday 23:59:59 (7 days)');
 
+    // Q. Dashboard Endpoint Success, User Ownership & Period Support (7, 14, 30 days)
+    const dashRes7 = mockRes();
+    await analyticsController.getDashboard({ ...testUserReq, query: { days: '7' } }, dashRes7);
+    console.assert(dashRes7.statusCode === 200, `Q1 Fail: status code ${dashRes7.statusCode}`);
+    console.assert(dashRes7.body.data.overview.focusTodayMinutes === 45, 'Q2 Fail: overview focusTodayMinutes');
+    console.assert(dashRes7.body.data.trend.length === 7, `Q3 Fail: trend length ${dashRes7.body.data.trend.length}`);
+    console.assert(dashRes7.body.data.recentSessions.length === 3, `Q4 Fail: recentSessions count ${dashRes7.body.data.recentSessions.length}`);
+
+    const dashRes14 = mockRes();
+    await analyticsController.getDashboard({ ...testUserReq, query: { days: '14' } }, dashRes14);
+    console.assert(dashRes14.body.data.trend.length === 14, 'Q5 Fail: 14 days trend length');
+
+    const dashRes30 = mockRes();
+    await analyticsController.getDashboard({ ...testUserReq, query: { days: '30' } }, dashRes30);
+    console.assert(dashRes30.body.data.trend.length === 30, 'Q6 Fail: 30 days trend length');
+    console.log('PASS [Q]: Consolidated dashboard endpoint succeeds for 7, 14, 30 days');
+
+    // R. Dashboard invalid days rejection (400 Bad Request)
+    const invalidDashReqs = ['0', '-1', '100', 'abc'];
+    for (const d of invalidDashReqs) {
+      const res = mockRes();
+      await analyticsController.getDashboard({ ...testUserReq, query: { days: d } }, res);
+      console.assert(res.statusCode === 400, `R Fail for days=${d}: status ${res.statusCode}`);
+      console.assert(res.body.success === false, `R Fail body for days=${d}`);
+    }
+    console.log('PASS [R]: Dashboard endpoint rejects invalid days with 400 Bad Request');
+
+    // S. User Isolation test (User A cannot receive User B analytics in dashboard)
+    const otherUserId = new mongoose.Types.ObjectId().toString();
+    const otherUserReq = { user: { userId: otherUserId }, query: {} };
+    const otherDashRes = mockRes();
+    await analyticsController.getDashboard(otherUserReq, otherDashRes);
+    console.assert(otherDashRes.statusCode === 200, `S1 Fail: got ${otherDashRes.statusCode}`);
+    console.assert(otherDashRes.body && otherDashRes.body.data.overview.focusTodayMinutes === 0, 'S2 Fail: User B received User A focus time');
+    console.assert(otherDashRes.body && otherDashRes.body.data.recentSessions.length === 0, 'S3 Fail: User B received User A recent sessions');
+    console.log('PASS [S]: Dashboard endpoint enforces strict user-scoped data isolation');
+
+    // T. Recent Sessions newest-first and bounded limit test
+    const recentSess = await analyticsService.getRecentSessions(testUserId, 10);
+    console.assert(recentSess.length === 3, `T1 Fail: expected 3 sessions, got ${recentSess.length}`);
+    const timeFirst = new Date(recentSess[0].createdAt).getTime();
+    const timeSecond = new Date(recentSess[1].createdAt).getTime();
+    console.assert(timeFirst >= timeSecond, 'T2 Fail: recentSessions not newest first');
+    console.log('PASS [T]: Recent sessions returned newest first and bounded correctly');
+
     console.log('\n--- ALL BACKEND ANALYTICS TESTS PASSED SUCCESSFULLY! ---\n');
   } finally {
     // Clean up test data

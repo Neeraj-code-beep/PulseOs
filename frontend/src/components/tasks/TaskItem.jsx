@@ -143,6 +143,7 @@ export const TaskItem = ({ todo, onToggleComplete, onDelete, onEdit }) => {
                 onEdit(todo);
               }}
               className="flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--text-primary)] hover:bg-[var(--bg-surface)] text-left cursor-pointer"
+              aria-label="Edit task"
             >
               <Edit2 size={13} /> Edit
             </button>
@@ -155,6 +156,7 @@ export const TaskItem = ({ todo, onToggleComplete, onDelete, onEdit }) => {
                   window.location.href = `/focus?task=${id}`;
                 }}
                 className="flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--focus)] hover:bg-[var(--focus-soft)] text-left cursor-pointer"
+                aria-label="Start focus session on task"
               >
                 <Clock size={13} /> Focus
               </a>
@@ -165,6 +167,7 @@ export const TaskItem = ({ todo, onToggleComplete, onDelete, onEdit }) => {
                 setShowConfirmDelete(true);
               }}
               className="flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--danger)] hover:bg-[var(--danger)]/10 text-left cursor-pointer"
+              aria-label="Delete task"
             >
               <Trash2 size={13} /> Delete
             </button>
@@ -182,12 +185,14 @@ export const TaskItem = ({ todo, onToggleComplete, onDelete, onEdit }) => {
             <button
               onClick={() => setShowConfirmDelete(false)}
               className="px-2 py-0.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
+              aria-label="Cancel task deletion"
             >
               Cancel
             </button>
             <button
               onClick={() => onDelete(id)}
               className="px-2.5 py-1 text-xs bg-[var(--danger)] text-white rounded-md cursor-pointer"
+              aria-label="Confirm task deletion"
             >
               Delete
             </button>

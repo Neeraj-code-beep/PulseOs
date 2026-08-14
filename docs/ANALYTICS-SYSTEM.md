@@ -56,14 +56,23 @@ Standard API Response
 - Set to `null` when `completed` transitions `true → false`.
 - Unrelated updates preserve `completedAt`.
 
-## API Contracts & Response Format
-```json
-{
-  "success": true,
-  "message": "...",
-  "data": { ... }
-}
-```
+## Consolidated Dashboard Endpoint (`GET /api/analytics/dashboard?days=7`)
+- **Supported Parameters**: `days` = `7`, `14`, or `30` (defaults to `7`). Any other value returns `400 Bad Request`.
+- **User Ownership**: Derived strictly from verified JWT `req.user.userId`.
+- **Response Contract**:
+  ```json
+  {
+    "success": true,
+    "message": "Analytics dashboard fetched successfully.",
+    "data": {
+      "overview": { "focusTodayMinutes": 45, "focusWeekMinutes": 120, ... },
+      "trend": [ { "date": "2026-08-14", "label": "Fri", "focusMinutes": 45, "sessions": 2 }, ... ],
+      "taskPerformance": { "plannedMinutes": 60, "focusedMinutes": 45, ... },
+      "recentSessions": [ { "_id": "...", "mode": "pomodoro", "actualSeconds": 1800, ... } ]
+    }
+  }
+  ```
+- **Performance & Realtime Sync**: Consolidates 4 separate backend queries into a single `Promise.all` operation. Realtime `productivity:updated` events on the frontend trigger a single debounced (300ms) GET `/api/analytics/dashboard` call instead of multiple parallel network requests.
 
 ## Zero-Data Behavior
 For a fresh or empty database, all endpoints return valid responses with zero values (`0` minutes, `0` sessions, `0` tasks) without exceptions or missing fields.

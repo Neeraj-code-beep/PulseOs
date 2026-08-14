@@ -12,6 +12,7 @@ export const TimerControls = () => {
           variant="primary"
           onClick={startTimer}
           className="px-6 py-2.5 bg-[var(--focus)] hover:bg-[var(--focus)]/90 text-white font-semibold text-xs rounded-[var(--radius-md)] flex items-center gap-2 cursor-pointer shadow-md transition-all hover:-translate-y-0.5"
+          aria-label="Start focus session timer"
         >
           <Play size={15} fill="currentColor" />
           <span>Start Focus</span>
@@ -24,6 +25,7 @@ export const TimerControls = () => {
             variant="secondary"
             onClick={pauseTimer}
             className="px-5 py-2 text-xs font-semibold flex items-center gap-2"
+            aria-label="Pause focus timer"
           >
             <Pause size={15} fill="currentColor" />
             <span>Pause</span>
@@ -32,6 +34,7 @@ export const TimerControls = () => {
             variant="ghost"
             onClick={resetTimer}
             className="px-4 py-2 text-xs text-[var(--danger)] hover:bg-[var(--danger)]/10 font-semibold flex items-center gap-1.5"
+            aria-label="End focus session"
           >
             <RotateCcw size={14} />
             <span>End Session</span>
@@ -45,6 +48,7 @@ export const TimerControls = () => {
             variant="primary"
             onClick={resumeTimer}
             className="px-6 py-2.5 bg-[var(--focus)] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-md"
+            aria-label="Resume focus timer"
           >
             <Play size={15} fill="currentColor" />
             <span>Resume</span>
@@ -53,6 +57,7 @@ export const TimerControls = () => {
             variant="ghost"
             onClick={resetTimer}
             className="px-4 py-2 text-xs text-[var(--danger)] hover:bg-[var(--danger)]/10 font-semibold flex items-center gap-1.5"
+            aria-label="Reset focus timer"
           >
             <RotateCcw size={14} />
             <span>Reset</span>
@@ -65,6 +70,7 @@ export const TimerControls = () => {
           variant="primary"
           onClick={resetTimer}
           className="px-6 py-2.5 bg-[var(--focus)] text-white text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-md"
+          aria-label="Start another focus session"
         >
           <CheckCircle2 size={15} />
           <span>Start Another Session</span>

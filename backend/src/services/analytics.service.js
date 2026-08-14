@@ -272,6 +272,38 @@ const getTaskPerformance = async (userId) => {
   };
 };
 
+/**
+ * Gets recent focus sessions for user (newest first, bounded limit).
+ */
+const getRecentSessions = async (userId, limit = 10) => {
+  const userObjectId = typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId;
+  const safeLimit = Math.min(Math.max(1, Number(limit) || 10), 20);
+
+  return await FocusSessionModel.find({ userId: userObjectId })
+    .sort({ createdAt: -1 })
+    .limit(safeLimit)
+    .lean();
+};
+
+/**
+ * Gets consolidated dashboard metrics (overview, trend, taskPerformance, recentSessions) in a single call via Promise.all.
+ */
+const getDashboard = async (userId, days = 7) => {
+  const [overview, trend, taskPerformance, recentSessions] = await Promise.all([
+    getOverview(userId),
+    getFocusTrend(userId, days),
+    getTaskPerformance(userId),
+    getRecentSessions(userId, 10),
+  ]);
+
+  return {
+    overview,
+    trend: trend.points || [],
+    taskPerformance,
+    recentSessions,
+  };
+};
+
 module.exports = {
   getStartOfToday,
   getStartOfTomorrow,
@@ -281,4 +313,6 @@ module.exports = {
   getOverview,
   getFocusTrend,
   getTaskPerformance,
+  getRecentSessions,
+  getDashboard,
 };

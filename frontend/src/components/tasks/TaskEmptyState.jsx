@@ -2,7 +2,7 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { CheckCircle2, Calendar, ListTodo } from 'lucide-react';
 
-export const TaskEmptyState = ({ activeFilter, onAddClick }) => {
+export const TaskEmptyState = ({ activeFilter, onAddClick, onClearFilters }) => {
   const configs = {
     today: {
       icon: CheckCircle2,
@@ -44,11 +44,18 @@ export const TaskEmptyState = ({ activeFilter, onAddClick }) => {
           {config.description}
         </p>
       </div>
-      {onAddClick && activeFilter !== 'completed' && (
-        <Button variant="secondary" size="sm" onClick={onAddClick} className="mt-2">
-          Add Task
-        </Button>
-      )}
+      <div className="flex items-center gap-2 mt-2">
+        {onAddClick && activeFilter !== 'completed' && (
+          <Button variant="secondary" size="sm" onClick={onAddClick}>
+            Add Task
+          </Button>
+        )}
+        {onClearFilters && activeFilter !== 'all' && (
+          <Button variant="ghost" size="sm" onClick={onClearFilters} className="text-xs">
+            Clear filters
+          </Button>
+        )}
+      </div>
     </Card>
   );
 };
