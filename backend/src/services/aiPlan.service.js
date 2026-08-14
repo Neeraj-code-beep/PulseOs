@@ -103,6 +103,7 @@ INSTRUCTIONS:
       },
       recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : [],
       proposedPlan: Array.isArray(parsed.proposedPlan) ? parsed.proposedPlan : [],
+      isFallback: false,
     };
   } catch (err) {
     console.warn('AI Daily Plan generation failed, returning deterministic fallback plan:', err.message);
@@ -142,6 +143,7 @@ INSTRUCTIONS:
                 taskTitle: 'Primary Focus Task',
               },
             ],
+      isFallback: true,
     };
   }
 };

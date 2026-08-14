@@ -251,6 +251,52 @@ const runOwnershipTests = async () => {
     console.assert(afterCancelTask.focusTimeSpent === afterSecondSessionTask.focusTimeSpent, `21 Fail: cancelled session incremented focusTimeSpent`);
     console.log('PASS [21]: Cancelled focus session logged without incrementing task focus time');
 
+    // 22. Todo completion state transition & completedAt consistency test
+    const toggleReq1 = { ...reqA, params: { id: taskA._id.toString() }, body: { completed: true } };
+    const toggleRes1 = mockRes();
+    await todoController.updateTodo(toggleReq1, toggleRes1);
+    console.assert(toggleRes1.statusCode === 200, `22 Fail (1): status ${toggleRes1.statusCode}`);
+    console.assert(toggleRes1.body.data.completed === true, '22 Fail: task not completed');
+    console.assert(toggleRes1.body.data.completedAt !== null, '22 Fail: completedAt is null');
+
+    const toggleReq2 = { ...reqA, params: { id: taskA._id.toString() }, body: { completed: false } };
+    const toggleRes2 = mockRes();
+    await todoController.updateTodo(toggleReq2, toggleRes2);
+    console.assert(toggleRes2.statusCode === 200, `22 Fail (2): status ${toggleRes2.statusCode}`);
+    console.assert(toggleRes2.body.data.completed === false, '22 Fail: task not reopened');
+    console.assert(toggleRes2.body.data.completedAt === null, '22 Fail: completedAt not cleared to null');
+    console.log('PASS [22]: Todo completion toggle maintains strict completedAt consistency');
+
+    // 23. Deleted task focus session safety test
+    const tempTaskReq = { ...reqA, body: { title: 'Temporary Task to Delete' } };
+    const tempTaskRes = mockRes();
+    await todoController.createTodo(tempTaskReq, tempTaskRes);
+    const tempTaskId = tempTaskRes.body.data._id.toString();
+
+    // Delete the task
+    const delReq = { ...reqA, params: { id: tempTaskId } };
+    const delRes = mockRes();
+    await todoController.deleteTodo(delReq, delRes);
+    console.assert(delRes.statusCode === 200, '23 Fail: delete failed');
+
+    // Submit focus session referencing deleted task (should log safely without crash or orphan errors)
+    const deletedTaskFocusReq = {
+      ...reqA,
+      body: {
+        taskId: tempTaskId,
+        mode: 'pomodoro',
+        plannedMinutes: 25,
+        actualSeconds: 1500,
+        status: 'completed',
+        startedAt: now.toISOString(),
+        endedAt: new Date(now.getTime() + 1500000).toISOString(),
+      },
+    };
+    const deletedTaskFocusRes = mockRes();
+    await focusController.createFocusSession(deletedTaskFocusReq, deletedTaskFocusRes);
+    console.assert(deletedTaskFocusRes.statusCode === 404, `23 Fail: expected 404 for deleted task binding, got ${deletedTaskFocusRes.statusCode}`);
+    console.log('PASS [23]: Focus session binding to deleted task handled safely with 404 response');
+
     console.log('\n--- ALL USER DATA OWNERSHIP TESTS PASSED SUCCESSFULLY! ---\n');
   } finally {
     await UserModel.deleteMany({});

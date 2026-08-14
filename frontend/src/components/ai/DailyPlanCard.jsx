@@ -77,6 +77,13 @@ export const DailyPlanCard = () => {
             transition={{ duration: 0.28, ease: 'easeOut' }}
             className="mt-6 pt-5 border-t border-[var(--border-soft)] space-y-6"
           >
+            {/* Fallback Notice */}
+            {plan.isFallback && (
+              <p className="text-[11px] text-[var(--text-muted)] italic px-1 font-mono">
+                Pulse created a basic plan from your current tasks and focus data.
+              </p>
+            )}
+
             {/* 1. Daily Goal Banner */}
             <div className="p-4 rounded-[var(--radius-lg)] bg-[var(--bg-surface-elevated)] border border-[var(--border-soft)] flex items-center gap-3">
               <CheckCircle2 size={18} className="text-[var(--focus)] shrink-0" />

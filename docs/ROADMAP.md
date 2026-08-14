@@ -118,4 +118,19 @@
 - [x] Automatic `sessionStorage` cleanup on reset, cancel, completion, and user logout
 - [x] Backend test suites updated & verified (auth 11/11, ownership 21/21, socket 25/25, analytics 16/16, ai 23/23, aiPlan 2/2)
 
+---
+
+## Phase 5F: Analytics Optimization & System Hardening (Milestone 3 & 4 Completed)
+- [x] Consolidated analytics dashboard endpoint (`GET /api/analytics/dashboard?days=7`)
+- [x] Single-request debounced realtime socket refresh on Analytics UI
+- [x] Strict parameter validation (`days` = 7, 14, 30) returning `400 Bad Request` on invalid query
+- [x] Accessibility micro-polish (`aria-label` tags on icon buttons in TaskItem & TimerControls)
+- [x] `PublicOnlyRoute` redirecting authenticated users away from `/login` and `/register` to `/app`
+- [x] Todo completion state consistency (`completedAt` set on completion, cleared to null on reopen)
+- [x] Deleted-task focus session safety with 404 binding error handling
+- [x] Offline reminder catch-up delivery on Socket.IO reconnect
+- [x] AI Daily Plan `isFallback` transparency flag and neutral UI fallback disclaimer notice
+- [x] Sanitized 500 error messages preventing internal database exception leakage
+- [x] Full backend test matrices verified (auth 11/11, ownership 23/23, socket 26/26, analytics 20/20, ai 23/23, aiPlan 2/2)
+
 

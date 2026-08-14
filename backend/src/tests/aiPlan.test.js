@@ -78,6 +78,7 @@ const runAiPlanTests = async () => {
     console.assert(planResult.workloadSummary.openTasksCount === 2, `2 Fail: expected 2 open tasks, got ${planResult.workloadSummary.openTasksCount}`);
     console.assert(Array.isArray(planResult.recommendations) && planResult.recommendations.length > 0, '3 Fail: recommendations empty');
     console.assert(Array.isArray(planResult.proposedPlan) && planResult.proposedPlan.length > 0, '4 Fail: proposedPlan empty');
+    console.assert(typeof planResult.isFallback === 'boolean', '5 Fail: isFallback boolean property missing');
     console.log('PASS [1]: Service generates valid structured daily focus plan synthesizing tasks, focus history, and completion metrics');
 
     // 3. Test Controller Endpoint
@@ -91,6 +92,7 @@ const runAiPlanTests = async () => {
     console.assert(res.statusCode === 200, `5 Fail: expected 200, got ${res.statusCode}`);
     console.assert(res.body.success === true, '6 Fail: success should be true');
     console.assert(res.body.data.workloadSummary.openTasksCount === 2, '7 Fail: controller payload mismatch');
+    console.assert(typeof res.body.data.isFallback === 'boolean', '8 Fail: controller response isFallback boolean missing');
     console.log('PASS [2]: Controller GET /api/ai/daily-plan returns 200 OK with formatted recommendations');
 
     console.log('\n--- ALL AI DAILY PLAN TESTS PASSED SUCCESSFULLY! ---\n');

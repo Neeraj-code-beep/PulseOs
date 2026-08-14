@@ -89,7 +89,7 @@ const createTodo = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message || 'Server Error',
+      message: 'An unexpected server error occurred.',
     });
   }
 };
@@ -115,7 +115,7 @@ const getTodos = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message || 'Server Error',
+      message: 'An unexpected server error occurred.',
     });
   }
 };
@@ -165,9 +165,9 @@ const updateTodo = async (req, res) => {
     if (req.body.completed !== undefined) {
       const isCompleted = Boolean(req.body.completed);
       updates.completed = isCompleted;
-      if (isCompleted && !existingTodo.completed) {
-        updates.completedAt = new Date();
-      } else if (!isCompleted && existingTodo.completed) {
+      if (isCompleted) {
+        updates.completedAt = existingTodo.completedAt || new Date();
+      } else {
         updates.completedAt = null;
       }
     }
@@ -253,7 +253,7 @@ const updateTodo = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message || 'Server Error',
+      message: 'An unexpected server error occurred.',
     });
   }
 };
@@ -303,7 +303,7 @@ const deleteTodo = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message || 'Server Error',
+      message: 'An unexpected server error occurred.',
     });
   }
 };

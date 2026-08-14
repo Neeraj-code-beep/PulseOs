@@ -160,7 +160,7 @@ const createFocusSession = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message || 'Server Error',
+      message: 'An unexpected server error occurred.',
     });
   }
 };
@@ -193,7 +193,7 @@ const getFocusSessions = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message || 'Server Error',
+      message: 'An unexpected server error occurred.',
     });
   }
 };

@@ -219,8 +219,41 @@ const runSocketTests = async () => {
     console.assert(expiringClientSocket.connected === false, '25 Fail: socket remained connected after token expiry');
     console.log('PASS [25]: Active socket automatically disconnects cleanly when token expires');
 
+    // 26. Offline Catch-Up Reminder Test
+    // Create an unsent due reminder for User A
+    const offlineDueTodo = await TodoModel.create({
+      userId: userIdA,
+      title: 'Offline Catch-up Task',
+      reminderTime: new Date(Date.now() - 10000),
+      reminderSent: false,
+      completed: false,
+    });
+
+    let catchUpReminderReceived = false;
+    let catchUpTodoId = null;
+
+    clientSocketA.on('todo:reminder', (data) => {
+      if (data.id === offlineDueTodo._id.toString()) {
+        catchUpReminderReceived = true;
+        catchUpTodoId = data.id;
+      }
+    });
+
+    // Reconnect socket A to trigger immediate catch-up
+    clientSocketA.connect();
+    await new Promise((res) => clientSocketA.on('connect', res));
+
+    // Allow 1.5s for catch-up setTimeout in socket connection handler to fire
+    await new Promise((res) => setTimeout(res, 1500));
+
+    console.assert(catchUpReminderReceived === true, '26 Fail: offline due reminder not delivered on reconnect catch-up');
+    console.assert(catchUpTodoId === offlineDueTodo._id.toString(), '26 Fail: catch-up reminder ID mismatch');
+
+    const verifiedTodo = await TodoModel.findById(offlineDueTodo._id);
+    console.assert(verifiedTodo.reminderSent === true, '26 Fail: catch-up reminder not marked sent in DB');
+    console.log('PASS [26]: Offline due reminder delivered on socket reconnect and marked sent');
+
     console.log('\n--- ALL SOCKET & REALTIME SYNC TESTS PASSED SUCCESSFULLY! ---\n');
-    process.exit(0);
   } catch (err) {
     console.error('SOCKET TEST MATRIX FAILURE:', err);
     process.exit(1);
@@ -230,13 +263,15 @@ const runSocketTests = async () => {
     server.close();
     await UserModel.deleteMany({});
     await TodoModel.deleteMany({});
+    await FocusSessionModel.deleteMany({});
     await mongoose.connection.close();
     console.log('Socket test database connection closed.');
   }
 };
 
-
-runSocketTests().catch((err) => {
-  console.error('SOCKET TEST MATRIX FAILURE:', err);
-  process.exit(1);
-});
+runSocketTests()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error('SOCKET TEST MATRIX FAILURE:', err);
+    process.exit(1);
+  });

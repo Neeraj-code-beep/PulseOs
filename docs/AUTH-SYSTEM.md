@@ -54,6 +54,7 @@ PulseOS implements JWT-based Email/Password authentication coupled with strict s
 - Secret: Configured via backend-only environment variable `JWT_SECRET`. Mandatory on backend startup (server fails immediately if missing). No fallback secrets allowed.
 - Socket Expiry: Socket.IO connections read `exp` from JWT on handshake and schedule a clean disconnect timer upon token expiration. When a token expires, the server emits `auth:expired`, triggering frontend session cleanup and immediate socket disconnect.
 - Client Storage & Expiry: Token persisted in browser `localStorage` as `pulse_token`. Interceptor automatically attaches token to outgoing Axios requests. An Axios response interceptor traps `401 Unauthorized` responses on authenticated requests, clears `pulse_token`, and dispatches `auth:unauthorized` (guarded by an `isHandling401` lock to prevent duplicate logout cycles across parallel requests). `AuthProvider` listens for `auth:unauthorized`, uses a request counter to prevent race conditions from late async calls, clears user state cleanly, and allows standard `ProtectedRoute` guards to redirect to `/login` without aggressive page reloads.
+- Public Route Guard (`PublicOnlyRoute`): Authenticated users navigating to public auth routes (`/login`, `/register`) are immediately redirected to `/app` without rendering page forms or flickering UI elements. During session initialization, a loading spinner is rendered until auth state resolves.
 
 ---
 

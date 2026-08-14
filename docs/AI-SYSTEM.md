@@ -126,7 +126,8 @@ The schedule algorithm uses application logic (no LLM):
 - **Availability Validation**: `date` (YYYY-MM-DD), `startTime` (HH:mm), `endTime` (HH:mm) all required; `startTime < endTime` enforced.
 - **Estimation Output Validation**: `estimatedMinutes` must be a positive finite number; normalized to integer. `reason` capped at 200 characters.
 - **Provider Error Masking**: `502 Bad Gateway` or `503 Service Unavailable` with user-friendly messages.
-- **No Database Schema Mutation**: Phases 5C.1–5C.2 do NOT add `subtasks[]` or schedule records to MongoDB. All results are preview-only.
+- **Daily Plan Fallback Transparency**: `GET /api/ai/daily-plan` returns `isFallback: false` on successful Gemini AI synthesis, and `isFallback: true` when a provider error or missing key forces a deterministic task-synthesized plan. The frontend UI renders a neutral disclaimer notice ("Pulse created a basic plan from your current tasks and focus data.") without alarming error styling.
+- **No Database Schema Mutation**: AI features do NOT mutate MongoDB schemas with unapproved fields. All breakdown and schedule results are preview-only.
 
 ---
 

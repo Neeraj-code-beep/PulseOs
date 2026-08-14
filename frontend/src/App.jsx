@@ -13,14 +13,29 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { NotFound } from './pages/NotFound';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { PublicOnlyRoute } from './components/auth/PublicOnlyRoute';
 
 const App = () => {
   return (
     <Router>
       <Routes>
         {/* Public Authentication Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route
+          path="/login"
+          element={
+            <PublicOnlyRoute>
+              <Login />
+            </PublicOnlyRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicOnlyRoute>
+              <Register />
+            </PublicOnlyRoute>
+          }
+        />
 
         {/* Protected Application Routes */}
         <Route
