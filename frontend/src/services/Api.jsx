@@ -16,6 +16,8 @@ API.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+let isHandling401 = false;
+
 // Response interceptor to handle HTTP 401 Unauthorized responses cleanly
 API.interceptors.response.use(
   (response) => response,
@@ -24,7 +26,13 @@ API.interceptors.response.use(
       // Only clear token if one existed to prevent interceptor loops on login failures
       if (localStorage.getItem('pulse_token')) {
         localStorage.removeItem('pulse_token');
-        window.dispatchEvent(new Event('auth:unauthorized'));
+        if (!isHandling401) {
+          isHandling401 = true;
+          window.dispatchEvent(new Event('auth:unauthorized'));
+          setTimeout(() => {
+            isHandling401 = false;
+          }, 1000);
+        }
       }
     }
     return Promise.reject(error);

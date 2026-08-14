@@ -53,12 +53,22 @@ const FocusSessionSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
+    clientSessionId: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true },
 );
 
 // Compound index for user focus analytics trends and aggregated time metrics
 FocusSessionSchema.index({ userId: 1, status: 1, startedAt: 1 });
+
+// Unique index for clientSessionId idempotency when clientSessionId is provided
+FocusSessionSchema.index(
+  { clientSessionId: 1 },
+  { unique: true, sparse: true }
+);
 
 const FocusSessionModel = mongoose.model('FocusSession', FocusSessionSchema);
 

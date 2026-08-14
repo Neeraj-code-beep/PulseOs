@@ -113,17 +113,19 @@ focusTimeSpent: {
 
 ## Timer Accuracy & Timestamp Strategy
 
-To prevent browser tab throttling and timer drift:
-1. When timer starts or resumes: `targetEndTime = Date.now() + remainingSeconds * 1000`.
-2. Every 250ms tick: `remainingSeconds = Math.max(0, Math.ceil((targetEndTime - Date.now()) / 1000))`.
-3. When `remainingSeconds === 0`, `handleTimerCompletion()` fires using a `completionGuardedRef` guard to guarantee **exactly one** API session record is created per completion.
+To prevent browser tab throttling, page refresh data loss, and timer drift:
+1. When timer starts or resumes: `targetEndTime = Date.now() + remainingSeconds * 1000` and generates a unique `clientSessionId`.
+2. Active `RUNNING` or `PAUSED` timer state is saved to `sessionStorage` (`pulse_focus_session`).
+3. On page refresh/remount, if a `RUNNING` timer is restored, remaining time is recalculated using actual wall-clock time: `remainingSeconds = Math.max(0, Math.ceil((targetEndTime - Date.now()) / 1000))`. If the restored timer is already past `targetEndTime`, it completes immediately.
+4. Every 250ms tick: `remainingSeconds = Math.max(0, Math.ceil((targetEndTime - Date.now()) / 1000))`.
+5. When `remainingSeconds === 0`, `handleTimerCompletion()` fires using a `completionGuardedRef` guard and sends `clientSessionId` to the backend. The backend enforces unique `clientSessionId` idempotency via MongoDB index, guaranteeing **exactly one** API session record is created per completion and `focusTimeSpent` is incremented only once.
 
 ---
 
 ## Cancel & Reset Behavior
 
-- **< 60 seconds elapsed**: Resetting discards the session without saving.
-- **≥ 60 seconds elapsed**: Resetting during `RUNNING` or `PAUSED` logs a `status: 'cancelled'` session record to preserve study history without crediting `focusTimeSpent` on the Todo.
+- **< 60 seconds elapsed**: Resetting discards the session without saving and clears `sessionStorage`.
+- **≥ 60 seconds elapsed**: Resetting during `RUNNING` or `PAUSED` logs a `status: 'cancelled'` session record (with `clientSessionId_cancelled`) to preserve study history without crediting `focusTimeSpent` on the Todo. Clears `sessionStorage`.
 
 ---
 

@@ -6,16 +6,21 @@ The application is a full-stack MERN student productivity workspace featuring a 
 ---
 
 ## Completed Functionality
-- **Authentication & User Data Ownership (Phase 5D Complete)**:
+- **Authentication & User Data Ownership (Phase 5D & Milestone 1 & 2 Complete)**:
   - User model schema (`User.js`) with email normalization, unique index, bcryptjs password hashing, and timestamps.
   - Auth service & controller (`auth.service.js`, `auth.controller.js`) providing `POST /api/auth/register`, `POST /api/auth/login`, and `GET /api/auth/me`.
   - JWT authentication middleware (`auth.middleware.js`) populating `req.user.userId`.
-  - Frontend Auth layer (`AuthProvider`, `AuthContext`, `useAuth`, `authApi.jsx`) with automatic session restoration and token persistence in localStorage.
+  - Mandatory `JWT_SECRET` startup check with no fallback secrets.
+  - Axios 401 response interceptor with `isHandling401` single-event lock dispatching `auth:unauthorized`.
+  - AuthProvider request lifecycle counter (`requestIdRef`) preventing session restoration race conditions.
+  - Socket.IO `auth:expired` server disconnect & frontend session sync handler.
+  - Focus timer `sessionStorage` persistence (`pulse_focus_session`) with wall-clock time restoration on tab refresh.
+  - Client session idempotency (`clientSessionId`) backed by unique sparse MongoDB index on `FocusSession` model.
   - Protected route component (`ProtectedRoute.jsx`) securing `/app`, `/tasks`, `/focus`, `/analytics`.
   - Warm Editorial Auth UI (`Login.jsx`, `Register.jsx`) adhering to design system.
   - User Data Ownership scoping on `Todo` model (`userId`), `FocusSession` model (`userId`), CRUD controllers, and Analytics aggregations.
-  - Backend test matrices: `auth.test.js` (9/9 passed), `ownership.test.js` (10/10 passed).
-  - Technical documentation: `docs/AUTH-SYSTEM.md`.
+  - Backend test matrices: `auth.test.js` (11/11 passed), `ownership.test.js` (21/21 passed), `socket.test.js` (25/25 passed).
+  - Technical documentation: `docs/AUTH-SYSTEM.md` and `docs/FOCUS-SYSTEM.md`.
 
 - **AI Time Estimation & Smart Scheduling (Phase 5C.2 Complete)**:
   - AI time estimation service (`estimateTaskTime`) with prompt engineering for realistic student work duration and response validation (positive integer, reason capped at 200 chars).

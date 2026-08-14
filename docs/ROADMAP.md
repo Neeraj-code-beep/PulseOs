@@ -102,7 +102,20 @@
 - [x] Protected route component (`ProtectedRoute.jsx`) securing `/app`, `/tasks`, `/focus`, `/analytics`
 - [x] Warm Editorial Auth UI (`Login.jsx`, `Register.jsx`) with DM Sans typography, coral CTAs, and error handling
 - [x] User Data Ownership scoping on `Todo` model (`userId`), `FocusSession` model (`userId`), CRUD controllers, and Analytics aggregations
-- [x] Backend test matrices (`auth.test.js` 9/9 passed, `ownership.test.js` 10/10 passed)
+- [x] Backend test matrices (`auth.test.js` 11/11 passed, `ownership.test.js` 21/21 passed)
 - [x] Technical documentation (`docs/AUTH-SYSTEM.md`)
+
+---
+
+## Phase 5E: Auth Session Sync & Focus Timer Resilience (Milestone 2 Completed)
+- [x] Axios 401 response interceptor with `isHandling401` concurrency lock
+- [x] AuthProvider session restoration request counter (`requestIdRef`) preventing race conditions
+- [x] Socket.IO `auth:expired` server token expiration disconnect and frontend auth clearing
+- [x] Focus timer state machine `sessionStorage` persistence (`pulse_focus_session`)
+- [x] Wall-clock time restoration formula for active `RUNNING` timers on browser refresh
+- [x] Paused timer restoration and fresh targetEndTime recalculation on resume
+- [x] Server-side idempotency via `clientSessionId` unique index on `FocusSession` model preventing duplicate focus time credit
+- [x] Automatic `sessionStorage` cleanup on reset, cancel, completion, and user logout
+- [x] Backend test suites updated & verified (auth 11/11, ownership 21/21, socket 25/25, analytics 16/16, ai 23/23, aiPlan 2/2)
 
 

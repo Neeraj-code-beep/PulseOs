@@ -39,7 +39,7 @@ PulseOS is a multi-user full-stack task management and productivity application 
 [ MongoDB Database ]
   ├── Collection: users (Schema: name, email, passwordHash, timestamps; Index: unique email)
   ├── Collection: todos (Schema: userId, title, completed, completedAt, dueDate, priority, estimatedMinutes, reminderTime, reminderSent, focusTimeSpent; Indexes: userId, {userId, completed, completedAt}, {reminderSent, reminderTime})
-  └── Collection: focussessions (Schema: userId, taskId, taskTitle, mode, plannedMinutes, actualSeconds, status, startedAt, endedAt; Indexes: userId, {userId, status, startedAt})
+  └── Collection: focussessions (Schema: userId, taskId, taskTitle, mode, plannedMinutes, actualSeconds, status, startedAt, endedAt, clientSessionId; Indexes: userId, {userId, status, startedAt}, unique clientSessionId)
 ```
 
 ---

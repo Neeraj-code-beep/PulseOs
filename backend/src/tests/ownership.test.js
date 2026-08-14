@@ -195,6 +195,62 @@ const runOwnershipTests = async () => {
     console.assert(analyticsB_updated.focusTodayMinutes === 60, `19 Fail: User B got ${analyticsB_updated.focusTodayMinutes} instead of 60`);
     console.log('PASS [19]: User A analytics exclude User B focus sessions');
 
+    // 20. Idempotency test: duplicate clientSessionId does not create duplicate credit
+    const idempotencySessionId = `client_sess_${Date.now()}`;
+    const initialTaskState = await TodoModel.findById(taskA._id);
+    const initialFocusTime = initialTaskState.focusTimeSpent || 0;
+
+    const focusReqIdempotent1 = {
+      ...reqA,
+      body: {
+        clientSessionId: idempotencySessionId,
+        taskId: taskA._id.toString(),
+        mode: 'pomodoro',
+        plannedMinutes: 25,
+        actualSeconds: 1500,
+        status: 'completed',
+        startedAt: now.toISOString(),
+        endedAt: new Date(now.getTime() + 1500000).toISOString(),
+      },
+    };
+    const focusResIdempotent1 = mockRes();
+    await focusController.createFocusSession(focusReqIdempotent1, focusResIdempotent1);
+    console.assert(focusResIdempotent1.statusCode === 201, `20 Fail (1): expected 201, got ${focusResIdempotent1.statusCode}`);
+
+    const afterFirstSessionTask = await TodoModel.findById(taskA._id);
+    console.assert(afterFirstSessionTask.focusTimeSpent === initialFocusTime + 25, `20 Fail: expected focusTimeSpent ${initialFocusTime + 25}, got ${afterFirstSessionTask.focusTimeSpent}`);
+
+    // Second call with same clientSessionId
+    const focusResIdempotent2 = mockRes();
+    await focusController.createFocusSession(focusReqIdempotent1, focusResIdempotent2);
+    console.assert(focusResIdempotent2.statusCode === 200, `20 Fail (2): expected 200, got ${focusResIdempotent2.statusCode}`);
+
+    const afterSecondSessionTask = await TodoModel.findById(taskA._id);
+    console.assert(afterSecondSessionTask.focusTimeSpent === initialFocusTime + 25, `20 Fail: duplicate clientSessionId incremented focusTimeSpent to ${afterSecondSessionTask.focusTimeSpent}`);
+    console.log('PASS [20]: Duplicate clientSessionId returns 200 without duplicate focus time credit');
+
+    // 21. Cancelled session does not increment focus time spent
+    const cancelReq = {
+      ...reqA,
+      body: {
+        clientSessionId: `${idempotencySessionId}_cancel`,
+        taskId: taskA._id.toString(),
+        mode: 'pomodoro',
+        plannedMinutes: 25,
+        actualSeconds: 600,
+        status: 'cancelled',
+        startedAt: now.toISOString(),
+        endedAt: new Date(now.getTime() + 600000).toISOString(),
+      },
+    };
+    const cancelRes = mockRes();
+    await focusController.createFocusSession(cancelReq, cancelRes);
+    console.assert(cancelRes.statusCode === 201, `21 Fail: expected 201 for cancelled session, got ${cancelRes.statusCode}`);
+
+    const afterCancelTask = await TodoModel.findById(taskA._id);
+    console.assert(afterCancelTask.focusTimeSpent === afterSecondSessionTask.focusTimeSpent, `21 Fail: cancelled session incremented focusTimeSpent`);
+    console.log('PASS [21]: Cancelled focus session logged without incrementing task focus time');
+
     console.log('\n--- ALL USER DATA OWNERSHIP TESTS PASSED SUCCESSFULLY! ---\n');
   } finally {
     await UserModel.deleteMany({});

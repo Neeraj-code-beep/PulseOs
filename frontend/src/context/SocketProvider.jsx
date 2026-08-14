@@ -44,6 +44,11 @@ const SocketProvider = ({ children }) => {
       setIsConnected(false);
     });
 
+    socketInstance.on('auth:expired', () => {
+      localStorage.removeItem('pulse_token');
+      window.dispatchEvent(new Event('auth:unauthorized'));
+    });
+
     setSocket(socketInstance);
 
     return () => {

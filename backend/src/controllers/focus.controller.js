@@ -14,7 +14,7 @@ const createFocusSession = async (req, res) => {
       });
     }
 
-    const { taskId, mode, plannedMinutes, actualSeconds, status, startedAt, endedAt } = req.body || {};
+    const { taskId, mode, plannedMinutes, actualSeconds, status, startedAt, endedAt, clientSessionId } = req.body || {};
 
     // Validate mode
     if (!mode || !['pomodoro', 'custom'].includes(mode)) {
@@ -22,6 +22,25 @@ const createFocusSession = async (req, res) => {
         success: false,
         message: "Mode must be either 'pomodoro' or 'custom'.",
       });
+    }
+
+    // Check for existing session by clientSessionId for idempotency
+    if (clientSessionId && typeof clientSessionId === 'string' && clientSessionId.trim()) {
+      const existingSession = await FocusSessionModel.findOne({ clientSessionId, userId });
+      if (existingSession) {
+        let taskDoc = null;
+        if (existingSession.taskId) {
+          taskDoc = await TodoModel.findOne({ _id: existingSession.taskId, userId });
+        }
+        return res.status(200).json({
+          success: true,
+          message: 'Focus session already recorded.',
+          data: {
+            session: existingSession,
+            task: taskDoc,
+          },
+        });
+      }
     }
 
     // Validate plannedMinutes
@@ -100,6 +119,7 @@ const createFocusSession = async (req, res) => {
       status,
       startedAt: startDate,
       endedAt: endDate,
+      clientSessionId: clientSessionId || null,
     });
 
     let updatedTodo = null;

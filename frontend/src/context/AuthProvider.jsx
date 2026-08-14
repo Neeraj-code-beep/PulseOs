@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AuthContext } from './AuthContext';
 import { loginApi, registerApi, getMeApi } from '../services/authApi';
 import { toast } from 'react-toastify';
@@ -8,8 +8,11 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem('pulse_token') || null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const requestIdRef = useRef(0);
+
   // Restore and verify user session on mount or token change
   const restoreSession = useCallback(async () => {
+    const currentRequestId = ++requestIdRef.current;
     const storedToken = localStorage.getItem('pulse_token');
     if (!storedToken) {
       setUser(null);
@@ -21,6 +24,9 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoading(true);
       const res = await getMeApi();
+      // Ignore if a newer request or explicit login/logout happened
+      if (currentRequestId !== requestIdRef.current) return;
+
       if (res.success && res.data?.user) {
         setUser(res.data.user);
         setToken(storedToken);
@@ -30,11 +36,14 @@ export const AuthProvider = ({ children }) => {
         setToken(null);
       }
     } catch {
+      if (currentRequestId !== requestIdRef.current) return;
       localStorage.removeItem('pulse_token');
       setUser(null);
       setToken(null);
     } finally {
-      setIsLoading(false);
+      if (currentRequestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
@@ -42,6 +51,8 @@ export const AuthProvider = ({ children }) => {
     restoreSession();
 
     const handleUnauthorized = () => {
+      requestIdRef.current++;
+      localStorage.removeItem('pulse_token');
       setUser(null);
       setToken(null);
       toast.warn('Session expired. Please log in again.');
@@ -52,6 +63,7 @@ export const AuthProvider = ({ children }) => {
   }, [restoreSession]);
 
   const login = async (credentials) => {
+    requestIdRef.current++;
     try {
       const res = await loginApi(credentials);
       if (res.success && res.data) {
@@ -70,6 +82,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (formData) => {
+    requestIdRef.current++;
     try {
       const res = await registerApi(formData);
       if (res.success && res.data) {
@@ -88,6 +101,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    requestIdRef.current++;
     localStorage.removeItem('pulse_token');
     setUser(null);
     setToken(null);
