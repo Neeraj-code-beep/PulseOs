@@ -169,6 +169,56 @@ const runSocketTests = async () => {
     console.assert(productivityUpdatedTypeA === 'task_completed', `23 Fail: expected task_completed, got ${productivityUpdatedTypeA}`);
     console.log('PASS [23]: Task completion emits productivity:updated event');
 
+    // 24. Invalid / Expired socket JWT token rejected on connect
+    const jwt = require('jsonwebtoken');
+    const expiredSocketToken = jwt.sign(
+      { userId: userIdA },
+      process.env.JWT_SECRET || 'test_secret',
+      { expiresIn: '-1s' }
+    );
+
+    let connectErrorMsg = null;
+    const invalidClientSocket = Client(`http://localhost:${port}`, {
+      transports: ['websocket'],
+      auth: { token: expiredSocketToken },
+    });
+
+    await new Promise((res) => {
+      invalidClientSocket.on('connect_error', (err) => {
+        connectErrorMsg = err.message;
+        res();
+      });
+    });
+
+    console.assert(connectErrorMsg !== null, '24 Fail: expired token socket connected successfully');
+    invalidClientSocket.disconnect();
+    console.log('PASS [24]: Expired socket token rejected on connection attempt');
+
+    // 25. Socket disconnects cleanly when token expires during active connection
+    const shortLivedToken = jwt.sign(
+      { userId: userIdA },
+      process.env.JWT_SECRET || 'test_secret',
+      { expiresIn: '2s' }
+    );
+
+    const expiringClientSocket = Client(`http://localhost:${port}`, {
+      transports: ['websocket'],
+      auth: { token: shortLivedToken },
+    });
+
+    await new Promise((res) => expiringClientSocket.on('connect', res));
+    console.assert(expiringClientSocket.connected === true, '25 Fail: expiring socket did not connect');
+
+    let expiredEventReceived = false;
+    expiringClientSocket.on('auth:expired', () => {
+      expiredEventReceived = true;
+    });
+
+    await new Promise((res) => expiringClientSocket.on('disconnect', res));
+    console.assert(expiredEventReceived === true, '25 Fail: auth:expired event not received prior to disconnect');
+    console.assert(expiringClientSocket.connected === false, '25 Fail: socket remained connected after token expiry');
+    console.log('PASS [25]: Active socket automatically disconnects cleanly when token expires');
+
     console.log('\n--- ALL SOCKET & REALTIME SYNC TESTS PASSED SUCCESSFULLY! ---\n');
     process.exit(0);
   } catch (err) {

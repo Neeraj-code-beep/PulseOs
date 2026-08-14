@@ -16,4 +16,19 @@ API.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+// Response interceptor to handle HTTP 401 Unauthorized responses cleanly
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Only clear token if one existed to prevent interceptor loops on login failures
+      if (localStorage.getItem('pulse_token')) {
+        localStorage.removeItem('pulse_token');
+        window.dispatchEvent(new Event('auth:unauthorized'));
+      }
+    }
+    return Promise.reject(error);
+  },
+);
+
 export default API;

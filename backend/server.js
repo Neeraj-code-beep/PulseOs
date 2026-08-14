@@ -1,6 +1,12 @@
 const app = require('./src/app');
 const cors = require('cors');
 require('dotenv').config();
+
+if (!process.env.JWT_SECRET) {
+  console.error('FATAL CONFIGURATION ERROR: JWT_SECRET is required.');
+  process.exit(1);
+}
+
 const express = require('express');
 const http = require('http');
 const AuthRoutes = require('./src/routes/AuthRoutes');

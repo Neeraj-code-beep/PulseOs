@@ -48,6 +48,7 @@ The AI Productivity Layer in PulseOS operates directly within the student's task
 - **Backend-Only Keys**: `GEMINI_API_KEY` (or `AI_API_KEY`) is stored exclusively in `backend/.env`.
 - **No Secret Exposure**: Neither the frontend nor error payloads ever receive the API key or raw stack traces.
 - **Untrusted Output Protection**: AI-generated text is rendered strictly as plain text React string children (no `dangerouslySetInnerHTML`).
+- **Rate Limiting**: All AI endpoints (`/api/ai/*`) are protected with `express-rate-limit` capped at **10 requests per user per minute**. Excessive requests return HTTP `429 Too Many Requests`.
 
 ---
 

@@ -51,8 +51,9 @@ PulseOS implements JWT-based Email/Password authentication coupled with strict s
 ## 4. JWT Token Lifecycle & Security
 - Token Payload: `{ userId: user._id }` (No sensitive passwords or PII stored in payload).
 - Expiration: Configurable via `JWT_EXPIRES_IN` (Default: `7d`).
-- Secret: Configured via backend-only environment variable `JWT_SECRET`. Never exposed to frontend.
-- Client Storage: Token persisted in browser `localStorage` as `pulse_token`. Interceptor automatically attaches token to outgoing Axios requests.
+- Secret: Configured via backend-only environment variable `JWT_SECRET`. Mandatory on backend startup (server fails immediately if missing). No fallback secrets allowed.
+- Socket Expiry: Socket.IO connections read `exp` from JWT on handshake and schedule a clean disconnect upon token expiration.
+- Client Storage & Expiry: Token persisted in browser `localStorage` as `pulse_token`. Interceptor automatically attaches token to outgoing Axios requests. An Axios response interceptor traps `401 Unauthorized` responses on authenticated requests, clears `pulse_token`, and dispatches `auth:unauthorized` to transition `AuthProvider` to logged-out state cleanly.
 
 ---
 

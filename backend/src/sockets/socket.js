@@ -28,16 +28,21 @@ function initializeSocket(server, options = {}) {
       return next(new Error('Authentication token missing'));
     }
 
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      return next(new Error('JWT_SECRET is required.'));
+    }
+
     try {
-      const secret = process.env.JWT_SECRET || 'fallback_secret_key_pulseos';
       const decoded = jwt.verify(token, secret);
 
       if (!decoded || !decoded.userId) {
         return next(new Error('Invalid token payload'));
       }
 
-      // Attach verified userId to socket
+      // Attach verified userId and exp to socket
       socket.userId = decoded.userId.toString();
+      socket.tokenExp = decoded.exp;
       next();
     } catch (err) {
       return next(new Error('Authentication failed: ' + err.message));
@@ -48,6 +53,22 @@ function initializeSocket(server, options = {}) {
     const userRoom = `user:${socket.userId}`;
     socket.join(userRoom);
     console.log(`Authenticated socket connected: ${socket.id} (Joined room: ${userRoom})`);
+
+    // Schedule clean socket disconnect when JWT token expires
+    if (socket.tokenExp) {
+      const msUntilExpiry = socket.tokenExp * 1000 - Date.now();
+      if (msUntilExpiry > 0) {
+        socket.expiryTimer = setTimeout(() => {
+          console.log(`JWT expired for socket ${socket.id} (User: ${socket.userId}). Disconnecting socket.`);
+          socket.emit('auth:expired', { message: 'Authentication token expired.' });
+          socket.disconnect(true);
+        }, msUntilExpiry);
+      } else {
+        // Token already expired by connection processing time
+        socket.disconnect(true);
+        return;
+      }
+    }
 
     // Immediate catch-up: deliver any pending due reminders for this specific user on connect
     setTimeout(() => {
@@ -60,6 +81,10 @@ function initializeSocket(server, options = {}) {
     }, 1000);
 
     socket.on('disconnect', () => {
+      if (socket.expiryTimer) {
+        clearTimeout(socket.expiryTimer);
+        socket.expiryTimer = null;
+      }
       console.log(`Socket disconnected: ${socket.id} (User: ${socket.userId})`);
     });
   });

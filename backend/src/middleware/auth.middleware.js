@@ -23,7 +23,10 @@ const authMiddleware = (req, res, next) => {
       });
     }
 
-    const secret = process.env.JWT_SECRET || 'fallback_secret_key_pulseos';
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('JWT_SECRET is required.');
+    }
     const decoded = jwt.verify(token, secret);
 
     if (!decoded || !decoded.userId) {

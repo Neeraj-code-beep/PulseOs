@@ -178,7 +178,42 @@ const runAuthTests = async () => {
     console.assert(res9.body.success === false, '9 Fail');
     console.log('PASS [9]: Request with invalid JWT token rejected with 401');
 
-    console.log('\n--- ALL 9 AUTHENTICATION TESTS PASSED SUCCESSFULLY! ---\n');
+    // 10. Expired Token Rejection
+    const jwt = require('jsonwebtoken');
+    const expiredToken = jwt.sign(
+      { userId: '507f1f77bcf86cd799439011' },
+      process.env.JWT_SECRET || 'test_secret',
+      { expiresIn: '-1s' }
+    );
+    const req10 = {
+      headers: {
+        authorization: `Bearer ${expiredToken}`,
+      },
+    };
+    const res10 = mockRes();
+    authMiddleware(req10, res10, () => {});
+
+    console.assert(res10.statusCode === 401, `10 Fail: expected 401 for expired token, got ${res10.statusCode}`);
+    console.assert(res10.body.message === 'Token expired.', `10 Fail: expected "Token expired.", got ${res10.body.message}`);
+    console.log('PASS [10]: Request with expired JWT token rejected with 401 "Token expired."');
+
+    // 11. Missing JWT_SECRET Causes Error
+    const originalSecret = process.env.JWT_SECRET;
+    delete process.env.JWT_SECRET;
+    let errorThrown = false;
+    try {
+      authService.generateToken('507f1f77bcf86cd799439011');
+    } catch (err) {
+      if (err.message === 'JWT_SECRET is required.') {
+        errorThrown = true;
+      }
+    } finally {
+      process.env.JWT_SECRET = originalSecret;
+    }
+    console.assert(errorThrown === true, '11 Fail: generateToken did not throw when JWT_SECRET missing');
+    console.log('PASS [11]: Missing JWT_SECRET causes secure config failure');
+
+    console.log('\n--- ALL AUTHENTICATION TESTS PASSED SUCCESSFULLY! ---\n');
   } finally {
     await UserModel.deleteMany({});
     await mongoose.connection.close();

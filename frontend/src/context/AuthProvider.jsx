@@ -40,6 +40,15 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     restoreSession();
+
+    const handleUnauthorized = () => {
+      setUser(null);
+      setToken(null);
+      toast.warn('Session expired. Please log in again.');
+    };
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
   }, [restoreSession]);
 
   const login = async (credentials) => {

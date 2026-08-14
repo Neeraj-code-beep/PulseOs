@@ -22,7 +22,10 @@ const isValidEmail = (email) => {
  * Generates JWT token containing only non-sensitive identity payload.
  */
 const generateToken = (userId) => {
-  const secret = process.env.JWT_SECRET || 'fallback_secret_key_pulseos';
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET is required.');
+  }
   const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
   return jwt.sign({ userId }, secret, { expiresIn });
 };

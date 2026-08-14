@@ -57,6 +57,9 @@ const FocusSessionSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// Compound index for user focus analytics trends and aggregated time metrics
+FocusSessionSchema.index({ userId: 1, status: 1, startedAt: 1 });
+
 const FocusSessionModel = mongoose.model('FocusSession', FocusSessionSchema);
 
 module.exports = FocusSessionModel;
