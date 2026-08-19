@@ -15,3 +15,5 @@ export const BentoCard = ({
     </div>
   );
 };
+
+export default BentoCard;

@@ -1,5 +1,5 @@
 const express = require('express');
-const rateLimit = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth.middleware');
 const aiController = require('../controllers/ai.controller');
@@ -7,8 +7,13 @@ const aiController = require('../controllers/ai.controller');
 // Rate limiter: Max 10 requests per authenticated user per minute
 const aiRateLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 10,
-  keyGenerator: (req) => req.user?.userId || req.ip,
+  limit: 10,
+  keyGenerator: (req) => {
+    if (req.user?.userId) {
+      return `user:${req.user.userId}`;
+    }
+    return `ip:${ipKeyGenerator(req)}`;
+  },
   handler: (req, res) => {
     return res.status(429).json({
       success: false,

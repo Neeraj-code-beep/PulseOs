@@ -7,6 +7,8 @@ import { TaskFilters } from '../components/tasks/TaskFilters';
 import { TaskEmptyState } from '../components/tasks/TaskEmptyState';
 import { TaskEditor } from '../components/tasks/TaskEditor';
 import { Button } from '../components/ui/Button';
+import { SectionEyebrow } from '../components/ui/SectionEyebrow';
+import { EditorialHeading } from '../components/ui/EditorialHeading';
 import { CalendarDays, Clock, Bell, Play } from 'lucide-react';
 
 export const Tasks = () => {

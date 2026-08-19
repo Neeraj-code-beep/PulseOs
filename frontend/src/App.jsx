@@ -2,9 +2,9 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Navigate,
 } from 'react-router-dom';
 import { AppLayout } from './layouts/AppLayout';
+import { Landing } from './pages/Landing';
 import { Today } from './pages/Today';
 import { Tasks } from './pages/Tasks';
 import { Focus } from './pages/Focus';
@@ -19,6 +19,9 @@ const App = () => {
   return (
     <Router>
       <Routes>
+        {/* Public Landing Page */}
+        <Route path="/" element={<Landing />} />
+
         {/* Public Authentication Routes */}
         <Route
           path="/login"
@@ -37,15 +40,7 @@ const App = () => {
           }
         />
 
-        {/* Protected Application Routes */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Navigate to="/app" replace />
-            </ProtectedRoute>
-          }
-        />
+        {/* Protected Application Workspace Routes */}
         <Route
           path="/app"
           element={

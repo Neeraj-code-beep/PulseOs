@@ -9,6 +9,8 @@ import { SessionComplete } from '../components/focus/SessionComplete';
 import { getFocusSessionsApi, getFocusSummaryApi } from '../services/focusApi';
 import { Flame, Clock, CheckCircle, RefreshCw } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { SectionEyebrow } from '../components/ui/SectionEyebrow';
+import { EditorialHeading } from '../components/ui/EditorialHeading';
 
 export const Focus = () => {
   const [searchParams] = useSearchParams();

@@ -22,3 +22,5 @@ export const ProductPreview = ({
     </div>
   );
 };
+
+export default ProductPreview;

@@ -26,3 +26,5 @@ export const SurfaceCard = ({
     </div>
   );
 };
+
+export default SurfaceCard;

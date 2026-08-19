@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import API from '../services/Api';
 import { toast } from 'react-toastify';
 import { TodoContext } from './TodoContext';
+import { useAuth } from './useAuth';
 
 const TodoProvider = ({ children }) => {
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [todos, settodos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -114,8 +116,15 @@ const TodoProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    fetchTodos();
-  }, []);
+    if (!isAuthLoading) {
+      if (isAuthenticated) {
+        fetchTodos();
+      } else {
+        settodos([]);
+        setIsLoading(false);
+      }
+    }
+  }, [isAuthenticated, isAuthLoading]);
 
   return (
     <TodoContext.Provider

@@ -17,3 +17,5 @@ export const SectionEyebrow = ({
     </div>
   );
 };
+
+export default SectionEyebrow;

@@ -12,3 +12,5 @@ export const SectionDivider = ({ label, className = '' }) => {
     </div>
   );
 };
+
+export default SectionDivider;

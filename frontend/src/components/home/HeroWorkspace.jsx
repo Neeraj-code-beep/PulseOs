@@ -1,14 +1,44 @@
-import { ArrowRight, Play, Check, Flame, Sparkles, Clock, Target } from 'lucide-react';
+import { ArrowRight, Play, Check, Flame, Sparkles, LogIn } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { motion as Motion, useReducedMotion } from 'framer-motion';
 import { SectionEyebrow } from '../ui/SectionEyebrow';
 import { EditorialHeading } from '../ui/EditorialHeading';
 import { Button } from '../ui/Button';
 import { FloatingInsight } from '../ui/FloatingInsight';
+import { useAuth } from '../../context/useAuth';
 
-export const HeroWorkspace = ({ openCount = 0, completedCount = 0, onPlanClick, onFocusClick }) => {
+export const HeroWorkspace = ({
+  openCount = 0,
+  completedCount = 0,
+  onPlanClick,
+  onFocusClick,
+  isPublic = false,
+}) => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const shouldReduceMotion = useReducedMotion();
   const totalCount = openCount + completedCount;
   const completionPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+  const handlePrimaryClick = () => {
+    if (onPlanClick) {
+      onPlanClick();
+    } else if (isPublic || !isAuthenticated) {
+      navigate('/register');
+    } else {
+      navigate('/app');
+    }
+  };
+
+  const handleSecondaryClick = () => {
+    if (onFocusClick) {
+      onFocusClick();
+    } else if (isPublic || !isAuthenticated) {
+      navigate('/login');
+    } else {
+      navigate('/focus');
+    }
+  };
 
   return (
     <section className="relative py-8 sm:py-14 overflow-hidden border-b border-[var(--border-soft)]">
@@ -61,21 +91,30 @@ export const HeroWorkspace = ({ openCount = 0, completedCount = 0, onPlanClick, 
             <Button
               variant="primary"
               size="lg"
-              onClick={onPlanClick}
+              onClick={handlePrimaryClick}
               icon={ArrowRight}
               className="px-6 py-3 text-sm font-semibold shadow-md"
             >
-              Plan my day
+              {isPublic || !isAuthenticated ? 'Get Started' : 'Plan my day'}
             </Button>
 
             <Button
               variant="secondary"
               size="lg"
-              onClick={onFocusClick}
+              onClick={handleSecondaryClick}
               className="px-6 py-3 text-sm font-semibold border-[var(--border)] shadow-xs"
             >
-              <Play size={15} className="text-[var(--focus)]" fill="currentColor" />
-              <span>Start focus session</span>
+              {isPublic || !isAuthenticated ? (
+                <>
+                  <LogIn size={15} className="text-[var(--primary)]" />
+                  <span>Sign in</span>
+                </>
+              ) : (
+                <>
+                  <Play size={15} className="text-[var(--focus)]" fill="currentColor" />
+                  <span>Start focus session</span>
+                </>
+              )}
             </Button>
           </div>
         </Motion.div>

@@ -95,6 +95,26 @@ const runAiPlanTests = async () => {
     console.assert(typeof res.body.data.isFallback === 'boolean', '8 Fail: controller response isFallback boolean missing');
     console.log('PASS [2]: Controller GET /api/ai/daily-plan returns 200 OK with formatted recommendations');
 
+    // 4. Test AI Daily Plan Fallback when AI service throws error
+    const aiProvider = require('../integrations/ai/ai.provider');
+    const originalGenerateText = aiProvider.generateText;
+    aiProvider.generateText = async () => {
+      throw new Error('Simulated AI provider failure');
+    };
+
+    try {
+      const fallbackResult = await aiPlanService.generateDailyPlan(user._id.toString(), {
+        startTime: '09:00 AM',
+        endTime: '05:00 PM',
+      });
+      console.assert(fallbackResult.isFallback === true, '3 Fail: isFallback should be true when AI service errors');
+      console.assert(fallbackResult.proposedPlan.length > 0, '3 Fail: fallback proposedPlan should not be empty');
+      console.assert(fallbackResult.recommendations.length > 0, '3 Fail: fallback recommendations should not be empty');
+      console.log('PASS [3]: Fallback plan triggered gracefully with isFallback: true on AI service failure');
+    } finally {
+      aiProvider.generateText = originalGenerateText;
+    }
+
     console.log('\n--- ALL AI DAILY PLAN TESTS PASSED SUCCESSFULLY! ---\n');
   } finally {
     await UserModel.deleteMany({});

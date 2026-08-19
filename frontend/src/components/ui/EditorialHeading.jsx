@@ -31,3 +31,5 @@ export const EditorialHeading = ({
     </div>
   );
 };
+
+export default EditorialHeading;

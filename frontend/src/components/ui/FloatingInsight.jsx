@@ -51,3 +51,5 @@ export const FloatingInsight = ({
     </Motion.div>
   );
 };
+
+export default FloatingInsight;

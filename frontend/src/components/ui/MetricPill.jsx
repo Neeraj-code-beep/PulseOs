@@ -20,3 +20,5 @@ export const MetricPill = ({
     </div>
   );
 };
+
+export default MetricPill;
