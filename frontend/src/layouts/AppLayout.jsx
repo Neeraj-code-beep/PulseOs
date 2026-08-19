@@ -34,14 +34,14 @@ export const AppLayout = ({ children }) => {
   return (
     <div className="min-h-dvh flex flex-col bg-[var(--bg-app)] text-[var(--text-primary)] transition-colors">
       {/* Desktop Header Navigation */}
-      <header className="sticky top-0 z-40 w-full border-b border-[var(--border)] bg-[var(--bg-surface)]/90 backdrop-blur-md h-15 flex items-center">
+      <header className="sticky top-0 z-40 w-full border-b border-[var(--border)] bg-[var(--bg-surface)]/90 backdrop-blur-md h-16 flex items-center shadow-xs">
         <div className="max-w-6xl w-full mx-auto px-4 md:px-6 flex items-center justify-between">
           {/* Code-built Brandmark */}
           <div
             onClick={() => navigate('/app')}
-            className="flex items-center gap-2.5 cursor-pointer group"
+            className="flex items-center gap-2.5 cursor-pointer group select-none"
           >
-            <div className="relative w-6 h-6 flex items-center justify-center text-[var(--primary)]">
+            <div className="relative w-7 h-7 rounded-[var(--radius-sm)] bg-[var(--primary-soft)] flex items-center justify-center text-[var(--primary)] border border-[var(--primary)]/20 transition-transform group-hover:scale-105">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -49,19 +49,19 @@ export const AppLayout = ({ children }) => {
                 strokeWidth="2.2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="w-5 h-5 transition-transform group-hover:scale-110"
+                className="w-4.5 h-4.5"
               >
                 <circle cx="12" cy="12" r="9" className="opacity-25" />
                 <path d="M12 7v5l3 3" />
               </svg>
             </div>
-            <span className="font-bold text-base tracking-tight font-sans">
-              Pulse<span className="text-[var(--primary)] font-semibold">OS</span>
+            <span className="font-bold text-base tracking-tight font-sans text-[var(--text-primary)]">
+              Pulse<span className="text-[var(--primary)] font-extrabold">OS</span>
             </span>
           </div>
 
           {/* Integrated Desktop Nav Items */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-1.5 p-1 bg-[var(--bg-app)]/60 rounded-[var(--radius-lg)] border border-[var(--border-soft)]">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -70,13 +70,13 @@ export const AppLayout = ({ children }) => {
                 <NavLink
                   key={item.path}
                   to={item.path}
-                  className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-[var(--radius-md)] text-xs font-medium transition-colors ${
+                  className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-[var(--radius-md)] text-xs font-medium transition-all ${
                     isActive
-                      ? 'text-[var(--text-primary)] font-semibold border-b-2 border-[var(--primary)]'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-elevated)]'
+                      ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] font-semibold shadow-xs border border-[var(--border)]'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-elevated)]/60'
                   }`}
                 >
-                  <Icon size={16} strokeWidth={isActive ? 2.2 : 1.75} />
+                  <Icon size={15} strokeWidth={isActive ? 2.2 : 1.75} className={isActive ? 'text-[var(--primary)]' : ''} />
                   <span>{item.label}</span>
                   {item.path === '/focus' && isFocusActive && (
                     <span className="w-2 h-2 rounded-full bg-[var(--focus)] animate-pulse" />
@@ -87,12 +87,12 @@ export const AppLayout = ({ children }) => {
           </nav>
 
           {/* Right Header Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => setIsAiOpen(true)}
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-elevated)] rounded-[var(--radius-md)] transition-colors cursor-pointer"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border-soft)] hover:border-[var(--border)] rounded-[var(--radius-md)] transition-colors cursor-pointer"
             >
-              <Sparkles size={15} className="text-[var(--accent)]" />
+              <Sparkles size={14} className="text-[var(--accent)]" />
               <span>Ask Pulse</span>
             </button>
             <ThemeToggle />
@@ -102,7 +102,7 @@ export const AppLayout = ({ children }) => {
               <div className="hidden sm:flex items-center gap-1.5 pl-2 border-l border-[var(--border-soft)]">
                 <span
                   title={user.email}
-                  className="w-7 h-7 rounded-full bg-[var(--primary-soft)] text-[var(--primary)] font-bold text-xs flex items-center justify-center font-mono"
+                  className="w-7 h-7 rounded-full bg-[var(--primary-soft)] text-[var(--primary)] font-bold text-xs flex items-center justify-center font-mono border border-[var(--primary)]/20"
                 >
                   {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                 </span>

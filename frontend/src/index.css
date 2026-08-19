@@ -110,6 +110,7 @@
     font-family: 'DM Sans', system-ui, sans-serif;
     font-weight: 700;
     color: var(--text-primary);
+    letter-spacing: -0.02em;
   }
 
   .font-mono,
@@ -120,6 +121,22 @@
   *:focus-visible {
     outline: 2px solid var(--primary);
     outline-offset: 2px;
+  }
+
+  /* Architectural dotted grid background */
+  .bg-dotted-pattern {
+    background-image: radial-gradient(var(--border) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Soft warm surface gradient shift */
+  .bg-warm-gradient {
+    background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-app) 100%);
+  }
+
+  /* Dark mode dotted pattern tweak */
+  .dark .bg-dotted-pattern {
+    background-image: radial-gradient(var(--border) 1px, transparent 1px);
   }
 
   /* Hide scrollbar for filter rows */

@@ -1,4 +1,7 @@
-import { Sparkles, ArrowRight, ListTree } from 'lucide-react';
+import { Sparkles, ListTree } from 'lucide-react';
+import { SectionEyebrow } from '../ui/SectionEyebrow';
+import { EditorialHeading } from '../ui/EditorialHeading';
+import { SurfaceCard } from '../ui/SurfaceCard';
 
 export const PlanningPreview = () => {
   const steps = [
@@ -8,20 +11,19 @@ export const PlanningPreview = () => {
   ];
 
   return (
-    <section className="py-14 border-t border-[var(--border)]">
+    <section className="py-12 border-t border-[var(--border-soft)]">
       <div className="max-w-6xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-        {/* Left Narrative */}
+        {/* Left Narrative Column */}
         <div className="lg:col-span-6 flex flex-col gap-4">
-          <div className="inline-flex items-center gap-2 text-xs font-bold font-mono tracking-wider text-[var(--primary)] uppercase">
-            <Sparkles size={14} />
-            <span>Smart Workload Division</span>
-          </div>
+          <SectionEyebrow dotColor="var(--primary)">
+            Workload Division
+          </SectionEyebrow>
 
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)]">
+          <EditorialHeading size="md">
             Planning that understands workload.
-          </h2>
+          </EditorialHeading>
 
-          <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-lg">
+          <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed max-w-lg font-sans">
             Break down intimidating assignments into focused, bite-sized study blocks. PulseOS helps you divide time realistically before you begin working.
           </p>
 
@@ -30,32 +32,32 @@ export const PlanningPreview = () => {
           </span>
         </div>
 
-        {/* Right Illustrative Card */}
+        {/* Right Product UI Showcase */}
         <div className="lg:col-span-6 flex justify-center">
-          <div className="w-full max-w-md bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-xl)] p-6 shadow-lg flex flex-col gap-4">
+          <SurfaceCard className="w-full max-w-md p-6 shadow-lg flex flex-col gap-4 border-[var(--border)]">
             <div className="flex items-center justify-between pb-3 border-b border-[var(--border-soft)]">
-              <div className="flex items-center gap-2 text-xs font-semibold text-[var(--text-primary)]">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[var(--text-primary)] font-sans">
                 <ListTree size={16} className="text-[var(--primary)]" />
                 <span>Operating Systems Essay</span>
               </div>
               <span className="text-xs font-mono text-[var(--primary)] font-bold">1h 30m total</span>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5">
               {steps.map((item, idx) => (
                 <div
                   key={idx}
                   className="p-3 bg-[var(--bg-surface-elevated)] border border-[var(--border-soft)] rounded-[var(--radius-md)] flex items-center justify-between text-xs"
                 >
-                  <div className="flex items-center gap-2 text-[var(--text-primary)] font-medium">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)]" />
+                  <div className="flex items-center gap-2.5 text-[var(--text-primary)] font-medium font-sans">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)] shrink-0" />
                     <span>{item.title}</span>
                   </div>
                   <span className="font-mono text-[var(--text-muted)]">{item.duration}</span>
                 </div>
               ))}
             </div>
-          </div>
+          </SurfaceCard>
         </div>
       </div>
     </section>

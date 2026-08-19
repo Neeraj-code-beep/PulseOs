@@ -61,19 +61,19 @@ export const Focus = () => {
   return (
     <div className="flex flex-col gap-8 max-w-5xl mx-auto py-2">
       {/* Header */}
-      <div className="border-b border-[var(--border)] pb-4 flex items-center justify-between">
+      <div className="border-b border-[var(--border-soft)] pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)] font-sans">
+          <SectionEyebrow dotColor="var(--focus)">
+            Deep Work Engine
+          </SectionEyebrow>
+          <EditorialHeading size="sm" className="mt-2">
             Focus Workspace
-          </h1>
-          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-            Distraction-free deep work timer bound directly to your execution plan
-          </p>
+          </EditorialHeading>
         </div>
 
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--focus-soft)] text-[var(--focus)] text-xs font-mono font-semibold">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--focus-soft)] text-[var(--focus)] text-xs font-mono font-semibold self-start sm:self-auto border border-[var(--focus)]/20">
           <Flame size={14} />
-          <span>Deep Work Mode</span>
+          <span>Deep Work Active</span>
         </div>
       </div>
 

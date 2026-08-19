@@ -1,15 +1,19 @@
 import { Timer, ArrowRight, ShieldCheck, Flame } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { SectionEyebrow } from '../ui/SectionEyebrow';
+import { EditorialHeading } from '../ui/EditorialHeading';
+import { SurfaceCard } from '../ui/SurfaceCard';
+import { Button } from '../ui/Button';
 
 export const FocusPreview = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="py-14 border-t border-[var(--border)]">
+    <section className="py-12 border-t border-[var(--border-soft)]">
       <div className="max-w-6xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-        {/* Left Instrument Visual Display */}
+        {/* Left Visual Instrument Display */}
         <div className="lg:col-span-6 flex justify-center">
-          <div className="w-full max-w-md bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-xl)] p-8 shadow-xl flex flex-col items-center text-center gap-6 relative">
+          <SurfaceCard className="w-full max-w-md p-8 shadow-xl flex flex-col items-center text-center gap-6 relative border-[var(--border)]">
             <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--focus-soft)] text-[var(--focus)] text-[11px] font-mono font-semibold">
               <ShieldCheck size={13} />
               <span>Distraction Free</span>
@@ -24,56 +28,57 @@ export const FocusPreview = () => {
                 25:00
               </div>
               <span className="text-xs text-[var(--text-muted)] font-mono mt-1 block">
-                Pomodoro Cycle · 5m Rest
+                Pomodoro Cycle · 5m Rest Interval
               </span>
             </div>
 
             {/* Target Task Binding Preview */}
             <div className="w-full p-3 bg-[var(--bg-surface-elevated)] border border-[var(--border-soft)] rounded-[var(--radius-md)] text-xs text-left flex items-center justify-between">
-              <span className="text-[var(--text-muted)] font-medium">Active task:</span>
-              <span className="font-semibold text-[var(--text-primary)] truncate max-w-[200px]">
+              <span className="text-[var(--text-muted)] font-medium font-mono">Bound task:</span>
+              <span className="font-semibold text-[var(--text-primary)] truncate max-w-[200px] font-sans">
                 Operating Systems assignment
               </span>
             </div>
 
-            <button
+            <Button
+              variant="primary"
+              size="md"
               onClick={() => navigate('/focus')}
-              className="w-full py-3 bg-[var(--focus)] text-white hover:bg-[var(--focus)]/90 rounded-[var(--radius-md)] text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all hover:-translate-y-0.5"
+              icon={ArrowRight}
+              className="w-full bg-[var(--focus)] hover:bg-[var(--focus)]/90 py-3 shadow-md"
             >
-              <span>Launch Focus Session</span>
-              <ArrowRight size={14} />
-            </button>
-          </div>
+              Launch Focus Session
+            </Button>
+          </SurfaceCard>
         </div>
 
-        {/* Right Narrative Copy */}
+        {/* Right Narrative Column */}
         <div className="lg:col-span-6 flex flex-col gap-5">
-          <div className="inline-flex items-center gap-2 text-xs font-bold font-mono tracking-wider text-[var(--focus)] uppercase">
-            <Flame size={14} />
-            <span>Deep Work Engine</span>
-          </div>
+          <SectionEyebrow dotColor="var(--focus)">
+            Focus Workspace
+          </SectionEyebrow>
 
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)]">
+          <EditorialHeading size="md">
             One task. One timer. <br />
             Zero distractions.
-          </h2>
+          </EditorialHeading>
 
-          <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-lg">
-            When you're ready to study, attach a task directly to the timer. PulseOS handles time tracking and session logging so you can focus entirely on completing your work.
+          <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed max-w-lg font-sans">
+            When you are ready to study, attach your target assignment directly to the focus timer. PulseOS handles session logging and metrics behind the scenes.
           </p>
 
-          <ul className="flex flex-col gap-2.5 text-xs text-[var(--text-secondary)] font-medium pt-2">
-            <li className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--focus)]" />
-              <span>Standard 25-minute Pomodoro or custom focus intervals</span>
+          <ul className="flex flex-col gap-2.5 text-xs text-[var(--text-secondary)] font-medium pt-1 font-sans">
+            <li className="flex items-center gap-2.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--focus)] shrink-0" />
+              <span>Standard 25-minute Pomodoro or custom focus duration</span>
             </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--focus)]" />
-              <span>Direct binding to active daily tasks</span>
+            <li className="flex items-center gap-2.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--focus)] shrink-0" />
+              <span>Direct binding to active daily execution plan</span>
             </li>
-            <li className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--focus)]" />
-              <span>Automatic study duration logging</span>
+            <li className="flex items-center gap-2.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--focus)] shrink-0" />
+              <span>Automated study duration logging & habit telemetry</span>
             </li>
           </ul>
         </div>

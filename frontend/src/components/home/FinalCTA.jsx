@@ -1,34 +1,40 @@
 import { ArrowRight, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { EditorialHeading } from '../ui/EditorialHeading';
+import { Button } from '../ui/Button';
 
 export const FinalCTA = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="py-16 border-t border-[var(--border)]">
+    <section className="py-14 border-t border-[var(--border-soft)]">
       <div className="max-w-4xl mx-auto px-4 text-center flex flex-col items-center gap-6">
-        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--text-primary)]">
+        <EditorialHeading size="md" className="text-center">
           Ready for your next focus block?
-        </h2>
-        <p className="text-sm text-[var(--text-secondary)] max-w-md">
+        </EditorialHeading>
+        <p className="text-xs sm:text-sm text-[var(--text-secondary)] max-w-md font-sans">
           Plan your assignments now or start a distraction-free study session immediately.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <button
+          <Button
+            variant="primary"
+            size="md"
             onClick={() => navigate('/tasks?add=true')}
-            className="px-6 py-3 bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] rounded-[var(--radius-md)] text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-md transition-all hover:-translate-y-0.5"
+            icon={ArrowRight}
+            className="px-6 py-2.5 font-semibold shadow-md"
           >
-            <span>Add a task</span>
-            <ArrowRight size={14} />
-          </button>
-          <button
+            Add a task
+          </Button>
+          <Button
+            variant="secondary"
+            size="md"
             onClick={() => navigate('/focus')}
-            className="px-6 py-3 bg-[var(--bg-surface)] text-[var(--text-primary)] border border-[var(--border)] hover:border-[var(--text-muted)] rounded-[var(--radius-md)] text-xs font-semibold flex items-center gap-2 cursor-pointer shadow-xs transition-all hover:-translate-y-0.5"
+            className="px-6 py-2.5 font-semibold border-[var(--border)] shadow-xs"
           >
-            <Play size={14} className="text-[var(--focus)]" />
+            <Play size={14} className="text-[var(--focus)]" fill="currentColor" />
             <span>Start focus</span>
-          </button>
+          </Button>
         </div>
       </div>
     </section>

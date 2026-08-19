@@ -122,14 +122,18 @@ export const Tasks = () => {
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-[var(--border-soft)] pb-4 gap-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
-            Tasks Workspace
-          </h1>
-          <p className="text-xs text-[var(--text-secondary)] mt-0.5 font-mono">
-            {counts.all} open tasks · {counts.completed} completed
-          </p>
+          <SectionEyebrow dotColor="var(--primary)">
+            Task Workspace
+          </SectionEyebrow>
+          <EditorialHeading size="sm" className="mt-2">
+            Execution Workspace
+          </EditorialHeading>
+        </div>
+        <div className="text-xs text-[var(--text-secondary)] font-mono self-start sm:self-auto">
+          <span className="font-bold text-[var(--text-primary)]">{counts.all}</span> open tasks ·{' '}
+          <span className="font-bold text-[var(--focus)]">{counts.completed}</span> completed
         </div>
       </div>
 
@@ -198,12 +202,12 @@ export const Tasks = () => {
           {/* Workload Summary Box */}
           <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-5 shadow-xs flex flex-col gap-4">
             <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] font-mono">
-              Planning Summary
+              Workload Summary
             </span>
 
             <div className="flex flex-col gap-3 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-[var(--text-secondary)] flex items-center gap-1.5">
+                <span className="text-[var(--text-secondary)] flex items-center gap-1.5 font-sans">
                   <CalendarDays size={14} className="text-[var(--primary)]" />
                   Due Today
                 </span>
@@ -213,7 +217,7 @@ export const Tasks = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-[var(--text-secondary)] flex items-center gap-1.5">
+                <span className="text-[var(--text-secondary)] flex items-center gap-1.5 font-sans">
                   <Clock size={14} className="text-[var(--focus)]" />
                   Total Workload
                 </span>
@@ -225,7 +229,7 @@ export const Tasks = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-[var(--text-secondary)] flex items-center gap-1.5">
+                <span className="text-[var(--text-secondary)] flex items-center gap-1.5 font-sans">
                   <Bell size={14} className="text-[var(--accent)]" />
                   Next Reminder
                 </span>
@@ -237,13 +241,15 @@ export const Tasks = () => {
               </div>
             </div>
 
-            <button
+            <Button
+              variant="primary"
+              size="sm"
+              icon={Play}
               onClick={() => navigate('/focus')}
-              className="mt-2 py-2 px-3 bg-[var(--focus)] text-white hover:bg-[var(--focus)]/90 rounded-[var(--radius-md)] text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all"
+              className="mt-2 w-full bg-[var(--focus)] hover:bg-[var(--focus)]/90 py-2.5 shadow-xs"
             >
-              <Play size={14} fill="currentColor" />
-              <span>Start Focus Session</span>
-            </button>
+              Start Focus Session
+            </Button>
           </div>
         </div>
       </div>
