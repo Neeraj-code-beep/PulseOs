@@ -1,27 +1,19 @@
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TodoContext } from '../context/TodoContext';
-import { HeroWorkspace } from '../components/home/HeroWorkspace';
+import { TodayHero } from '../components/home/TodayHero';
+import { FocusContinuity } from '../components/home/FocusContinuity';
+import { NextBestAction } from '../components/home/NextBestAction';
+import { TodayProgress } from '../components/home/TodayProgress';
 import { DailyPlanCard } from '../components/ai/DailyPlanCard';
 import { DailyWorkspace } from '../components/home/DailyWorkspace';
-import { Methodology } from '../components/home/Methodology';
-import { FocusPreview } from '../components/home/FocusPreview';
-import { PlanningPreview } from '../components/home/PlanningPreview';
-import { InsightsPreview } from '../components/home/InsightsPreview';
-import { FinalCTA } from '../components/home/FinalCTA';
 
 export const Today = () => {
   const navigate = useNavigate();
   const { todos, isLoading, updateTodo } = useContext(TodoContext);
 
-  const todayTodos = todos.filter((t) => {
-    if (t.completed) return false;
-    if (!t.dueDate) return true;
-    const d = new Date(t.dueDate);
-    return d <= new Date();
-  });
-
-  const completedToday = todos.filter((t) => t.completed);
+  const openTodos = todos.filter((t) => !t.completed);
+  const completedTodos = todos.filter((t) => t.completed);
 
   const now = new Date();
   const nextReminderTodo = todos
@@ -33,40 +25,48 @@ export const Today = () => {
   };
 
   return (
-    <div className="flex flex-col gap-4 -mt-2">
-      {/* 1. Hero Workspace Showcase */}
-      <HeroWorkspace
-        openCount={todayTodos.length}
-        completedCount={completedToday.length}
+    <div className="flex flex-col gap-6 -mt-2 pb-12">
+      {/* 1. Active Focus Continuity Banner (if timer is RUNNING/PAUSED) */}
+      <FocusContinuity />
+
+      {/* 2. Command Center Today Hero Banner */}
+      <TodayHero
+        openCount={openTodos.length}
+        completedCount={completedTodos.length}
         onPlanClick={() => navigate('/tasks?add=true')}
         onFocusClick={() => navigate('/focus')}
       />
 
-      {/* 2. AI Daily Focus Recommendations Card */}
-      <DailyPlanCard />
+      {/* 3. Primary Command Center Workspace Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Main Column (8 Columns) */}
+        <div className="lg:col-span-8 flex flex-col gap-6">
+          {/* Next Best Action Card */}
+          <NextBestAction
+            todos={todos}
+            onToggleComplete={handleToggleComplete}
+          />
 
-      {/* 3. Daily Execution Workspace */}
-      <DailyWorkspace
-        todos={todos}
-        isLoading={isLoading}
-        onToggleComplete={handleToggleComplete}
-        nextReminderTodo={nextReminderTodo}
-      />
+          {/* Daily Execution List */}
+          <DailyWorkspace
+            todos={todos}
+            isLoading={isLoading}
+            onToggleComplete={handleToggleComplete}
+            nextReminderTodo={nextReminderTodo}
+          />
+        </div>
 
-      {/* 4. Methodology Story (Dark Contrast Section) */}
-      <Methodology />
+        {/* Intelligence Sidebar (4 Columns) */}
+        <div className="lg:col-span-4 flex flex-col gap-6">
+          {/* Lightweight Telemetry Progress Summary */}
+          <TodayProgress todos={todos} />
 
-      {/* 5. Focus Preview */}
-      <FocusPreview />
-
-      {/* 6. Smart Planning Preview */}
-      <PlanningPreview />
-
-      {/* 7. Productivity Insights Preview */}
-      <InsightsPreview />
-
-      {/* 8. Final Action Call */}
-      <FinalCTA />
+          {/* AI Daily Focus Recommendations */}
+          <DailyPlanCard />
+        </div>
+      </div>
     </div>
   );
 };
+
+export default Today;

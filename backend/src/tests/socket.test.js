@@ -6,6 +6,7 @@ require('dotenv').config();
 const app = require('../app');
 const UserModel = require('../models/User');
 const TodoModel = require('../models/Todo');
+const FocusSessionModel = require('../models/FocusSession');
 const authService = require('../services/auth.service');
 const { initializeSocket } = require('../sockets/socket');
 const todoController = require('../controllers/todo.controller');
@@ -240,6 +241,7 @@ const runSocketTests = async () => {
     });
 
     // Reconnect socket A to trigger immediate catch-up
+    clientSocketA.disconnect();
     clientSocketA.connect();
     await new Promise((res) => clientSocketA.on('connect', res));
 
