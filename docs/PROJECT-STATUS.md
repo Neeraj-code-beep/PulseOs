@@ -6,6 +6,13 @@ The application is a full-stack MERN student productivity workspace featuring a 
 ---
 
 ## Completed Functionality
+- **Task Organization Engine Backend Foundation (Milestone 7 Phase 1 Complete)**:
+  - Extended `Todo` Mongoose schema with normalized `tags` (`[String]`) and checkable `subtasks` (`[{ title, completed, completedAt }]`).
+  - Implemented tag normalization (trimmed, lowercased, duplicate removal, max 5 tags, max 30 chars per tag) in `todo.controller.js`.
+  - Implemented subtask validation and state-transition tracking (`completed: true` sets `completedAt` timestamp; `completed: false` clears `completedAt` to null).
+  - Maintained strict backward compatibility and user ownership isolation (`req.user.userId`).
+  - Expanded test matrix with 13 new backend unit test cases in `ownership.test.js` (36/36 passed).
+
 - **Focus Workspace Refinement & Polish (Milestone 6 Complete)**:
   - Dynamic state-aware status badge (`RUNNING` / `PAUSED` / `COMPLETED` / `IDLE`) in `Focus.jsx`.
   - Optimized summary data fetching in `Focus.jsx` preventing overfetching on pause/resume toggles.

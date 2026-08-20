@@ -4,6 +4,16 @@ import { toast } from 'react-toastify';
 import { TodoContext } from './TodoContext';
 import { useAuth } from './useAuth';
 
+// Helper to normalize task data ensuring tags and subtasks default to arrays
+const normalizeTodo = (t) => {
+  if (!t) return t;
+  return {
+    ...t,
+    tags: Array.isArray(t.tags) ? t.tags : [],
+    subtasks: Array.isArray(t.subtasks) ? t.subtasks : [],
+  };
+};
+
 const TodoProvider = ({ children }) => {
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [todos, settodos] = useState([]);
@@ -16,10 +26,10 @@ const TodoProvider = ({ children }) => {
     setError(null);
     try {
       const res = await API.get('api/todos');
-      if (res.data && res.data.success) {
-        settodos(res.data.data);
+      if (res.data && res.data.success && Array.isArray(res.data.data)) {
+        settodos(res.data.data.map(normalizeTodo));
       } else if (Array.isArray(res.data)) {
-        settodos(res.data);
+        settodos(res.data.map(normalizeTodo));
       }
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to fetch tasks';
@@ -47,9 +57,10 @@ const TodoProvider = ({ children }) => {
     try {
       const res = await API.post('api/todos', payload);
       if (res.data && res.data.success && res.data.data) {
-        settodos((prev) => [res.data.data, ...prev]);
+        const normalized = normalizeTodo(res.data.data);
+        settodos((prev) => [normalized, ...prev]);
         toast.success('Task Created');
-        return res.data.data;
+        return normalized;
       } else {
         fetchTodos();
       }
@@ -88,13 +99,14 @@ const TodoProvider = ({ children }) => {
 
       const res = await API.patch(`api/todos/${id}`, payload);
       if (res.data && res.data.success && res.data.data) {
+        const normalized = normalizeTodo(res.data.data);
         settodos((prev) =>
           prev.map((todo) =>
-            (todo._id || todo.id) === id ? res.data.data : todo,
+            (todo._id || todo.id) === id ? normalized : todo,
           ),
         );
         toast.success('Task Updated');
-        return res.data.data;
+        return normalized;
       } else {
         fetchTodos();
       }
@@ -108,11 +120,77 @@ const TodoProvider = ({ children }) => {
   const replaceTodo = (updatedTodo) => {
     if (!updatedTodo || (!updatedTodo._id && !updatedTodo.id)) return;
     const targetId = updatedTodo._id || updatedTodo.id;
+    const normalized = normalizeTodo(updatedTodo);
     settodos((prev) =>
       prev.map((todo) =>
-        (todo._id || todo.id) === targetId ? updatedTodo : todo,
+        (todo._id || todo.id) === targetId ? normalized : todo,
       ),
     );
+  };
+
+  // Subtask Helpers
+  const addSubtask = async (taskId, title) => {
+    if (!title || !title.trim()) return;
+    const target = todos.find((t) => (t._id || t.id) === taskId);
+    if (!target) return;
+    const existing = Array.isArray(target.subtasks) ? target.subtasks : [];
+    const updatedSubtasks = [...existing, { title: title.trim(), completed: false }];
+    return updateTodo(taskId, { subtasks: updatedSubtasks });
+  };
+
+  const updateSubtask = async (taskId, subtaskId, updates) => {
+    const target = todos.find((t) => (t._id || t.id) === taskId);
+    if (!target) return;
+    const existing = Array.isArray(target.subtasks) ? target.subtasks : [];
+    const updatedSubtasks = existing.map((sub) =>
+      (sub._id || sub.id) === subtaskId ? { ...sub, ...updates } : sub,
+    );
+    return updateTodo(taskId, { subtasks: updatedSubtasks });
+  };
+
+  const toggleSubtask = async (taskId, subtaskId) => {
+    const target = todos.find((t) => (t._id || t.id) === taskId);
+    if (!target) return;
+    const existing = Array.isArray(target.subtasks) ? target.subtasks : [];
+    const updatedSubtasks = existing.map((sub) =>
+      (sub._id || sub.id) === subtaskId ? { ...sub, completed: !sub.completed } : sub,
+    );
+    return updateTodo(taskId, { subtasks: updatedSubtasks });
+  };
+
+  const deleteSubtask = async (taskId, subtaskId) => {
+    const target = todos.find((t) => (t._id || t.id) === taskId);
+    if (!target) return;
+    const existing = Array.isArray(target.subtasks) ? target.subtasks : [];
+    const updatedSubtasks = existing.filter((sub) => (sub._id || sub.id) !== subtaskId);
+    return updateTodo(taskId, { subtasks: updatedSubtasks });
+  };
+
+  // Tag Helpers
+  const setTaskTags = async (taskId, tags) => {
+    const tagsArray = Array.isArray(tags) ? tags : [];
+    return updateTodo(taskId, { tags: tagsArray });
+  };
+
+  const addTaskTag = async (taskId, tag) => {
+    if (!tag || typeof tag !== 'string' || !tag.trim()) return;
+    const target = todos.find((t) => (t._id || t.id) === taskId);
+    if (!target) return;
+    const existing = Array.isArray(target.tags) ? target.tags : [];
+    const cleanTag = tag.trim().toLowerCase();
+    if (existing.includes(cleanTag)) return target;
+    const updatedTags = [...existing, cleanTag];
+    return updateTodo(taskId, { tags: updatedTags });
+  };
+
+  const removeTaskTag = async (taskId, tag) => {
+    if (!tag || typeof tag !== 'string') return;
+    const target = todos.find((t) => (t._id || t.id) === taskId);
+    if (!target) return;
+    const existing = Array.isArray(target.tags) ? target.tags : [];
+    const cleanTag = tag.trim().toLowerCase();
+    const updatedTags = existing.filter((t) => t.toLowerCase() !== cleanTag);
+    return updateTodo(taskId, { tags: updatedTags });
   };
 
   useEffect(() => {
@@ -138,6 +216,13 @@ const TodoProvider = ({ children }) => {
         updateTodo,
         markReminderSentLocally,
         replaceTodo,
+        addSubtask,
+        updateSubtask,
+        toggleSubtask,
+        deleteSubtask,
+        setTaskTags,
+        addTaskTag,
+        removeTaskTag,
       }}
     >
       {children}

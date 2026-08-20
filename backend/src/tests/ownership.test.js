@@ -297,6 +297,157 @@ const runOwnershipTests = async () => {
     console.assert(deletedTaskFocusRes.statusCode === 404, `23 Fail: expected 404 for deleted task binding, got ${deletedTaskFocusRes.statusCode}`);
     console.log('PASS [23]: Focus session binding to deleted task handled safely with 404 response');
 
+    // 24. Create task without tags/subtasks defaults to []
+    const plainTaskReq = { ...reqA, body: { title: 'Plain Task' } };
+    const plainTaskRes = mockRes();
+    await todoController.createTodo(plainTaskReq, plainTaskRes);
+    console.assert(plainTaskRes.statusCode === 201, '24 Fail: expected 201');
+    console.assert(Array.isArray(plainTaskRes.body.data.tags) && plainTaskRes.body.data.tags.length === 0, '24 Fail: tags not empty array');
+    console.assert(Array.isArray(plainTaskRes.body.data.subtasks) && plainTaskRes.body.data.subtasks.length === 0, '24 Fail: subtasks not empty array');
+    console.log('PASS [24]: Create task without tags/subtasks defaults to empty arrays');
+
+    // 25. Create task with valid tags & 26. Tag normalization & 27. Duplicate tag removal
+    const tagTaskReq = {
+      ...reqA,
+      body: {
+        title: 'Tagged Task',
+        tags: [' CS101 ', 'cs101', 'Assignment', 'MATH '],
+      },
+    };
+    const tagTaskRes = mockRes();
+    await todoController.createTodo(tagTaskReq, tagTaskRes);
+    console.assert(tagTaskRes.statusCode === 201, '25 Fail: expected 201');
+    const tagsResult = tagTaskRes.body.data.tags;
+    console.assert(tagsResult.length === 3, `25 Fail: expected 3 unique normalized tags, got ${tagsResult.length}`);
+    console.assert(tagsResult.includes('cs101') && tagsResult.includes('assignment') && tagsResult.includes('math'), '25 Fail: tag normalization mismatch');
+    console.log('PASS [25-27]: Create task with tags normalizes to lowercase, trims whitespace, and removes duplicates');
+
+    // 28. Reject >5 tags
+    const excessTagsReq = {
+      ...reqA,
+      body: {
+        title: 'Excess Tags Task',
+        tags: ['t1', 't2', 't3', 't4', 't5', 't6'],
+      },
+    };
+    const excessTagsRes = mockRes();
+    await todoController.createTodo(excessTagsReq, excessTagsRes);
+    console.assert(excessTagsRes.statusCode === 400, `28 Fail: expected 400 for >5 tags, got ${excessTagsRes.statusCode}`);
+    console.log('PASS [28]: Reject >5 tags returns 400 Bad Request');
+
+    // 29. Reject tag >30 characters
+    const longTagReq = {
+      ...reqA,
+      body: {
+        title: 'Long Tag Task',
+        tags: ['a'.repeat(31)],
+      },
+    };
+    const longTagRes = mockRes();
+    await todoController.createTodo(longTagReq, longTagRes);
+    console.assert(longTagRes.statusCode === 400, `29 Fail: expected 400 for >30 char tag, got ${longTagRes.statusCode}`);
+    console.log('PASS [29]: Reject tag >30 characters returns 400 Bad Request');
+
+    // 30. Create task with subtasks & 31. Subtask defaults completed=false, completedAt=null
+    const subtaskTaskReq = {
+      ...reqA,
+      body: {
+        title: 'Task with Subtasks',
+        subtasks: [
+          { title: 'Subtask 1' },
+          { title: 'Subtask 2', completed: false },
+        ],
+      },
+    };
+    const subtaskTaskRes = mockRes();
+    await todoController.createTodo(subtaskTaskReq, subtaskTaskRes);
+    console.assert(subtaskTaskRes.statusCode === 201, '30 Fail: expected 201');
+    const createdSubtasks = subtaskTaskRes.body.data.subtasks;
+    console.assert(createdSubtasks.length === 2, `30 Fail: expected 2 subtasks, got ${createdSubtasks.length}`);
+    console.assert(createdSubtasks[0].completed === false && createdSubtasks[0].completedAt === null, '31 Fail: subtask 1 default mismatch');
+    console.assert(createdSubtasks[1].completed === false && createdSubtasks[1].completedAt === null, '31 Fail: subtask 2 default mismatch');
+    console.log('PASS [30-31]: Create task with subtasks defaults completed=false and completedAt=null');
+
+    // 32. Completing subtask sets completedAt timestamp
+    const createdSubtaskId = createdSubtasks[0]._id.toString();
+    const updateSubtaskReq1 = {
+      ...reqA,
+      params: { id: subtaskTaskRes.body.data._id.toString() },
+      body: {
+        subtasks: [
+          { _id: createdSubtaskId, title: 'Subtask 1', completed: true },
+          { _id: createdSubtasks[1]._id.toString(), title: 'Subtask 2', completed: false },
+        ],
+      },
+    };
+    const updateSubtaskRes1 = mockRes();
+    await todoController.updateTodo(updateSubtaskReq1, updateSubtaskRes1);
+    console.assert(updateSubtaskRes1.statusCode === 200, `32 Fail: status ${updateSubtaskRes1.statusCode}`);
+    const updatedSubtasks1 = updateSubtaskRes1.body.data.subtasks;
+    const sub1Completed = updatedSubtasks1.find((s) => s._id.toString() === createdSubtaskId);
+    console.assert(sub1Completed.completed === true, '32 Fail: subtask 1 not completed');
+    console.assert(sub1Completed.completedAt !== null, '32 Fail: subtask 1 completedAt is null');
+    const sub1CompletedAtTimestamp = new Date(sub1Completed.completedAt).getTime();
+    console.log('PASS [32]: Completing subtask sets completedAt timestamp');
+
+    // 33. Reopening subtask clears completedAt
+    const updateSubtaskReq2 = {
+      ...reqA,
+      params: { id: subtaskTaskRes.body.data._id.toString() },
+      body: {
+        subtasks: [
+          { _id: createdSubtaskId, title: 'Subtask 1', completed: false },
+          { _id: createdSubtasks[1]._id.toString(), title: 'Subtask 2', completed: false },
+        ],
+      },
+    };
+    const updateSubtaskRes2 = mockRes();
+    await todoController.updateTodo(updateSubtaskReq2, updateSubtaskRes2);
+    console.assert(updateSubtaskRes2.statusCode === 200, `33 Fail: status ${updateSubtaskRes2.statusCode}`);
+    const updatedSubtasks2 = updateSubtaskRes2.body.data.subtasks;
+    const sub1Reopened = updatedSubtasks2.find((s) => s._id.toString() === createdSubtaskId);
+    console.assert(sub1Reopened.completed === false, '33 Fail: subtask 1 not reopened');
+    console.assert(sub1Reopened.completedAt === null, '33 Fail: subtask 1 completedAt not cleared');
+    console.log('PASS [33]: Reopening subtask clears completedAt to null');
+
+    // 34. Completed subtask preserves completedAt when unrelated fields change
+    // Re-complete subtask 1 first
+    await todoController.updateTodo(updateSubtaskReq1, mockRes());
+    // Update task title without changing subtasks
+    const updateTitleReq = {
+      ...reqA,
+      params: { id: subtaskTaskRes.body.data._id.toString() },
+      body: { title: 'Renamed Parent Task' },
+    };
+    const updateTitleRes = mockRes();
+    await todoController.updateTodo(updateTitleReq, updateTitleRes);
+    console.assert(updateTitleRes.statusCode === 200, '34 Fail: status update title');
+    const sub1Preserved = updateTitleRes.body.data.subtasks.find((s) => s._id.toString() === createdSubtaskId);
+    console.assert(sub1Preserved.completed === true && sub1Preserved.completedAt !== null, '34 Fail: completedAt lost on title update');
+    console.log('PASS [34]: Completed subtask preserves completedAt when unrelated fields change');
+
+    // 35. User A cannot update User B's subtasks
+    const updateUnownedSubtaskReq = {
+      ...reqB,
+      params: { id: subtaskTaskRes.body.data._id.toString() },
+      body: { subtasks: [{ title: 'Hacked Subtask' }] },
+    };
+    const updateUnownedSubtaskRes = mockRes();
+    await todoController.updateTodo(updateUnownedSubtaskReq, updateUnownedSubtaskRes);
+    console.assert(updateUnownedSubtaskRes.statusCode === 404, `35 Fail: expected 404 for unowned update, got ${updateUnownedSubtaskRes.statusCode}`);
+    console.log('PASS [35]: User A cannot update User B subtasks (returns 404)');
+
+    // 36. User A cannot update User B's tags
+    const updateUnownedTagReq = {
+      ...reqB,
+      params: { id: subtaskTaskRes.body.data._id.toString() },
+      body: { tags: ['hacked'] },
+    };
+    const updateUnownedTagRes = mockRes();
+    await todoController.updateTodo(updateUnownedTagReq, updateUnownedTagRes);
+    console.assert(updateUnownedTagRes.statusCode === 404, `36 Fail: expected 404 for unowned update, got ${updateUnownedTagRes.statusCode}`);
+    console.log('PASS [36]: User A cannot update User B tags (returns 404)');
+
     console.log('\n--- ALL USER DATA OWNERSHIP TESTS PASSED SUCCESSFULLY! ---\n');
   } finally {
     await UserModel.deleteMany({});

@@ -1,6 +1,128 @@
 const TodoModel = require('../models/Todo');
 const mongoose = require('mongoose');
 
+// Helper to validate and normalize tags array
+const parseAndValidateTags = (tagsInput) => {
+  if (tagsInput === undefined || tagsInput === null) return { valid: true, value: undefined };
+  if (!Array.isArray(tagsInput)) {
+    return { valid: false, message: 'Tags must be an array of strings.' };
+  }
+
+  const normalized = [];
+  const seen = new Set();
+
+  for (const item of tagsInput) {
+    if (typeof item !== 'string') {
+      return { valid: false, message: 'Tags must be an array of strings.' };
+    }
+    const clean = item.trim().toLowerCase();
+    if (!clean) continue;
+    if (clean.length > 30) {
+      return { valid: false, message: 'Tag length cannot exceed 30 characters.' };
+    }
+    if (!seen.has(clean)) {
+      seen.add(clean);
+      normalized.push(clean);
+    }
+  }
+
+  if (normalized.length > 5) {
+    return { valid: false, message: 'Cannot specify more than 5 tags.' };
+  }
+
+  return { valid: true, value: normalized };
+};
+
+// Helper to validate subtasks for createTodo
+const parseAndValidateSubtasksCreate = (subtasksInput) => {
+  if (subtasksInput === undefined || subtasksInput === null) return { valid: true, value: undefined };
+  if (!Array.isArray(subtasksInput)) {
+    return { valid: false, message: 'Subtasks must be an array of objects.' };
+  }
+
+  const parsed = [];
+  for (const item of subtasksInput) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) {
+      return { valid: false, message: 'Subtasks must be an array of objects.' };
+    }
+    if (typeof item.title !== 'string' || !item.title.trim()) {
+      return { valid: false, message: 'Subtask title is required and cannot be empty.' };
+    }
+    const title = item.title.trim();
+    if (title.length > 300) {
+      return { valid: false, message: 'Subtask title cannot exceed 300 characters.' };
+    }
+    const completed = Boolean(item.completed);
+    let completedAt = null;
+    if (completed) {
+      completedAt = item.completedAt ? new Date(item.completedAt) : new Date();
+      if (isNaN(completedAt.getTime())) completedAt = new Date();
+    }
+    parsed.push({ title, completed, completedAt });
+  }
+
+  return { valid: true, value: parsed };
+};
+
+// Helper to validate subtasks for updateTodo with state transition logic
+const parseAndValidateSubtasksUpdate = (subtasksInput, existingSubtasks = []) => {
+  if (subtasksInput === undefined) return { valid: true, value: undefined };
+  if (subtasksInput === null) return { valid: true, value: [] };
+  if (!Array.isArray(subtasksInput)) {
+    return { valid: false, message: 'Subtasks must be an array of objects.' };
+  }
+
+  const existingMap = new Map();
+  existingSubtasks.forEach((sub) => {
+    if (sub && sub._id) {
+      existingMap.set(sub._id.toString(), sub);
+    }
+  });
+
+  const parsed = [];
+  for (const item of subtasksInput) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) {
+      return { valid: false, message: 'Subtasks must be an array of objects.' };
+    }
+    if (typeof item.title !== 'string' || !item.title.trim()) {
+      return { valid: false, message: 'Subtask title is required and cannot be empty.' };
+    }
+    const title = item.title.trim();
+    if (title.length > 300) {
+      return { valid: false, message: 'Subtask title cannot exceed 300 characters.' };
+    }
+
+    const subId = (item._id || item.id) ? (item._id || item.id).toString() : null;
+    const existingSub = subId ? existingMap.get(subId) : null;
+
+    const isCompleted = Boolean(item.completed);
+    let completedAt = null;
+
+    if (isCompleted) {
+      if (existingSub && existingSub.completed && existingSub.completedAt) {
+        completedAt = existingSub.completedAt;
+      } else {
+        completedAt = new Date();
+      }
+    } else {
+      completedAt = null;
+    }
+
+    const subObj = {
+      title,
+      completed: isCompleted,
+      completedAt,
+    };
+    if (subId && mongoose.Types.ObjectId.isValid(subId)) {
+      subObj._id = subId;
+    }
+
+    parsed.push(subObj);
+  }
+
+  return { valid: true, value: parsed };
+};
+
 // @desc    Create a new Todo (Scoped to authenticated user)
 // @route   POST /api/todos
 const createTodo = async (req, res) => {
@@ -13,7 +135,7 @@ const createTodo = async (req, res) => {
       });
     }
 
-    const { title, reminderTime, dueDate, priority, estimatedMinutes } = req.body || {};
+    const { title, reminderTime, dueDate, priority, estimatedMinutes, tags, subtasks } = req.body || {};
 
     if (!title || typeof title !== 'string' || !title.trim()) {
       return res.status(400).json({
@@ -69,6 +191,22 @@ const createTodo = async (req, res) => {
       parsedEstMinutes = Math.round(num);
     }
 
+    const parsedTags = parseAndValidateTags(tags);
+    if (!parsedTags.valid) {
+      return res.status(400).json({
+        success: false,
+        message: parsedTags.message,
+      });
+    }
+
+    const parsedSubtasks = parseAndValidateSubtasksCreate(subtasks);
+    if (!parsedSubtasks.valid) {
+      return res.status(400).json({
+        success: false,
+        message: parsedSubtasks.message,
+      });
+    }
+
     // Always derive userId strictly from authenticated JWT context
     const newTodo = await TodoModel.create({
       userId,
@@ -79,6 +217,8 @@ const createTodo = async (req, res) => {
       reminderTime: parsedReminderTime,
       completed: false,
       reminderSent: false,
+      tags: parsedTags.value || [],
+      subtasks: parsedSubtasks.value || [],
     });
 
     return res.status(201).json({
@@ -227,6 +367,28 @@ const updateTodo = async (req, res) => {
         updates.reminderTime = dateVal;
         updates.reminderSent = false;
       }
+    }
+
+    if (req.body.tags !== undefined) {
+      const parsedTags = parseAndValidateTags(req.body.tags);
+      if (!parsedTags.valid) {
+        return res.status(400).json({
+          success: false,
+          message: parsedTags.message,
+        });
+      }
+      updates.tags = parsedTags.value || [];
+    }
+
+    if (req.body.subtasks !== undefined) {
+      const parsedSubtasks = parseAndValidateSubtasksUpdate(req.body.subtasks, existingTodo.subtasks);
+      if (!parsedSubtasks.valid) {
+        return res.status(400).json({
+          success: false,
+          message: parsedSubtasks.message,
+        });
+      }
+      updates.subtasks = parsedSubtasks.value || [];
     }
 
     const updatedTodo = await TodoModel.findOneAndUpdate(

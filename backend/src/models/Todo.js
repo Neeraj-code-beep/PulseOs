@@ -1,5 +1,25 @@
 const mongoose = require('mongoose');
 
+const SubtaskSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 300,
+    },
+    completed: {
+      type: Boolean,
+      default: false,
+    },
+    completedAt: {
+      type: Date,
+      default: null,
+    },
+  },
+  { _id: true, timestamps: false }
+);
+
 const ToDoSchema = new mongoose.Schema(
   {
     userId: {
@@ -56,6 +76,16 @@ const ToDoSchema = new mongoose.Schema(
     completedAt: {
       type: Date,
       default: null,
+    },
+
+    tags: {
+      type: [String],
+      default: [],
+    },
+
+    subtasks: {
+      type: [SubtaskSchema],
+      default: [],
     },
   },
   { timestamps: true },

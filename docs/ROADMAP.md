@@ -144,3 +144,12 @@
 - [x] Inline reset confirmation prompt in `TimerControls.jsx` for sessions with ≥ 60s elapsed focus time
 - [x] Global `Space` bar keyboard listener in `Focus.jsx` to toggle start/pause/resume
 - [x] Technical documentation updates (`docs/FOCUS-SYSTEM.md`, `PROJECT-STATUS.md`, `ROADMAP.md`)
+
+---
+
+## Phase 7.1: Task Organization Engine — Backend Foundation (Completed)
+- [x] Schema extension (`Todo.js`): `tags: [String]` and `subtasks: [{ title, completed, completedAt }]`
+- [x] Tag normalization & validation in `todo.controller.js` (lowercase, trim, max 5, max 30 chars, no duplicates)
+- [x] Subtask validation & state-transition tracking (`completed: true` sets `completedAt`, `completed: false` clears `completedAt`)
+- [x] Strict user ownership isolation (`req.user.userId`) and backward compatibility
+- [x] Expanded backend test suite (`ownership.test.js` — 36/36 passed)
