@@ -17,10 +17,26 @@ export const TimerDisplay = () => {
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference * (1 - progress);
 
+  const isRunning = timerState === 'RUNNING';
+
   return (
     <div className="relative flex flex-col items-center justify-center p-6">
+      {/* Screen Reader ARIA Live Region for Throttled Time Announcements */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {isRunning && remainingSeconds % 30 === 0
+          ? `${minutes} minutes and ${seconds} seconds remaining in focus session`
+          : ''}
+      </div>
+
       {/* SVG Ring Visual Instrument */}
-      <div className="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center">
+      <div
+        className="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center"
+        role="progressbar"
+        aria-valuenow={Math.round(progress * 100)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Focus timer progress"
+      >
         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 250 250">
           <circle
             cx="125"
@@ -33,7 +49,9 @@ export const TimerDisplay = () => {
             cx="125"
             cy="125"
             r={radius}
-            className="stroke-[var(--focus)] fill-none transition-all duration-300 ease-out"
+            className={`stroke-[var(--focus)] fill-none transition-all duration-300 ease-out ${
+              isRunning ? 'drop-shadow-[0_0_8px_var(--focus)]' : ''
+            }`}
             strokeWidth="7"
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
@@ -48,7 +66,7 @@ export const TimerDisplay = () => {
           </div>
 
           <div className="mt-2 text-xs font-mono font-medium text-[var(--text-muted)] uppercase tracking-wider">
-            {timerState === 'RUNNING' && <span className="text-[var(--focus)]">● Focusing</span>}
+            {timerState === 'RUNNING' && <span className="text-[var(--focus)] animate-pulse">● Focusing</span>}
             {timerState === 'PAUSED' && <span className="text-[var(--warning)]">❚❚ Paused</span>}
             {timerState === 'COMPLETED' && <span className="text-[var(--success)]">✓ Completed</span>}
             {timerState === 'IDLE' && <span>Ready</span>}

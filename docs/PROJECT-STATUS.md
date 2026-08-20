@@ -6,6 +6,15 @@ The application is a full-stack MERN student productivity workspace featuring a 
 ---
 
 ## Completed Functionality
+- **Focus Workspace Refinement & Polish (Milestone 6 Complete)**:
+  - Dynamic state-aware status badge (`RUNNING` / `PAUSED` / `COMPLETED` / `IDLE`) in `Focus.jsx`.
+  - Optimized summary data fetching in `Focus.jsx` preventing overfetching on pause/resume toggles.
+  - SPA deep-link navigation in `TaskItem.jsx` replacing `window.location.href`.
+  - Accessibility enhancements: Throttled `aria-live="polite"` timer announcements, `role="progressbar"` SVG timer ring, `aria-pressed` mode buttons, and explicit `htmlFor`/`id` label associations.
+  - Active session visual glow effect on timer ring during `RUNNING` state.
+  - Inline reset confirmation prompt in `TimerControls.jsx` for sessions with ≥ 60s elapsed focus time.
+  - Global `Space` bar keyboard listener in `Focus.jsx` to toggle start/pause/resume.
+
 - **Authentication & User Data Ownership (Phase 5D & Milestone 1 & 2 Complete)**:
   - User model schema (`User.js`) with email normalization, unique index, bcryptjs password hashing, and timestamps.
   - Auth service & controller (`auth.service.js`, `auth.controller.js`) providing `POST /api/auth/register`, `POST /api/auth/login`, and `GET /api/auth/me`.

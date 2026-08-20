@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { formatDateDisplay, formatEstimate } from '../../utils/taskUtils';
 import { MoreVertical, Edit2, Trash2, Calendar, Clock, Bell, Check } from 'lucide-react';
 
 export const TaskItem = ({ todo, onToggleComplete, onDelete, onEdit }) => {
+  const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const menuRef = useRef(null);
@@ -148,18 +150,16 @@ export const TaskItem = ({ todo, onToggleComplete, onDelete, onEdit }) => {
               <Edit2 size={13} /> Edit
             </button>
             {!todo.completed && (
-              <a
-                href={`/focus?task=${id}`}
-                onClick={(e) => {
-                  e.preventDefault();
+              <button
+                onClick={() => {
                   setShowMenu(false);
-                  window.location.href = `/focus?task=${id}`;
+                  navigate(`/focus?task=${id}`);
                 }}
-                className="flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--focus)] hover:bg-[var(--focus-soft)] text-left cursor-pointer"
+                className="flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--focus)] hover:bg-[var(--focus-soft)] text-left cursor-pointer w-full"
                 aria-label="Start focus session on task"
               >
                 <Clock size={13} /> Focus
-              </a>
+              </button>
             )}
             <button
               onClick={() => {

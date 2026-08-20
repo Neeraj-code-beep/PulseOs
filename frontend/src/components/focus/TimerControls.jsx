@@ -1,9 +1,54 @@
+import { useState } from 'react';
 import { useFocus } from '../../context/useFocus';
-import { Play, Pause, RotateCcw, CheckCircle2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
 
 export const TimerControls = () => {
-  const { timerState, startTimer, pauseTimer, resumeTimer, resetTimer } = useFocus();
+  const { timerState, remainingSeconds, totalPlannedSeconds, startTimer, pauseTimer, resumeTimer, resetTimer } = useFocus();
+  const [showConfirmReset, setShowConfirmReset] = useState(false);
+
+  const elapsedSeconds = totalPlannedSeconds - remainingSeconds;
+  const isMeaningfulSession = (timerState === 'RUNNING' || timerState === 'PAUSED') && elapsedSeconds >= 60;
+
+  const handleResetClick = () => {
+    if (isMeaningfulSession && !showConfirmReset) {
+      setShowConfirmReset(true);
+      return;
+    }
+    setShowConfirmReset(false);
+    resetTimer();
+  };
+
+  const handleCancelReset = () => {
+    setShowConfirmReset(false);
+  };
+
+  if (showConfirmReset) {
+    return (
+      <div className="flex items-center gap-2 p-2 bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-[var(--radius-md)] text-xs animate-in fade-in duration-150">
+        <AlertCircle size={15} className="text-[var(--danger)] shrink-0" />
+        <span className="text-[var(--text-primary)] font-medium">End & log session?</span>
+        <Button
+          variant="danger"
+          size="sm"
+          onClick={handleResetClick}
+          className="text-xs px-2.5 py-1"
+          aria-label="Confirm ending focus session"
+        >
+          Confirm
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleCancelReset}
+          className="text-xs px-2 py-1"
+          aria-label="Cancel ending focus session"
+        >
+          Cancel
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center gap-3">
@@ -32,7 +77,7 @@ export const TimerControls = () => {
           </Button>
           <Button
             variant="ghost"
-            onClick={resetTimer}
+            onClick={handleResetClick}
             className="px-4 py-2 text-xs text-[var(--danger)] hover:bg-[var(--danger)]/10 font-semibold flex items-center gap-1.5"
             aria-label="End focus session"
           >
@@ -55,7 +100,7 @@ export const TimerControls = () => {
           </Button>
           <Button
             variant="ghost"
-            onClick={resetTimer}
+            onClick={handleResetClick}
             className="px-4 py-2 text-xs text-[var(--danger)] hover:bg-[var(--danger)]/10 font-semibold flex items-center gap-1.5"
             aria-label="Reset focus timer"
           >

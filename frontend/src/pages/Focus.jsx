@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useFocus } from '../context/useFocus';
 import { TimerDisplay } from '../components/focus/TimerDisplay';
@@ -8,7 +8,6 @@ import { FocusTaskSelector } from '../components/focus/FocusTaskSelector';
 import { SessionComplete } from '../components/focus/SessionComplete';
 import { getFocusSessionsApi, getFocusSummaryApi } from '../services/focusApi';
 import { Flame, Clock, CheckCircle, RefreshCw } from 'lucide-react';
-import { Button } from '../components/ui/Button';
 import { SectionEyebrow } from '../components/ui/SectionEyebrow';
 import { EditorialHeading } from '../components/ui/EditorialHeading';
 
@@ -16,12 +15,14 @@ export const Focus = () => {
   const [searchParams] = useSearchParams();
   const deepLinkTaskId = searchParams.get('task');
 
-  const { setSelectedTaskId, timerState } = useFocus();
+  const { setSelectedTaskId, timerState, startTimer, pauseTimer, resumeTimer } = useFocus();
 
   const [summary, setSummary] = useState(null);
   const [recentSessions, setRecentSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+
+  const prevTimerStateRef = useRef(timerState);
 
   // Handle deep link from task action (/focus?task=<id>)
   useEffect(() => {
@@ -49,9 +50,43 @@ export const Focus = () => {
     }
   }, []);
 
+  // Fetch data on initial mount
   useEffect(() => {
     fetchFocusData();
-  }, [fetchFocusData, timerState]);
+  }, [fetchFocusData]);
+
+  // Refetch summary data only on completion or reset to IDLE state (prevent polling/overfetching)
+  useEffect(() => {
+    if (prevTimerStateRef.current !== timerState) {
+      if (timerState === 'COMPLETED' || (prevTimerStateRef.current === 'COMPLETED' && timerState === 'IDLE')) {
+        fetchFocusData();
+      }
+      prevTimerStateRef.current = timerState;
+    }
+  }, [timerState, fetchFocusData]);
+
+  // Keyboard shortcut: Space bar toggles start/pause/resume when not focused inside an input field
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const targetTag = e.target?.tagName?.toLowerCase();
+      if (targetTag === 'input' || targetTag === 'select' || targetTag === 'textarea' || e.target?.isContentEditable) {
+        return;
+      }
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (timerState === 'IDLE') {
+          startTimer();
+        } else if (timerState === 'RUNNING') {
+          pauseTimer();
+        } else if (timerState === 'PAUSED') {
+          resumeTimer();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [timerState, startTimer, pauseTimer, resumeTimer]);
 
   const formatSeconds = (sec = 0) => {
     const hrs = Math.floor(sec / 3600);
@@ -73,9 +108,25 @@ export const Focus = () => {
           </EditorialHeading>
         </div>
 
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--focus-soft)] text-[var(--focus)] text-xs font-mono font-semibold self-start sm:self-auto border border-[var(--focus)]/20">
-          <Flame size={14} />
-          <span>Deep Work Active</span>
+        {/* Dynamic State-Aware Status Badge */}
+        <div
+          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold self-start sm:self-auto border transition-colors ${
+            timerState === 'RUNNING'
+              ? 'bg-[var(--focus-soft)] text-[var(--focus)] border-[var(--focus)]/30'
+              : timerState === 'PAUSED'
+              ? 'bg-[var(--accent-soft)] text-[var(--accent)] border-[var(--accent)]/30'
+              : timerState === 'COMPLETED'
+              ? 'bg-[var(--focus-soft)] text-[var(--focus)] border-[var(--focus)]/30'
+              : 'bg-[var(--bg-surface-elevated)] text-[var(--text-muted)] border-[var(--border-soft)]'
+          }`}
+        >
+          <Flame size={14} className={timerState === 'RUNNING' ? 'animate-pulse text-[var(--focus)]' : ''} />
+          <span>
+            {timerState === 'RUNNING' && 'Focus Active'}
+            {timerState === 'PAUSED' && 'Session Paused'}
+            {timerState === 'COMPLETED' && 'Session Complete'}
+            {timerState === 'IDLE' && 'Ready to Focus'}
+          </span>
         </div>
       </div>
 

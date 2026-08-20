@@ -15,7 +15,7 @@ export const FocusTaskSelector = () => {
 
   return (
     <div className="flex flex-col gap-2 w-full">
-      <label className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] flex items-center justify-between">
+      <label htmlFor="focus-target-task-select" className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] flex items-center justify-between">
         <span>Target Task</span>
         {selectedTodo && (
           <span className="text-[11px] font-mono text-[var(--focus)] normal-case font-normal">
@@ -26,9 +26,11 @@ export const FocusTaskSelector = () => {
 
       <div className="relative">
         <select
+          id="focus-target-task-select"
           disabled={isDisabled}
           value={selectedTaskId || ''}
           onChange={(e) => setSelectedTaskId(e.target.value || null)}
+          aria-label="Target task for focus session"
           className={`w-full p-2.5 bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-md)] text-xs text-[var(--text-primary)] font-medium outline-none cursor-pointer appearance-none transition-colors ${
             isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-[var(--border-strong)]'
           }`}
