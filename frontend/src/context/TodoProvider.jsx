@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import API from '../services/Api';
+import {
+  getTodosApi,
+  createTodoApi,
+  updateTodoApi,
+  deleteTodoApi,
+} from '../services/todoApi';
 import { toast } from 'react-toastify';
 import { TodoContext } from './TodoContext';
 import { useAuth } from './useAuth';
@@ -10,7 +15,13 @@ const normalizeTodo = (t) => {
   return {
     ...t,
     tags: Array.isArray(t.tags) ? t.tags : [],
-    subtasks: Array.isArray(t.subtasks) ? t.subtasks : [],
+    subtasks: Array.isArray(t.subtasks)
+      ? t.subtasks.map((st) => ({
+          ...st,
+          completed: Boolean(st.completed),
+          completedAt: st.completedAt || null,
+        }))
+      : [],
   };
 };
 
@@ -25,11 +36,11 @@ const TodoProvider = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await API.get('api/todos');
-      if (res.data && res.data.success && Array.isArray(res.data.data)) {
-        settodos(res.data.data.map(normalizeTodo));
-      } else if (Array.isArray(res.data)) {
+      const res = await getTodosApi();
+      if (res && res.success && Array.isArray(res.data)) {
         settodos(res.data.map(normalizeTodo));
+      } else if (Array.isArray(res)) {
+        settodos(res.map(normalizeTodo));
       }
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to fetch tasks';
@@ -55,9 +66,9 @@ const TodoProvider = ({ children }) => {
     if (!payload.title || !payload.title.trim()) return;
 
     try {
-      const res = await API.post('api/todos', payload);
-      if (res.data && res.data.success && res.data.data) {
-        const normalized = normalizeTodo(res.data.data);
+      const res = await createTodoApi(payload);
+      if (res && res.success && res.data) {
+        const normalized = normalizeTodo(res.data);
         settodos((prev) => [normalized, ...prev]);
         toast.success('Task Created');
         return normalized;
@@ -73,8 +84,8 @@ const TodoProvider = ({ children }) => {
   // DELETE Todo
   const deleteTodo = async (id) => {
     try {
-      const res = await API.delete(`api/todos/${id}`);
-      if (res.data && res.data.success) {
+      const res = await deleteTodoApi(id);
+      if (res && res.success) {
         settodos((prev) => prev.filter((todo) => (todo._id || todo.id) !== id));
         toast.success('Task Deleted');
       } else {
@@ -97,9 +108,9 @@ const TodoProvider = ({ children }) => {
         if (completed !== undefined) payload.completed = completed;
       }
 
-      const res = await API.patch(`api/todos/${id}`, payload);
-      if (res.data && res.data.success && res.data.data) {
-        const normalized = normalizeTodo(res.data.data);
+      const res = await updateTodoApi(id, payload);
+      if (res && res.success && res.data) {
+        const normalized = normalizeTodo(res.data);
         settodos((prev) =>
           prev.map((todo) =>
             (todo._id || todo.id) === id ? normalized : todo,
@@ -130,7 +141,7 @@ const TodoProvider = ({ children }) => {
 
   // Subtask Helpers
   const addSubtask = async (taskId, title) => {
-    if (!title || !title.trim()) return;
+    if (!title || typeof title !== 'string' || !title.trim()) return;
     const target = todos.find((t) => (t._id || t.id) === taskId);
     if (!target) return;
     const existing = Array.isArray(target.subtasks) ? target.subtasks : [];
@@ -167,9 +178,13 @@ const TodoProvider = ({ children }) => {
   };
 
   // Tag Helpers
-  const setTaskTags = async (taskId, tags) => {
+  const updateTaskTags = async (taskId, tags) => {
     const tagsArray = Array.isArray(tags) ? tags : [];
     return updateTodo(taskId, { tags: tagsArray });
+  };
+
+  const setTaskTags = async (taskId, tags) => {
+    return updateTaskTags(taskId, tags);
   };
 
   const addTaskTag = async (taskId, tag) => {
@@ -220,6 +235,7 @@ const TodoProvider = ({ children }) => {
         updateSubtask,
         toggleSubtask,
         deleteSubtask,
+        updateTaskTags,
         setTaskTags,
         addTaskTag,
         removeTaskTag,

@@ -147,9 +147,21 @@
 
 ---
 
-## Phase 7.1: Task Organization Engine — Backend Foundation (Completed)
+## Phase 7.1: Task Organization Engine — Backend Foundation (Milestone 7 Phase 1 Completed)
 - [x] Schema extension (`Todo.js`): `tags: [String]` and `subtasks: [{ title, completed, completedAt }]`
 - [x] Tag normalization & validation in `todo.controller.js` (lowercase, trim, max 5, max 30 chars, no duplicates)
 - [x] Subtask validation & state-transition tracking (`completed: true` sets `completedAt`, `completed: false` clears `completedAt`)
 - [x] Strict user ownership isolation (`req.user.userId`) and backward compatibility
 - [x] Expanded backend test suite (`ownership.test.js` — 36/36 passed)
+
+---
+
+## Phase 7.2A: Task Context & Frontend State Synchronization (Milestone 7 Phase 2A Completed)
+- [x] Created `todoApi.jsx` service layer (`getTodosApi`, `createTodoApi`, `updateTodoApi`, `deleteTodoApi`)
+- [x] Extended `TodoProvider.jsx` with full tags & subtasks normalization (`tags: []`, `subtasks: []`)
+- [x] Added clean subtask helper methods: `addSubtask`, `updateSubtask`, `toggleSubtask`, `deleteSubtask`
+- [x] Added clean tag helper methods: `updateTaskTags`, `setTaskTags`, `addTaskTag`, `removeTaskTag`
+- [x] Created `useTodo.jsx` custom hook for ergonomic context consumption
+- [x] Preserved existing optimistic/local state mutation contracts and backward compatibility
+- [x] Full test verification (Frontend lint 0 errors, Frontend build passed, Backend test suites all passed)
+
