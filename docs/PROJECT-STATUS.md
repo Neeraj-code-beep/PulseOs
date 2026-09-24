@@ -6,6 +6,14 @@ The application is a full-stack MERN student productivity workspace featuring a 
 ---
 
 ## Completed Functionality
+- **Persistent Subtask & Subject Tag UI (Milestone 7 Phase 2B Complete)**:
+  - Extended [components/tasks/TaskEditor.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/components/tasks/TaskEditor.jsx) with comprehensive persistent subtask management: subtask checklist, progress counter badge, add subtask input with Enter/Escape hotkeys, inline title editing, toggle completion with immediate persistence, and delete subtask actions.
+  - Added persistent tag management to `TaskEditor.jsx`: tag pill badges, single-click tag deletion, inline add tag input with Enter trigger, duplicate prevention, and maximum 5 tags enforcement.
+  - Enhanced [components/tasks/TaskItem.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/components/tasks/TaskItem.jsx) to display compact subject tags (`#tag`) and subtask completion progress indicators (`✓ x/y subtasks`).
+  - Preserved zero visual overhead and unchanged layout for tasks without tags or subtasks.
+  - Verified responsive design across mobile, tablet, and desktop viewports without horizontal overflow.
+  - Verified 0 lint errors, clean Vite production build, and full 119/119 backend test suite.
+
 - **Task Context & Frontend State Synchronization (Milestone 7 Phase 2A Complete)**:
   - Created modular task API client ([services/todoApi.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/services/todoApi.jsx)) supporting `getTodosApi`, `createTodoApi`, `updateTodoApi`, and `deleteTodoApi`.
   - Extended [context/TodoProvider.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/context/TodoProvider.jsx) with array normalization for `tags` and `subtasks`, preventing undefined exceptions and guaranteeing backward compatibility.

@@ -165,3 +165,13 @@
 - [x] Preserved existing optimistic/local state mutation contracts and backward compatibility
 - [x] Full test verification (Frontend lint 0 errors, Frontend build passed, Backend test suites all passed)
 
+---
+
+## Phase 7.2B: Persistent Subtask & Subject Tag UI (Milestone 7 Phase 2B Completed)
+- [x] Implemented persistent subtask checklist in `TaskEditor.jsx` (add, toggle, inline edit, delete, with count badge)
+- [x] Implemented persistent tag management in `TaskEditor.jsx` (pill badges, add input with Enter shortcut, remove button, max 5 limit, duplicate protection)
+- [x] Integrated `TaskItem.jsx` with compact tag badges (`#tag`) and subtask progress indicator (`✓ x/y subtasks`)
+- [x] Preserved existing `TaskItem` layout and zero-overhead presentation for tasks without tags or subtasks
+- [x] Full responsive design verified across mobile, tablet, and desktop viewports
+- [x] Full regression suites passed (Frontend lint 0 errors, Vite production build passed, 119/119 backend tests passed)
+

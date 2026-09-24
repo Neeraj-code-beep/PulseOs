@@ -1,7 +1,17 @@
+import PropTypes from 'prop-types';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatDateDisplay, formatEstimate } from '../../utils/taskUtils';
-import { MoreVertical, Edit2, Trash2, Calendar, Clock, Bell, Check } from 'lucide-react';
+import {
+  MoreVertical,
+  Edit2,
+  Trash2,
+  Calendar,
+  Clock,
+  Bell,
+  Check,
+  ListChecks,
+} from 'lucide-react';
 
 export const TaskItem = ({ todo, onToggleComplete, onDelete, onEdit }) => {
   const navigate = useNavigate();
@@ -12,6 +22,13 @@ export const TaskItem = ({ todo, onToggleComplete, onDelete, onEdit }) => {
 
   const dateInfo = formatDateDisplay(todo.dueDate);
   const formattedEst = formatEstimate(todo.estimatedMinutes);
+
+  const subtasks = Array.isArray(todo.subtasks) ? todo.subtasks : [];
+  const tags = Array.isArray(todo.tags) ? todo.tags : [];
+  const completedSubtasksCount = subtasks.filter((s) => s.completed).length;
+  const hasSubtasks = subtasks.length > 0;
+  const hasTags = tags.length > 0;
+  const hasContextDetails = hasSubtasks || hasTags;
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -49,15 +66,43 @@ export const TaskItem = ({ todo, onToggleComplete, onDelete, onEdit }) => {
           </div>
         </label>
 
-        {/* Title & Inline Metadata */}
+        {/* Title, Context & Inline Metadata */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 min-w-0 flex-1">
-          <span
-            className={`text-sm font-medium text-[var(--text-primary)] truncate ${
-              todo.completed ? 'line-through text-[var(--text-muted)]' : ''
-            }`}
-          >
-            {todo.title}
-          </span>
+          <div className="flex flex-col gap-1 min-w-0 flex-1 pr-2">
+            <span
+              className={`text-sm font-medium text-[var(--text-primary)] truncate ${
+                todo.completed ? 'line-through text-[var(--text-muted)]' : ''
+              }`}
+            >
+              {todo.title}
+            </span>
+
+            {/* Context details: Tags and Subtask Progress */}
+            {hasContextDetails && (
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center px-1.5 py-0.2 text-[10px] font-mono rounded bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)] border border-[var(--border-soft)]"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+                {hasSubtasks && (
+                  <span
+                    className={`inline-flex items-center gap-1 text-[10px] font-mono ${
+                      completedSubtasksCount === subtasks.length
+                        ? 'text-[var(--focus)] font-medium'
+                        : 'text-[var(--text-muted)]'
+                    }`}
+                  >
+                    <ListChecks size={11} />
+                    {completedSubtasksCount}/{subtasks.length} subtasks
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Metadata items */}
           <div className="flex items-center gap-3 text-xs text-[var(--text-muted)] font-mono shrink-0">
@@ -201,4 +246,32 @@ export const TaskItem = ({ todo, onToggleComplete, onDelete, onEdit }) => {
       )}
     </div>
   );
+};
+
+TaskItem.propTypes = {
+  todo: PropTypes.shape({
+    _id: PropTypes.string,
+    id: PropTypes.string,
+    title: PropTypes.string.isRequired,
+    dueDate: PropTypes.string,
+    reminderTime: PropTypes.string,
+    reminderSent: PropTypes.bool,
+    priority: PropTypes.string,
+    estimatedMinutes: PropTypes.number,
+    focusTimeSpent: PropTypes.number,
+    completed: PropTypes.bool,
+    tags: PropTypes.arrayOf(PropTypes.string),
+    subtasks: PropTypes.arrayOf(
+      PropTypes.shape({
+        _id: PropTypes.string,
+        id: PropTypes.string,
+        title: PropTypes.string,
+        completed: PropTypes.bool,
+        completedAt: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
+      }),
+    ),
+  }).isRequired,
+  onToggleComplete: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
+  onEdit: PropTypes.func.isRequired,
 };
