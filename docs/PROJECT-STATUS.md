@@ -6,6 +6,17 @@ The application is a full-stack MERN student productivity workspace featuring a 
 ---
 
 ## Completed Functionality
+- **Subject Tag Filtering & Task Organization (Milestone 7 Phase 4 Complete)**:
+  - Implemented dynamic subject tag filter bar in [pages/Tasks.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/pages/Tasks.jsx), deriving available tags from the user's existing tasks with no hardcoded subject list.
+  - Integrated tag filtering into the existing status filter pipeline: `todos → status filter → tag filter → sorting → render`.
+  - Tags rendered as alphabetically-sorted pill buttons with active/inactive states following the existing Warm Editorial design.
+  - "All" button resets to unfiltered view; clicking an active tag toggles it off.
+  - Auto-resets selected tag when it no longer exists in any task.
+  - Tag-specific empty state (`"No tasks found for #tagname"`) in [components/tasks/TaskEmptyState.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/components/tasks/TaskEmptyState.jsx).
+  - "Clear filters" resets both status and tag filters simultaneously.
+  - Responsive flex-wrap layout — no horizontal page overflow on mobile.
+  - Zero backend changes — pure frontend filtering over already-fetched `todos` state.
+
 - **AI Breakdown → Persistent Subtasks (Milestone 7 Phase 3 Complete)**:
   - Connected AI Task Breakdown workflow in [components/ai/TaskBreakdownPanel.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/components/ai/TaskBreakdownPanel.jsx) to persistent `Todo.subtasks` persistence architecture.
   - Implemented explicit review & persist UX: generation does NOT auto-persist; users review AI work blocks and click "Add to Subtasks" to persist.

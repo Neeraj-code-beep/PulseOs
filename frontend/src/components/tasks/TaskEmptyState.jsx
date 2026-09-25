@@ -1,8 +1,32 @@
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { CheckCircle2, Calendar, ListTodo } from 'lucide-react';
+import { CheckCircle2, Calendar, ListTodo, Tag } from 'lucide-react';
 
-export const TaskEmptyState = ({ activeFilter, onAddClick, onClearFilters }) => {
+export const TaskEmptyState = ({ activeFilter, activeTag, onAddClick, onClearFilters }) => {
+  // Tag-specific empty state takes priority when a tag filter is active
+  if (activeTag) {
+    return (
+      <Card className="p-10 text-center flex flex-col items-center justify-center gap-3 border-dashed my-4">
+        <div className="p-3 bg-[var(--bg-surface-elevated)] rounded-full text-[var(--accent)]">
+          <Tag size={32} />
+        </div>
+        <div>
+          <h3 className="font-bold text-base">No tasks found for #{activeTag}</h3>
+          <p className="text-xs text-[var(--text-muted)] mt-1 max-w-sm">
+            No tasks match this subject tag with the current status filter.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 mt-2">
+          {onClearFilters && (
+            <Button variant="secondary" size="sm" onClick={onClearFilters}>
+              Clear filters
+            </Button>
+          )}
+        </div>
+      </Card>
+    );
+  }
+
   const configs = {
     today: {
       icon: CheckCircle2,

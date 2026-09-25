@@ -188,3 +188,17 @@
 - [x] Preserved result suggestions on network/save failure with inline alert banner to allow easy retries
 - [x] Immediate TaskEditor subtask list synchronization upon persistence
 - [x] Verified 0 lint errors, clean Vite production build, and full 119/119 backend test suite
+
+---
+
+## Phase 7.4: Subject Tag Filtering & Task Organization (Milestone 7 Phase 4 Completed)
+- [x] Implemented subject tag filter bar in `Tasks.jsx` — dynamically derived from user's existing task tags (no hardcoded list)
+- [x] Integrated tag filter into existing status filter pipeline (today/upcoming/all/completed → tag filter → sorting)
+- [x] Tags rendered as alphabetically-sorted pill buttons with clear active/inactive states using existing Warm Editorial design
+- [x] "All" button resets to unfiltered view; clicking an active tag toggles it off
+- [x] Auto-resets selected tag when it no longer exists in any task (e.g., tag removed from all tasks)
+- [x] Tag-specific empty state: "No tasks found for #tagname" when active tag + status filter yields zero results
+- [x] "Clear filters" resets both status and tag filters simultaneously
+- [x] Responsive flex-wrap layout for tag buttons — no horizontal page overflow on mobile
+- [x] Zero backend changes — pure frontend filtering over already-fetched `todos` state
+- [x] Verified 0 lint errors, clean Vite production build, and full backend test suite passed

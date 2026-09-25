@@ -1,4 +1,5 @@
 import { useState, useContext, useMemo } from 'react';
+import { Tag } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { TodoContext } from '../context/TodoContext';
 import { TaskQuickAdd } from '../components/tasks/TaskQuickAdd';
@@ -19,6 +20,7 @@ export const Tasks = () => {
   const autoFocusQuickAdd = searchParams.get('add') === 'true';
 
   const [activeFilter, setActiveFilter] = useState('today');
+  const [activeTag, setActiveTag] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
 
   // Filter counts
@@ -45,6 +47,19 @@ export const Tasks = () => {
     };
   }, [todos]);
 
+  // Derive unique subject tags from all tasks
+  const availableTags = useMemo(() => {
+    const tagSet = new Set();
+    for (const t of todos) {
+      if (Array.isArray(t.tags)) {
+        for (const tag of t.tags) {
+          if (tag && typeof tag === 'string') tagSet.add(tag.trim().toLowerCase());
+        }
+      }
+    }
+    return [...tagSet].sort();
+  }, [todos]);
+
   // Total estimated workload calculation
   const totalWorkloadMins = useMemo(() => {
     return todos
@@ -60,10 +75,14 @@ export const Tasks = () => {
     return active[0] || null;
   }, [todos]);
 
+  // Auto-reset activeTag when the selected tag no longer exists in any task
+  const safeActiveTag = activeTag && availableTags.includes(activeTag) ? activeTag : null;
+
   // Filtering & Sorting
   const filteredTodos = useMemo(() => {
     let result = [...todos];
 
+    // Status filter
     if (activeFilter === 'completed') {
       result = result.filter((t) => t.completed);
     } else {
@@ -83,6 +102,15 @@ export const Tasks = () => {
       }
     }
 
+    // Tag filter
+    if (safeActiveTag) {
+      result = result.filter((t) => {
+        const tags = Array.isArray(t.tags) ? t.tags : [];
+        return tags.some((tag) => tag.trim().toLowerCase() === safeActiveTag);
+      });
+    }
+
+    // Sorting
     const priorityWeight = { high: 3, medium: 2, low: 1 };
 
     result.sort((a, b) => {
@@ -108,7 +136,7 @@ export const Tasks = () => {
     });
 
     return result;
-  }, [todos, activeFilter]);
+  }, [todos, activeFilter, safeActiveTag]);
 
   const handleToggleComplete = async (id, isCompleted) => {
     await updateTodo(id, { completed: isCompleted });
@@ -154,9 +182,46 @@ export const Tasks = () => {
           {/* Filter Bar */}
           <TaskFilters
             activeFilter={activeFilter}
-            onFilterChange={setActiveFilter}
+            onFilterChange={(f) => { setActiveFilter(f); }}
             counts={counts}
           />
+
+          {/* Subject Tag Filter */}
+          {availableTags.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[10px] font-mono uppercase text-[var(--text-muted)] tracking-wider flex items-center gap-1">
+                <Tag size={11} className="text-[var(--accent)]" />
+                Filter by Subject
+              </span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setActiveTag(null)}
+                  className={`px-2.5 py-1 text-[11px] font-medium rounded-[var(--radius-sm)] border transition-colors cursor-pointer ${
+                    !safeActiveTag
+                      ? 'bg-[var(--primary)] text-white border-[var(--primary)] shadow-xs'
+                      : 'bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  All
+                </button>
+                {availableTags.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => setActiveTag(safeActiveTag === tag ? null : tag)}
+                    className={`px-2.5 py-1 text-[11px] font-mono font-medium rounded-[var(--radius-sm)] border transition-colors cursor-pointer ${
+                      safeActiveTag === tag
+                        ? 'bg-[var(--accent-soft)] text-[var(--accent)] border-[var(--accent)]/30 shadow-xs'
+                        : 'bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
+                    }`}
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Loading Skeleton */}
           {isLoading ? (
@@ -178,10 +243,11 @@ export const Tasks = () => {
           ) : filteredTodos.length === 0 ? (
             <TaskEmptyState
               activeFilter={activeFilter}
+              activeTag={safeActiveTag}
               onAddClick={() => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              onClearFilters={() => setActiveFilter('all')}
+              onClearFilters={() => { setActiveFilter('all'); setActiveTag(null); }}
             />
           ) : (
             <TaskList
