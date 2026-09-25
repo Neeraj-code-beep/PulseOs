@@ -27,6 +27,7 @@ export const TaskEditor = ({ task, onSave, onClose }) => {
   const {
     todos,
     addSubtask,
+    addSubtasks,
     updateSubtask,
     toggleSubtask,
     deleteSubtask,
@@ -194,10 +195,16 @@ export const TaskEditor = ({ task, onSave, onClose }) => {
     }
   };
 
-  const handleApplyBreakdown = (totalMins) => {
+  const handleApplyBreakdown = async (aiSubtasks, totalMins) => {
     if (totalMins) {
       setEstimatedMinutes(totalMins);
     }
+    if (!taskId) {
+      setSubtaskError('Task must be saved before adding persistent subtasks.');
+      throw new Error('Task must be saved before adding persistent subtasks.');
+    }
+    await addSubtasks(taskId, aiSubtasks);
+    setAiMode(null);
   };
 
   const handleApplyEstimate = (mins) => {

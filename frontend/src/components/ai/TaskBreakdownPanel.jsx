@@ -9,7 +9,9 @@ export const TaskBreakdownPanel = ({ title, context, onApplyBreakdown, onClose }
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [saveError, setSaveError] = useState(null);
   const [result, setResult] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [applied, setApplied] = useState(false);
 
   const handleGenerate = async () => {
@@ -18,6 +20,7 @@ export const TaskBreakdownPanel = ({ title, context, onApplyBreakdown, onClose }
     try {
       setLoading(true);
       setError(null);
+      setSaveError(null);
       setApplied(false);
       const res = await breakDownTaskApi(title.trim(), context);
 
@@ -33,10 +36,23 @@ export const TaskBreakdownPanel = ({ title, context, onApplyBreakdown, onClose }
     }
   };
 
-  const handleApply = () => {
-    if (result && result.totalEstimatedMinutes && onApplyBreakdown) {
-      onApplyBreakdown(result.totalEstimatedMinutes, result.subtasks);
+  const handleApply = async () => {
+    if (!result || !Array.isArray(result.subtasks) || result.subtasks.length === 0) return;
+    if (!onApplyBreakdown) return;
+
+    try {
+      setIsSaving(true);
+      setSaveError(null);
+      await onApplyBreakdown(result.subtasks, result.totalEstimatedMinutes);
       setApplied(true);
+    } catch (err) {
+      setSaveError(
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to add subtasks to task."
+      );
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -118,8 +134,8 @@ export const TaskBreakdownPanel = ({ title, context, onApplyBreakdown, onClose }
         </div>
       )}
 
-      {/* Error State */}
-      {!loading && error && (
+      {/* Generation Error State (when no result yet) */}
+      {!loading && error && !result && (
         <div className="py-2 flex flex-col gap-2.5">
           <div className="flex items-center gap-2 text-[var(--danger)]">
             <AlertCircle size={16} />
@@ -192,6 +208,14 @@ export const TaskBreakdownPanel = ({ title, context, onApplyBreakdown, onClose }
             ))}
           </Motion.div>
 
+          {/* Persistence Error Banner if Add to Subtasks failed */}
+          {saveError && (
+            <div className="flex items-center gap-2 p-2 bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/20 rounded-[var(--radius-sm)] text-xs">
+              <AlertCircle size={14} className="shrink-0" />
+              <span className="font-medium">{saveError}</span>
+            </div>
+          )}
+
           {/* Total & Action Footer */}
           <div className="pt-2 border-t border-[var(--border-soft)] flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5">
@@ -205,6 +229,7 @@ export const TaskBreakdownPanel = ({ title, context, onApplyBreakdown, onClose }
               <button
                 type="button"
                 onClick={onClose}
+                disabled={isSaving}
                 className="px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
               >
                 Dismiss
@@ -213,22 +238,22 @@ export const TaskBreakdownPanel = ({ title, context, onApplyBreakdown, onClose }
               <button
                 type="button"
                 onClick={handleApply}
-                disabled={applied}
+                disabled={applied || isSaving}
                 className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-[var(--radius-sm)] transition-all cursor-pointer shadow-xs ${
                   applied
                     ? 'bg-[var(--focus-soft)] text-[var(--focus)] border border-[var(--focus)]/20'
-                    : 'bg-[var(--focus)] text-white hover:brightness-110'
+                    : 'bg-[var(--focus)] text-white hover:brightness-110 disabled:opacity-50'
                 }`}
               >
                 {applied ? (
                   <>
                     <Check size={13} />
-                    <span>Estimate Applied ({result.totalEstimatedMinutes}m)</span>
+                    <span>Added to Subtasks</span>
                   </>
                 ) : (
                   <>
                     <Sparkles size={13} />
-                    <span>Apply breakdown</span>
+                    <span>{isSaving ? 'Adding...' : 'Add to Subtasks'}</span>
                   </>
                 )}
               </button>

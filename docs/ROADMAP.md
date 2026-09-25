@@ -167,6 +167,8 @@
 
 ---
 
+---
+
 ## Phase 7.2B: Persistent Subtask & Subject Tag UI (Milestone 7 Phase 2B Completed)
 - [x] Implemented persistent subtask checklist in `TaskEditor.jsx` (add, toggle, inline edit, delete, with count badge)
 - [x] Implemented persistent tag management in `TaskEditor.jsx` (pill badges, add input with Enter shortcut, remove button, max 5 limit, duplicate protection)
@@ -175,3 +177,14 @@
 - [x] Full responsive design verified across mobile, tablet, and desktop viewports
 - [x] Full regression suites passed (Frontend lint 0 errors, Vite production build passed, 119/119 backend tests passed)
 
+---
+
+## Phase 7.3: AI Breakdown → Persistent Subtasks (Milestone 7 Phase 3 Completed)
+- [x] Connected AI Task Breakdown workflow to persistent `Todo.subtasks` persistence architecture via `TodoProvider.jsx` (`addSubtasks`)
+- [x] Guaranteed two-step review flow: User clicks "Generate breakdown", reviews suggestions, then explicitly clicks "Add to Subtasks" to persist
+- [x] Safe subtask appending preserving all existing subtasks and their completed states
+- [x] Case-insensitive deduplication against existing task subtasks and within the AI response batch
+- [x] Subtask validation enforcement (300-char limit, non-empty, formatted objects)
+- [x] Preserved result suggestions on network/save failure with inline alert banner to allow easy retries
+- [x] Immediate TaskEditor subtask list synchronization upon persistence
+- [x] Verified 0 lint errors, clean Vite production build, and full 119/119 backend test suite

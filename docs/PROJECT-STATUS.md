@@ -6,6 +6,15 @@ The application is a full-stack MERN student productivity workspace featuring a 
 ---
 
 ## Completed Functionality
+- **AI Breakdown → Persistent Subtasks (Milestone 7 Phase 3 Complete)**:
+  - Connected AI Task Breakdown workflow in [components/ai/TaskBreakdownPanel.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/components/ai/TaskBreakdownPanel.jsx) to persistent `Todo.subtasks` persistence architecture.
+  - Implemented explicit review & persist UX: generation does NOT auto-persist; users review AI work blocks and click "Add to Subtasks" to persist.
+  - Added atomic batch helper `addSubtasks` in [context/TodoProvider.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/context/TodoProvider.jsx) utilizing single PATCH update.
+  - Implemented non-destructive subtask appending preserving all existing subtasks and completion states.
+  - Implemented case-insensitive deduplication against existing subtasks and within the AI response batch.
+  - Added error preservation: on network/save failure, generated suggestions remain visible in the panel alongside an inline alert banner so users can retry.
+  - Verified 0 lint errors, clean Vite build, and 119/119 backend tests passed.
+
 - **Persistent Subtask & Subject Tag UI (Milestone 7 Phase 2B Complete)**:
   - Extended [components/tasks/TaskEditor.jsx](file:///n:/Diwali/FullStack_ToDo_App/frontend/src/components/tasks/TaskEditor.jsx) with comprehensive persistent subtask management: subtask checklist, progress counter badge, add subtask input with Enter/Escape hotkeys, inline title editing, toggle completion with immediate persistence, and delete subtask actions.
   - Added persistent tag management to `TaskEditor.jsx`: tag pill badges, single-click tag deletion, inline add tag input with Enter trigger, duplicate prevention, and maximum 5 tags enforcement.

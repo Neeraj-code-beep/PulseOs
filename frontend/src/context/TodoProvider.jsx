@@ -169,6 +169,40 @@ const TodoProvider = ({ children }) => {
     return updateTodo(taskId, { subtasks: updatedSubtasks });
   };
 
+  const addSubtasks = async (taskId, newItems) => {
+    if (!taskId) return;
+    if (!Array.isArray(newItems) || newItems.length === 0) return;
+    const target = todos.find((t) => (t._id || t.id) === taskId);
+    if (!target) return;
+
+    const existing = Array.isArray(target.subtasks) ? target.subtasks : [];
+    const existingTitles = new Set(
+      existing.map((s) => (s.title || '').trim().toLowerCase())
+    );
+
+    const seen = new Set();
+    const toAdd = [];
+
+    for (const item of newItems) {
+      const rawTitle = typeof item === 'string' ? item : item?.title;
+      if (!rawTitle || typeof rawTitle !== 'string') continue;
+      const cleanTitle = rawTitle.trim();
+      if (!cleanTitle || cleanTitle.length > 300) continue;
+      const lower = cleanTitle.toLowerCase();
+      if (existingTitles.has(lower) || seen.has(lower)) continue;
+      seen.add(lower);
+      toAdd.push({ title: cleanTitle, completed: false, completedAt: null });
+    }
+
+    if (toAdd.length === 0) {
+      toast.info('All suggested subtasks already exist.');
+      return target;
+    }
+
+    const updatedSubtasks = [...existing, ...toAdd];
+    return updateTodo(taskId, { subtasks: updatedSubtasks });
+  };
+
   const deleteSubtask = async (taskId, subtaskId) => {
     const target = todos.find((t) => (t._id || t.id) === taskId);
     if (!target) return;
@@ -232,6 +266,7 @@ const TodoProvider = ({ children }) => {
         markReminderSentLocally,
         replaceTodo,
         addSubtask,
+        addSubtasks,
         updateSubtask,
         toggleSubtask,
         deleteSubtask,
