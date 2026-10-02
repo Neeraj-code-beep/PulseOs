@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Calendar, Clock, CheckCircle2, ArrowRight, RefreshCw, Zap } from 'lucide-react';
+import { Sparkles, Calendar, Clock, CheckCircle2, ArrowRight, RefreshCw, Zap, AlertCircle } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -9,11 +9,13 @@ import { getDailyPlanApi } from '../../services/aiApi';
 export const DailyPlanCard = () => {
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleGeneratePlan = async () => {
     try {
       setLoading(true);
+      setError(null);
       const res = await getDailyPlanApi({
         startTime: '09:00 AM',
         endTime: '05:00 PM',
@@ -21,9 +23,14 @@ export const DailyPlanCard = () => {
       if (res.success && res.data) {
         setPlan(res.data);
         setIsExpanded(true);
+      } else {
+        setError(res.message || "Pulse couldn't create a daily focus plan right now.");
       }
     } catch (err) {
-      console.error('Failed to generate daily plan:', err);
+      setError(
+        err.response?.data?.message ||
+        "Pulse couldn't create a daily focus plan right now. Please try again shortly."
+      );
     } finally {
       setLoading(false);
     }
@@ -66,6 +73,25 @@ export const DailyPlanCard = () => {
           {loading ? 'Building Plan…' : plan ? 'Regenerate Plan' : 'Generate Daily Plan'}
         </Button>
       </div>
+
+      {/* Visible Error Banner */}
+      {error && !loading && (
+        <div className="mt-5 p-4 bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-[var(--radius-lg)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[var(--danger)]">
+          <div className="flex items-center gap-2">
+            <AlertCircle size={16} className="shrink-0" />
+            <span className="font-medium">{error}</span>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleGeneratePlan}
+            icon={RefreshCw}
+            className="text-xs shrink-0 self-end sm:self-auto"
+          >
+            Retry
+          </Button>
+        </div>
+      )}
 
       {/* Active Plan Content */}
       <AnimatePresence>

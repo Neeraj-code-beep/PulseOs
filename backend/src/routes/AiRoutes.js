@@ -40,4 +40,7 @@ router.post('/schedule', aiController.proposeSchedule);
 // POST /api/ai/daily-plan
 router.post('/daily-plan', aiController.getDailyPlan);
 
+// POST /api/ai/ask
+router.post('/ask', aiController.askAssistant);
+
 module.exports = router;

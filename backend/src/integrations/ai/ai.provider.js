@@ -13,10 +13,12 @@ class AiProvider {
    * Helper to instantiate GoogleGenAI client lazily using environment key.
    */
   getClient() {
-    const apiKey = process.env.GEMINI_API_KEY || process.env.AI_API_KEY;
-    if (!apiKey) {
+    const rawKey = process.env.GEMINI_API_KEY || process.env.AI_API_KEY;
+    const apiKey = typeof rawKey === 'string' ? rawKey.trim() : '';
+    if (!apiKey || apiKey.startsWith('your_')) {
       const err = new Error('AI API key is missing in environment variables.');
       err.code = 'MISSING_API_KEY';
+      err.status = 503;
       throw err;
     }
     return new GoogleGenAI({ apiKey });
@@ -25,9 +27,10 @@ class AiProvider {
   /**
    * Generates structured text response from LLM using system/user prompt.
    * @param {string} promptText - Fully constructed prompt.
+   * @param {Object} [config] - Optional generation configuration overrides.
    * @returns {Promise<string>} Raw text output from model.
    */
-  async generateText(promptText) {
+  async generateText(promptText, config = {}) {
     const client = this.getClient();
 
     try {
@@ -36,6 +39,7 @@ class AiProvider {
         contents: promptText,
         config: {
           responseMimeType: 'application/json',
+          ...config,
         },
       });
 
@@ -49,8 +53,21 @@ class AiProvider {
         throw error;
       }
       // Wrap provider errors to hide raw stack traces and internal API details
+      const rawMsg = error.message || '';
       const customErr = new Error('AI provider request failed.');
-      customErr.originalMessage = error.message;
+
+      if (rawMsg.includes('429') || rawMsg.toLowerCase().includes('quota') || rawMsg.toLowerCase().includes('rate limit')) {
+        customErr.code = 'RATE_LIMITED';
+        customErr.status = 429;
+      } else if (rawMsg.includes('400') || rawMsg.includes('403') || rawMsg.toLowerCase().includes('api key') || rawMsg.toLowerCase().includes('permission')) {
+        customErr.code = 'AUTH_ERROR';
+        customErr.status = 502;
+      } else {
+        customErr.code = 'PROVIDER_ERROR';
+        customErr.status = 502;
+      }
+
+      customErr.originalMessage = rawMsg;
       throw customErr;
     }
   }

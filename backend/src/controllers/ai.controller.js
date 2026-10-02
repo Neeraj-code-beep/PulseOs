@@ -111,9 +111,43 @@ const getDailyPlan = async (req, res) => {
   }
 };
 
+/**
+ * Controller endpoint: POST /api/ai/ask
+ * Generates AI productivity guidance answering student questions based on task workload.
+ */
+const askAssistant = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized access.',
+      });
+    }
+
+    const { query, context } = req.body || {};
+    const data = await aiService.askAssistant({ userId, query, context });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Productivity assistance generated successfully.',
+      data,
+    });
+  } catch (error) {
+    const statusCode = error.status || 500;
+    const message = error.message || 'AI assistant is temporarily unavailable.';
+
+    return res.status(statusCode).json({
+      success: false,
+      message,
+    });
+  }
+};
+
 module.exports = {
   breakdownTask,
   estimateTaskTime,
   proposeSchedule,
   getDailyPlan,
+  askAssistant,
 };

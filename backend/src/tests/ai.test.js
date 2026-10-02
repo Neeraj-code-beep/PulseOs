@@ -10,6 +10,10 @@ const {
   generateScheduleBlocks,
   proposeSchedule,
   parseTimeToMinutes,
+  validateAskInput,
+  buildAskPrompt,
+  parseAndValidateAskOutput,
+  askAssistant,
 } = require('../services/ai.service');
 
 async function runAiTests() {
@@ -294,6 +298,87 @@ async function runAiTests() {
     assert(noOverlap, 'Schedule - No overlapping blocks generated');
   } catch {
     assert(false, 'Timeline should have no overlapping blocks');
+  }
+
+  // --- PART 4: ASK PULSE ASSISTANT TESTS ---
+
+  // TEST 24: Ask - Missing query throws 400 Bad Request
+  try {
+    validateAskInput('');
+    assert(false, 'Missing query should throw error');
+  } catch (err) {
+    assert(err.status === 400, 'Ask - Missing query throws 400 Bad Request');
+  }
+
+  // TEST 25: Ask - Non-string query throws 400 Bad Request
+  try {
+    validateAskInput({ invalid: true });
+    assert(false, 'Non-string query should throw error');
+  } catch (err) {
+    assert(err.status === 400, 'Ask - Non-string query throws 400 Bad Request');
+  }
+
+  // TEST 26: Ask - Oversized query (>1000 chars) throws 400 Bad Request
+  try {
+    validateAskInput('A'.repeat(1001));
+    assert(false, 'Oversized query should throw error');
+  } catch (err) {
+    assert(err.status === 400, 'Ask - Oversized query (>1000 chars) throws 400 Bad Request');
+  }
+
+  // TEST 27: Ask - Prompt construction injects active task context
+  const askPrompt = buildAskPrompt('How should I prioritize my study session?', [
+    { title: 'Data Structures Lab', priority: 'high', estimatedMinutes: 45, dueDate: new Date() },
+  ]);
+  assert(
+    askPrompt.includes('Data Structures Lab') && askPrompt.includes('Priority: high'),
+    'Ask - Prompt construction injects student question and active task context'
+  );
+
+  // TEST 28: Ask - Malformed JSON output throws 502 Bad Gateway
+  try {
+    parseAndValidateAskOutput('invalid response string');
+    assert(false, 'Invalid JSON should throw 502');
+  } catch (err) {
+    assert(err.status === 502, 'Ask - Malformed JSON throws 502 Bad Gateway');
+  }
+
+  // TEST 29: Ask - Valid assistant output parsed cleanly
+  try {
+    const parsed = parseAndValidateAskOutput(
+      JSON.stringify({
+        answer: 'Start with your highest priority assignment and work in 25-minute Pomodoro intervals.',
+        actionItems: ['Open Data Structures Lab in Focus Mode', 'Eliminate all tab distractions'],
+        suggestedFocusTask: { title: 'Data Structures Lab', reason: 'High priority assignment due today' },
+      })
+    );
+    assert(
+      parsed.answer.includes('Pomodoro intervals') &&
+      parsed.actionItems.length === 2 &&
+      parsed.suggestedFocusTask.title === 'Data Structures Lab' &&
+      parsed.isFallback === false,
+      'Ask - Valid structured assistant output parsed cleanly'
+    );
+  } catch {
+    assert(false, 'Valid assistant output should parse without errors');
+  }
+
+  // TEST 30: Ask - Fallback handles offline/unconfigured provider gracefully
+  try {
+    const fallbackRes = await askAssistant({
+      userId: null,
+      query: 'What should I work on today?',
+      context: {},
+    });
+    assert(
+      typeof fallbackRes.answer === 'string' &&
+      Array.isArray(fallbackRes.actionItems) &&
+      fallbackRes.actionItems.length > 0 &&
+      fallbackRes.isFallback === true,
+      'Ask - Fallback response generated gracefully when AI provider is unavailable'
+    );
+  } catch {
+    assert(false, 'Fallback should succeed gracefully without throwing');
   }
 
   console.log(`\nAI & SCHEDULING TEST RESULT: ${passed}/${total} tests passed.`);

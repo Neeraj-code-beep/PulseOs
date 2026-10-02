@@ -13,6 +13,7 @@ import {
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { Button } from '../components/ui/Button';
 import { Footer } from '../components/layout/Footer';
+import { AskPulseDrawer } from '../components/ai/AskPulseDrawer';
 import { useFocus } from '../context/useFocus';
 import { useAuth } from '../context/useAuth';
 
@@ -162,47 +163,7 @@ export const AppLayout = ({ children }) => {
       <Footer />
 
       {/* Contextual AI Assistant Panel */}
-      {isAiOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xs flex justify-end"
-          onClick={() => setIsAiOpen(false)}
-        >
-          <div
-            className="w-full max-w-md bg-[var(--bg-surface)] h-full p-6 shadow-2xl flex flex-col justify-between"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div>
-              <div className="flex items-center justify-between pb-4 border-b border-[var(--border)] mb-6">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="text-[var(--accent)]" size={18} />
-                  <h2 className="text-base font-bold font-sans">Pulse Assistant</h2>
-                </div>
-                <button
-                  onClick={() => setIsAiOpen(false)}
-                  className="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-1 rounded-md cursor-pointer"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-              <div className="p-4 bg-[var(--bg-surface-elevated)] rounded-[var(--radius-lg)] border border-[var(--border-soft)] text-xs text-[var(--text-secondary)] space-y-2">
-                <p className="font-semibold text-[var(--text-primary)]">
-                  Intelligent Task Planning
-                </p>
-                <p className="leading-relaxed">
-                  Ask Pulse helps break complex study goals into realistic time blocks and focus routines.
-                </p>
-              </div>
-            </div>
-            <Button
-              variant="secondary"
-              onClick={() => setIsAiOpen(false)}
-              className="w-full"
-            >
-              Close
-            </Button>
-          </div>
-        </div>
-      )}
+      <AskPulseDrawer isOpen={isAiOpen} onClose={() => setIsAiOpen(false)} />
     </div>
   );
 };

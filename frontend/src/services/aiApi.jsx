@@ -41,3 +41,14 @@ export const getDailyPlanApi = async (availability) => {
   const res = await API.post('api/ai/daily-plan', { availability });
   return res.data;
 };
+
+/**
+ * Calls backend POST /api/ai/ask to get contextual AI productivity advice.
+ * @param {string} query - Student natural language question or prompt.
+ * @param {Object} [context] - Optional additional context.
+ * @returns {Promise<Object>} API response payload { success, message, data }.
+ */
+export const askPulseApi = async (query, context) => {
+  const res = await API.post('api/ai/ask', { query, context });
+  return res.data;
+};
