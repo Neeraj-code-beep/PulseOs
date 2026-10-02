@@ -113,7 +113,7 @@ export const FocusProvider = ({ children }) => {
   // Sync title when taskId changes
   useEffect(() => {
     if (selectedTaskId && todos) {
-      const found = todos.find((t) => t._id === selectedTaskId);
+      const found = todos.find((t) => (t._id || t.id) === selectedTaskId);
       if (found) setTaskTitle(found.title);
     }
   }, [selectedTaskId, todos]);

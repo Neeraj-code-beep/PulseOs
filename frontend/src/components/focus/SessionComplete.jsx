@@ -12,7 +12,7 @@ export const SessionComplete = () => {
 
   const handleMarkComplete = async () => {
     if (!selectedTaskId) return;
-    await updateTodo(selectedTaskId, undefined, undefined, true);
+    await updateTodo(selectedTaskId, { completed: true });
     resetTimer();
   };
 

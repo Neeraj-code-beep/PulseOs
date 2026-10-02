@@ -9,6 +9,9 @@ const AiRoutes = require('./routes/AiRoutes');
 
 const app = express();
 
+// Trust first proxy hop in production deployments (e.g. Render, Railway, AWS ALB, Nginx)
+app.set('trust proxy', 1);
+
 // Safe CORS configuration with local development fallback
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())

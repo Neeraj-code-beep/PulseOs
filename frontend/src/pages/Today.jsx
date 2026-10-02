@@ -15,13 +15,8 @@ export const Today = () => {
   const openTodos = todos.filter((t) => !t.completed);
   const completedTodos = todos.filter((t) => t.completed);
 
-  const now = new Date();
-  const nextReminderTodo = todos
-    .filter((t) => t.reminderTime && !t.completed && !t.reminderSent && new Date(t.reminderTime) > now)
-    .sort((a, b) => new Date(a.reminderTime) - new Date(b.reminderTime))[0] || null;
-
   const handleToggleComplete = async (id, isCompleted) => {
-    await updateTodo(id, undefined, undefined, isCompleted);
+    await updateTodo(id, { completed: isCompleted });
   };
 
   return (
@@ -52,7 +47,6 @@ export const Today = () => {
             todos={todos}
             isLoading={isLoading}
             onToggleComplete={handleToggleComplete}
-            nextReminderTodo={nextReminderTodo}
           />
         </div>
 
