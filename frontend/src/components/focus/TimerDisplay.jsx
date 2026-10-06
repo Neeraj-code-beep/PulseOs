@@ -1,7 +1,9 @@
+import { motion as Motion, useReducedMotion } from 'framer-motion';
 import { useFocus } from '../../context/useFocus';
 
 export const TimerDisplay = () => {
   const { remainingSeconds, totalPlannedSeconds, timerState } = useFocus();
+  const shouldReduceMotion = useReducedMotion();
 
   const minutes = Math.floor(remainingSeconds / 60);
   const seconds = remainingSeconds % 60;
@@ -28,14 +30,24 @@ export const TimerDisplay = () => {
           : ''}
       </div>
 
-      {/* SVG Ring Visual Instrument */}
-      <div
+      {/* SVG Ring Visual Instrument with ambient breathing life during active focus */}
+      <Motion.div
         className="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center"
         role="progressbar"
         aria-valuenow={Math.round(progress * 100)}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label="Focus timer progress"
+        animate={
+          isRunning && !shouldReduceMotion
+            ? { scale: [1, 1.014, 1] }
+            : { scale: 1 }
+        }
+        transition={{
+          duration: 4,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
       >
         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 250 250">
           <circle
@@ -72,7 +84,7 @@ export const TimerDisplay = () => {
             {timerState === 'IDLE' && <span>Ready</span>}
           </div>
         </div>
-      </div>
+      </Motion.div>
     </div>
   );
 };

@@ -106,7 +106,7 @@ export const ScheduleProposalPanel = ({ taskId, title, estimatedMinutes, context
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 py-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 py-1">
             <div className="flex flex-col gap-1">
               <label htmlFor="avail-date" className="text-[10px] font-medium text-[var(--text-secondary)] flex items-center gap-1">
                 <Calendar size={11} /> Date
@@ -116,7 +116,7 @@ export const ScheduleProposalPanel = ({ taskId, title, estimatedMinutes, context
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="p-1.5 bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--text-primary)] outline-none text-xs"
+                className="w-full p-2 sm:p-1.5 bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--text-primary)] outline-none text-xs"
                 required
               />
             </div>
@@ -130,7 +130,7 @@ export const ScheduleProposalPanel = ({ taskId, title, estimatedMinutes, context
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="p-1.5 bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--text-primary)] outline-none text-xs"
+                className="w-full p-2 sm:p-1.5 bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--text-primary)] outline-none text-xs"
                 required
               />
             </div>
@@ -144,7 +144,7 @@ export const ScheduleProposalPanel = ({ taskId, title, estimatedMinutes, context
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="p-1.5 bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--text-primary)] outline-none text-xs"
+                className="w-full p-2 sm:p-1.5 bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--text-primary)] outline-none text-xs"
                 required
               />
             </div>

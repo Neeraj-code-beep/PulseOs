@@ -216,406 +216,423 @@ export const TaskEditor = ({ task, onSave, onClose }) => {
   return (
     <>
       <div
-        className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200"
         onClick={onClose}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="task-editor-title"
       >
         <form
           onSubmit={handleSubmit}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-md bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-5 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
+          className="w-full sm:max-w-lg bg-[var(--bg-surface)] border-t sm:border border-[var(--border)] rounded-t-[var(--radius-xl)] sm:rounded-[var(--radius-xl)] shadow-2xl flex flex-col max-h-[90dvh] sm:max-h-[85vh] overflow-hidden transition-all"
         >
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-[var(--border-soft)] pb-3">
-            <h2 className="text-sm font-bold font-sans">Edit Task</h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-1 rounded-md cursor-pointer"
-            >
-              <X size={16} />
-            </button>
-          </div>
-
-          {/* Title */}
-          <Input
-            label="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Task title"
-            required
-          />
-
-          {/* 2x2 Grid: Due Date, Reminder, Priority, Estimate */}
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="flex flex-col gap-1">
-              <label className="text-[11px] font-medium text-[var(--text-secondary)] flex items-center gap-1">
-                <Calendar size={12} /> Due Date
-              </label>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="p-1.5 bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] text-[var(--text-primary)] outline-none text-xs"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-[11px] font-medium text-[var(--text-secondary)] flex items-center gap-1">
-                <Bell size={12} /> Reminder
-              </label>
-              <input
-                type="datetime-local"
-                value={reminderTime}
-                onChange={(e) => setReminderTime(e.target.value)}
-                className="p-1.5 bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] text-[var(--text-primary)] outline-none text-xs"
-              />
-              {reminderTime && (
-                <button
-                  type="button"
-                  onClick={() => setReminderTime('')}
-                  className="text-[10px] text-[var(--text-muted)] hover:text-[var(--danger)] self-start cursor-pointer"
-                >
-                  Clear reminder
-                </button>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-[11px] font-medium text-[var(--text-secondary)] flex items-center gap-1">
-                <Flag size={12} /> Priority
-              </label>
-              <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value)}
-                className="p-1.5 bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] text-[var(--text-primary)] outline-none cursor-pointer text-xs"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-[11px] font-medium text-[var(--text-secondary)] flex items-center gap-1">
-                <Clock size={12} /> Estimate (mins)
-              </label>
-              <Input
-                type="number"
-                min="1"
-                placeholder="e.g. 60"
-                value={estimatedMinutes}
-                onChange={(e) => setEstimatedMinutes(e.target.value)}
-                className="py-1 px-2 text-xs"
-              />
-            </div>
-          </div>
-
-          {/* Tags Section */}
-          <div className="flex flex-col gap-2 pt-2 border-t border-[var(--border-soft)]">
+          {/* Fixed Header */}
+          <div className="px-5 pt-3 pb-3 sm:py-3.5 border-b border-[var(--border-soft)] shrink-0 bg-[var(--bg-surface)] flex flex-col">
+            {/* Mobile Sheet Handle */}
+            <div className="w-10 h-1 rounded-full bg-[var(--border-strong)] mx-auto mb-2 sm:hidden opacity-60" />
+            
             <div className="flex items-center justify-between">
-              <label className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider font-mono flex items-center gap-1.5">
-                <Tag size={13} className="text-[var(--accent)]" />
-                <span>Tags</span>
-                <span className="text-[10px] font-normal text-[var(--text-muted)]">
-                  ({tags.length}/5)
-                </span>
-              </label>
+              <h2 id="task-editor-title" className="text-sm font-bold font-sans text-[var(--text-primary)]">
+                Edit Task
+              </h2>
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-1.5 rounded-md hover:bg-[var(--bg-surface-elevated)] transition-colors cursor-pointer"
+                aria-label="Close modal"
+              >
+                <X size={16} />
+              </button>
             </div>
+          </div>
 
-            <div className="flex flex-wrap items-center gap-1.5 min-h-6">
-              {tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-xs text-[var(--text-secondary)] font-mono"
-                >
-                  <span>#{tag}</span>
+          {/* Scrollable Content Body */}
+          <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
+            {/* Title */}
+            <Input
+              label="Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Task title"
+              required
+            />
+
+            {/* 2x2 Grid: Due Date, Reminder, Priority, Estimate */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-medium text-[var(--text-secondary)] flex items-center gap-1">
+                  <Calendar size={12} /> Due Date
+                </label>
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  className="p-2 sm:p-1.5 bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] text-[var(--text-primary)] outline-none text-xs"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-medium text-[var(--text-secondary)] flex items-center gap-1">
+                  <Bell size={12} /> Reminder
+                </label>
+                <input
+                  type="datetime-local"
+                  value={reminderTime}
+                  onChange={(e) => setReminderTime(e.target.value)}
+                  className="p-2 sm:p-1.5 bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] text-[var(--text-primary)] outline-none text-xs"
+                />
+                {reminderTime && (
                   <button
                     type="button"
-                    onClick={() => handleRemoveTag(tag)}
-                    className="text-[var(--text-muted)] hover:text-[var(--danger)] rounded-xs p-0.5 cursor-pointer"
-                    aria-label={`Remove tag ${tag}`}
+                    onClick={() => setReminderTime('')}
+                    className="text-[10px] text-[var(--text-muted)] hover:text-[var(--danger)] self-start cursor-pointer pt-0.5"
                   >
-                    <X size={10} />
+                    Clear reminder
                   </button>
-                </span>
-              ))}
-
-              {tags.length < 5 && (
-                <div className="inline-flex items-center">
-                  <input
-                    type="text"
-                    value={newTag}
-                    onChange={(e) => {
-                      setNewTag(e.target.value);
-                      if (tagError) setTagError('');
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddTag();
-                      }
-                    }}
-                    placeholder="+ Add tag..."
-                    maxLength={30}
-                    className="w-24 px-2 py-0.5 text-xs bg-transparent border border-dashed border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none focus:w-32 focus:border-[var(--primary)] transition-all font-mono"
-                  />
-                </div>
-              )}
-            </div>
-
-            {tagError && (
-              <span className="text-[10px] text-[var(--danger)] font-mono">{tagError}</span>
-            )}
-          </div>
-
-          {/* Subtasks Section */}
-          <div className="flex flex-col gap-2 pt-2 border-t border-[var(--border-soft)]">
-            <div className="flex items-center justify-between">
-              <label className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider font-mono flex items-center gap-1.5">
-                <ListChecks size={13} className="text-[var(--primary)]" />
-                <span>Subtasks</span>
-                {subtasks.length > 0 && (
-                  <span className="text-[10px] font-normal text-[var(--text-muted)]">
-                    ({subtasks.filter((s) => s.completed).length}/{subtasks.length})
-                  </span>
                 )}
-              </label>
-              {!isAddingSubtask && (
-                <button
-                  type="button"
-                  onClick={() => setIsAddingSubtask(true)}
-                  className="text-[11px] font-medium text-[var(--primary)] hover:underline flex items-center gap-1 cursor-pointer"
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-medium text-[var(--text-secondary)] flex items-center gap-1">
+                  <Flag size={12} /> Priority
+                </label>
+                <select
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
+                  className="p-2 sm:p-1.5 bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] text-[var(--text-primary)] outline-none cursor-pointer text-xs"
                 >
-                  <Plus size={12} /> Add subtask
-                </button>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-medium text-[var(--text-secondary)] flex items-center gap-1">
+                  <Clock size={12} /> Estimate (mins)
+                </label>
+                <Input
+                  type="number"
+                  min="1"
+                  placeholder="e.g. 60"
+                  value={estimatedMinutes}
+                  onChange={(e) => setEstimatedMinutes(e.target.value)}
+                  className="py-1.5 sm:py-1 px-2 text-xs"
+                />
+              </div>
+            </div>
+
+            {/* Tags Section */}
+            <div className="flex flex-col gap-2 pt-2 border-t border-[var(--border-soft)]">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider font-mono flex items-center gap-1.5">
+                  <Tag size={13} className="text-[var(--accent)]" />
+                  <span>Tags</span>
+                  <span className="text-[10px] font-normal text-[var(--text-muted)]">
+                    ({tags.length}/5)
+                  </span>
+                </label>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5 min-h-6">
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-xs text-[var(--text-secondary)] font-mono"
+                  >
+                    <span>#{tag}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag)}
+                      className="text-[var(--text-muted)] hover:text-[var(--danger)] rounded-xs p-0.5 cursor-pointer"
+                      aria-label={`Remove tag ${tag}`}
+                    >
+                      <X size={10} />
+                    </button>
+                  </span>
+                ))}
+
+                {tags.length < 5 && (
+                  <div className="inline-flex items-center">
+                    <input
+                      type="text"
+                      value={newTag}
+                      onChange={(e) => {
+                        setNewTag(e.target.value);
+                        if (tagError) setTagError('');
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddTag();
+                        }
+                      }}
+                      placeholder="+ Add tag..."
+                      maxLength={30}
+                      className="w-24 px-2 py-0.5 text-xs bg-transparent border border-dashed border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none focus:w-32 focus:border-[var(--primary)] transition-all font-mono"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {tagError && (
+                <span className="text-[10px] text-[var(--danger)] font-mono">{tagError}</span>
               )}
             </div>
 
-            {/* Existing Subtasks List */}
-            {subtasks.length > 0 && (
-              <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-1">
-                {subtasks.map((sub) => {
-                  const subId = sub._id || sub.id;
-                  const isEditing = editingSubtaskId === subId;
+            {/* Subtasks Section */}
+            <div className="flex flex-col gap-2 pt-2 border-t border-[var(--border-soft)]">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider font-mono flex items-center gap-1.5">
+                  <ListChecks size={13} className="text-[var(--primary)]" />
+                  <span>Subtasks</span>
+                  {subtasks.length > 0 && (
+                    <span className="text-[10px] font-normal text-[var(--text-muted)]">
+                      ({subtasks.filter((s) => s.completed).length}/{subtasks.length})
+                    </span>
+                  )}
+                </label>
+                {!isAddingSubtask && (
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingSubtask(true)}
+                    className="text-[11px] font-medium text-[var(--primary)] hover:underline flex items-center gap-1 cursor-pointer py-1"
+                  >
+                    <Plus size={12} /> Add subtask
+                  </button>
+                )}
+              </div>
 
-                  return (
-                    <div
-                      key={subId}
-                      className="group flex items-center justify-between gap-2 p-1.5 rounded-[var(--radius-md)] bg-[var(--bg-surface-elevated)] border border-[var(--border-soft)] hover:border-[var(--border)] transition-colors text-xs"
-                    >
-                      {isEditing ? (
-                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                          <input
-                            type="text"
-                            value={editingSubtaskTitle}
-                            onChange={(e) => setEditingSubtaskTitle(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleSaveSubtaskTitle(subId);
-                              } else if (e.key === 'Escape') {
-                                e.preventDefault();
-                                handleCancelEditSubtask();
-                              }
-                            }}
-                            autoFocus
-                            maxLength={300}
-                            className="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] rounded px-2 py-1 text-xs text-[var(--text-primary)] outline-none"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleSaveSubtaskTitle(subId)}
-                            className="p-1 text-[var(--focus)] hover:bg-[var(--bg-surface)] rounded cursor-pointer"
-                            aria-label="Save subtask title"
-                          >
-                            <Check size={13} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleCancelEditSubtask}
-                            className="p-1 text-[var(--text-muted)] hover:bg-[var(--bg-surface)] rounded cursor-pointer"
-                            aria-label="Cancel editing"
-                          >
-                            <X size={13} />
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <label className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer">
+              {/* Existing Subtasks List */}
+              {subtasks.length > 0 && (
+                <div className="flex flex-col gap-1.5 max-h-56 overflow-y-auto pr-1">
+                  {subtasks.map((sub) => {
+                    const subId = sub._id || sub.id;
+                    const isEditing = editingSubtaskId === subId;
+
+                    return (
+                      <div
+                        key={subId}
+                        className="group flex items-center justify-between gap-2 p-2 rounded-[var(--radius-md)] bg-[var(--bg-surface-elevated)] border border-[var(--border-soft)] hover:border-[var(--border)] transition-colors text-xs"
+                      >
+                        {isEditing ? (
+                          <div className="flex items-center gap-1.5 flex-1 min-w-0">
                             <input
-                              type="checkbox"
-                              checked={sub.completed || false}
-                              onChange={() => handleToggleSubtask(subId)}
-                              className="sr-only"
+                              type="text"
+                              value={editingSubtaskTitle}
+                              onChange={(e) => setEditingSubtaskTitle(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleSaveSubtaskTitle(subId);
+                                } else if (e.key === 'Escape') {
+                                  e.preventDefault();
+                                  handleCancelEditSubtask();
+                                }
+                              }}
+                              autoFocus
+                              maxLength={300}
+                              className="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] rounded px-2 py-1 text-xs text-[var(--text-primary)] outline-none"
                             />
-                            <div
-                              className={`w-3.5 h-3.5 rounded-[3px] border transition-all flex items-center justify-center shrink-0 ${
-                                sub.completed
-                                  ? 'bg-[var(--focus)] border-[var(--focus)] text-white'
-                                  : 'border-[var(--border-strong)] hover:border-[var(--primary)]'
-                              }`}
-                            >
-                              {sub.completed && <Check size={9} strokeWidth={3} />}
-                            </div>
-                            <span
-                              className={`truncate text-xs text-[var(--text-primary)] ${
-                                sub.completed ? 'line-through text-[var(--text-muted)]' : ''
-                              }`}
-                            >
-                              {sub.title}
-                            </span>
-                          </label>
-
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                             <button
                               type="button"
-                              onClick={() => handleStartEditSubtask(sub)}
-                              className="p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] rounded cursor-pointer"
-                              aria-label="Edit subtask"
+                              onClick={() => handleSaveSubtaskTitle(subId)}
+                              className="p-1 text-[var(--focus)] hover:bg-[var(--bg-surface)] rounded cursor-pointer"
+                              aria-label="Save subtask title"
                             >
-                              <Pencil size={11} />
+                              <Check size={13} />
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleDeleteSubtask(subId)}
-                              className="p-1 text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--danger)]/10 rounded cursor-pointer"
-                              aria-label="Delete subtask"
+                              onClick={handleCancelEditSubtask}
+                              className="p-1 text-[var(--text-muted)] hover:bg-[var(--bg-surface)] rounded cursor-pointer"
+                              aria-label="Cancel editing"
                             >
-                              <Trash2 size={11} />
+                              <X size={13} />
                             </button>
                           </div>
-                        </>
-                      )}
+                        ) : (
+                          <>
+                            <label className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={sub.completed || false}
+                                onChange={() => handleToggleSubtask(subId)}
+                                className="sr-only"
+                              />
+                              <div
+                                className={`w-3.5 h-3.5 rounded-[3px] border transition-all flex items-center justify-center shrink-0 ${
+                                  sub.completed
+                                    ? 'bg-[var(--focus)] border-[var(--focus)] text-white'
+                                    : 'border-[var(--border-strong)] hover:border-[var(--primary)]'
+                                }`}
+                              >
+                                {sub.completed && <Check size={9} strokeWidth={3} />}
+                              </div>
+                              <span
+                                className={`truncate text-xs text-[var(--text-primary)] ${
+                                  sub.completed ? 'line-through text-[var(--text-muted)]' : ''
+                                }`}
+                              >
+                                {sub.title}
+                              </span>
+                            </label>
+
+                            {/* Discoverable on touch, hover on desktop */}
+                            <div className="flex items-center gap-0.5 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleStartEditSubtask(sub)}
+                                className="p-1.5 min-w-[28px] min-h-[28px] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] rounded cursor-pointer"
+                                aria-label="Edit subtask"
+                              >
+                                <Pencil size={12} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteSubtask(subId)}
+                                className="p-1.5 min-w-[28px] min-h-[28px] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--danger)]/10 rounded cursor-pointer"
+                                aria-label="Delete subtask"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Add Subtask Input */}
+              {isAddingSubtask && (
+                <div className="flex flex-col gap-1 mt-1">
+                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5">
+                    <input
+                      type="text"
+                      value={newSubtaskTitle}
+                      onChange={(e) => {
+                        setNewSubtaskTitle(e.target.value);
+                        if (subtaskError) setSubtaskError('');
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddSubtask();
+                        } else if (e.key === 'Escape') {
+                          e.preventDefault();
+                          setIsAddingSubtask(false);
+                          setNewSubtaskTitle('');
+                          setSubtaskError('');
+                        }
+                      }}
+                      autoFocus
+                      placeholder="Subtask title (press Enter to add)..."
+                      maxLength={300}
+                      className="flex-1 min-w-[180px] bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] px-2.5 py-1.5 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none focus:border-[var(--primary)]"
+                    />
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        onClick={handleAddSubtask}
+                        disabled={!newSubtaskTitle.trim()}
+                        className="py-1 px-2.5 text-xs"
+                      >
+                        Add
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setIsAddingSubtask(false);
+                          setNewSubtaskTitle('');
+                          setSubtaskError('');
+                        }}
+                        className="py-1 px-2 text-xs"
+                      >
+                        Cancel
+                      </Button>
                     </div>
-                  );
-                })}
+                  </div>
+                  {subtaskError && (
+                    <span className="text-[10px] text-[var(--danger)] font-mono">{subtaskError}</span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* AI Productivity Engine Section */}
+            {aiMode === null && (
+              <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-[var(--border-soft)]">
+                <span className="text-[10px] font-mono uppercase text-[var(--text-muted)] w-full tracking-wider">
+                  PULSE ASSISTANT
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setAiMode('breakdown')}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] transition-all cursor-pointer shadow-xs hover:border-[var(--border-soft)]"
+                >
+                  <Sparkles size={13} className="text-[var(--accent)]" />
+                  <span>Break down</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAiMode('estimate')}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] transition-all cursor-pointer shadow-xs hover:border-[var(--border-soft)]"
+                >
+                  <Clock size={13} className="text-[var(--accent)]" />
+                  <span>Estimate with Pulse</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAiMode('schedule')}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] transition-all cursor-pointer shadow-xs hover:border-[var(--border-soft)]"
+                >
+                  <Calendar size={13} className="text-[var(--accent)]" />
+                  <span>Smart Schedule</span>
+                </button>
               </div>
             )}
 
-            {/* Add Subtask Input */}
-            {isAddingSubtask && (
-              <div className="flex flex-col gap-1 mt-1">
-                <div className="flex items-center gap-1.5">
-                  <input
-                    type="text"
-                    value={newSubtaskTitle}
-                    onChange={(e) => {
-                      setNewSubtaskTitle(e.target.value);
-                      if (subtaskError) setSubtaskError('');
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddSubtask();
-                      } else if (e.key === 'Escape') {
-                        e.preventDefault();
-                        setIsAddingSubtask(false);
-                        setNewSubtaskTitle('');
-                        setSubtaskError('');
-                      }
-                    }}
-                    autoFocus
-                    placeholder="Subtask title (press Enter to add)..."
-                    maxLength={300}
-                    className="flex-1 bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] px-2.5 py-1.5 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none focus:border-[var(--primary)]"
-                  />
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    onClick={handleAddSubtask}
-                    disabled={!newSubtaskTitle.trim()}
-                    className="py-1 px-2.5 text-xs shrink-0"
-                  >
-                    Add
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setIsAddingSubtask(false);
-                      setNewSubtaskTitle('');
-                      setSubtaskError('');
-                    }}
-                    className="py-1 px-2 text-xs shrink-0"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-                {subtaskError && (
-                  <span className="text-[10px] text-[var(--danger)] font-mono">{subtaskError}</span>
-                )}
-              </div>
+            {aiMode === 'breakdown' && (
+              <TaskBreakdownPanel
+                title={title}
+                context={{ priority, dueDate, estimatedMinutes }}
+                onApplyBreakdown={handleApplyBreakdown}
+                onClose={() => setAiMode(null)}
+              />
+            )}
+
+            {aiMode === 'estimate' && (
+              <TaskEstimatorPanel
+                title={title}
+                context={{ priority, dueDate, estimatedMinutes }}
+                onApplyEstimate={handleApplyEstimate}
+                onClose={() => setAiMode(null)}
+              />
+            )}
+
+            {aiMode === 'schedule' && (
+              <ScheduleProposalPanel
+                taskId={task._id}
+                title={title}
+                estimatedMinutes={estimatedMinutes}
+                context={{ priority, dueDate }}
+                onClose={() => setAiMode(null)}
+              />
             )}
           </div>
 
-          {/* AI Productivity Engine Section */}
-          {aiMode === null && (
-            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-[var(--border-soft)]">
-              <span className="text-[10px] font-mono uppercase text-[var(--text-muted)] w-full tracking-wider">
-                PULSE ASSISTANT
-              </span>
-
-              <button
-                type="button"
-                onClick={() => setAiMode('breakdown')}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] transition-all cursor-pointer shadow-xs hover:border-[var(--border-soft)]"
-              >
-                <Sparkles size={13} className="text-[var(--accent)]" />
-                <span>Break down</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAiMode('estimate')}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] transition-all cursor-pointer shadow-xs hover:border-[var(--border-soft)]"
-              >
-                <Clock size={13} className="text-[var(--accent)]" />
-                <span>Estimate with Pulse</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAiMode('schedule')}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] transition-all cursor-pointer shadow-xs hover:border-[var(--border-soft)]"
-              >
-                <Calendar size={13} className="text-[var(--accent)]" />
-                <span>Smart Schedule</span>
-              </button>
-            </div>
-          )}
-
-          {aiMode === 'breakdown' && (
-            <TaskBreakdownPanel
-              title={title}
-              context={{ priority, dueDate, estimatedMinutes }}
-              onApplyBreakdown={handleApplyBreakdown}
-              onClose={() => setAiMode(null)}
-            />
-          )}
-
-          {aiMode === 'estimate' && (
-            <TaskEstimatorPanel
-              title={title}
-              context={{ priority, dueDate, estimatedMinutes }}
-              onApplyEstimate={handleApplyEstimate}
-              onClose={() => setAiMode(null)}
-            />
-          )}
-
-          {aiMode === 'schedule' && (
-            <ScheduleProposalPanel
-              taskId={task._id}
-              title={title}
-              estimatedMinutes={estimatedMinutes}
-              context={{ priority, dueDate }}
-              onClose={() => setAiMode(null)}
-            />
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[var(--border-soft)]">
+          {/* Sticky / Fixed Footer Actions */}
+          <div className="flex items-center justify-end gap-2.5 px-5 py-3 border-t border-[var(--border-soft)] bg-[var(--bg-surface)] shrink-0">
             <Button type="button" variant="ghost" size="sm" onClick={onClose}>
               Cancel
             </Button>

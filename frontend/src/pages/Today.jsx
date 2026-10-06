@@ -29,7 +29,6 @@ export const Today = () => {
         openCount={openTodos.length}
         completedCount={completedTodos.length}
         onPlanClick={() => navigate('/tasks?add=true')}
-        onFocusClick={() => navigate('/focus')}
       />
 
       {/* 3. Primary Command Center Workspace Layout */}

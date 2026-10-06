@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { motion as Motion, useReducedMotion } from 'framer-motion';
 import {
   CalendarDays,
   CheckSquare,
@@ -31,6 +32,8 @@ export const AppLayout = ({ children }) => {
     { path: '/focus', label: 'Focus', icon: Timer },
     { path: '/analytics', label: 'Insights', icon: BarChart2 },
   ];
+
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <div className="min-h-dvh flex flex-col bg-[var(--bg-app)] text-[var(--text-primary)] transition-colors">
@@ -91,7 +94,7 @@ export const AppLayout = ({ children }) => {
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => setIsAiOpen(true)}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border-soft)] hover:border-[var(--border)] rounded-[var(--radius-md)] transition-colors cursor-pointer"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border-soft)] hover:border-[var(--border)] rounded-[var(--radius-md)] transition-colors cursor-pointer active:scale-[0.98]"
             >
               <Sparkles size={14} className="text-[var(--accent)]" />
               <span>Ask Pulse</span>
@@ -130,10 +133,16 @@ export const AppLayout = ({ children }) => {
         </div>
       </header>
 
-
-      {/* Main Content Workspace */}
+      {/* Main Content Workspace with Route Transition */}
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 md:px-6 py-6 pb-24 md:pb-12">
-        {children}
+        <Motion.div
+          key={location.pathname}
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {children}
+        </Motion.div>
       </main>
 
       {/* Mobile Bottom Navigation */}

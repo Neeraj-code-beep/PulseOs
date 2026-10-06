@@ -95,7 +95,7 @@ export const DailyWorkspace = ({ todos = [], isLoading = false, onToggleComplete
                   <div className="flex items-center gap-3.5 min-w-0 flex-1">
                     <button
                       onClick={() => onToggleComplete(id, true)}
-                      className="w-4.5 h-4.5 rounded-full border border-[var(--border-strong)] group-hover:border-[var(--primary)] group-hover:bg-[var(--primary-soft)] flex items-center justify-center transition-all cursor-pointer shrink-0"
+                      className="w-4.5 h-4.5 rounded-full border border-[var(--border-strong)] group-hover:border-[var(--primary)] group-hover:bg-[var(--primary-soft)] flex items-center justify-center transition-all cursor-pointer shrink-0 active:scale-90"
                       aria-label={`Complete ${todo.title}`}
                     >
                       <Check size={11} className="text-transparent group-hover:text-[var(--primary)]" />

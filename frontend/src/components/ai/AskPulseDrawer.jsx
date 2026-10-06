@@ -134,42 +134,43 @@ export const AskPulseDrawer = ({ isOpen, onClose }) => {
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: shouldReduceMotion ? 0 : '100%', opacity: shouldReduceMotion ? 0 : 1 }}
         transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-        className="w-full max-w-lg bg-[var(--bg-surface)] h-full p-6 shadow-2xl flex flex-col justify-between border-l border-[var(--border)] overflow-y-auto"
+        className="w-full max-w-lg bg-[var(--bg-surface)] h-full max-h-dvh shadow-2xl flex flex-col border-l border-[var(--border)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex flex-col gap-5">
-          {/* Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-[var(--border)]">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-[var(--radius-md)] bg-[var(--accent-soft)] text-[var(--accent)] flex items-center justify-center">
-                <Sparkles size={18} />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-bold font-sans text-[var(--text-primary)]">
-                    Ask Pulse
-                  </h2>
-                  <Badge variant="primary" className="text-[10px] uppercase font-mono tracking-wider">
-                    AI Assistant
-                  </Badge>
-                </div>
-                <span className="text-[11px] text-[var(--text-muted)] font-mono block">
-                  Productivity & Focus Strategy Coach
-                </span>
-              </div>
+        {/* Fixed Header */}
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[var(--border)] bg-[var(--bg-surface)] shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-[var(--radius-md)] bg-[var(--accent-soft)] text-[var(--accent)] flex items-center justify-center">
+              <Sparkles size={18} />
             </div>
-
-            <button
-              onClick={onClose}
-              className="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-1.5 rounded-[var(--radius-sm)] hover:bg-[var(--bg-surface-elevated)] transition-colors cursor-pointer"
-              aria-label="Close Ask Pulse drawer"
-            >
-              <X size={18} />
-            </button>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-bold font-sans text-[var(--text-primary)]">
+                  Ask Pulse
+                </h2>
+                <Badge variant="primary" className="text-[10px] uppercase font-mono tracking-wider">
+                  AI Assistant
+                </Badge>
+              </div>
+              <span className="text-[11px] text-[var(--text-muted)] font-mono block">
+                Productivity & Focus Strategy Coach
+              </span>
+            </div>
           </div>
 
+          <button
+            onClick={onClose}
+            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-1.5 rounded-[var(--radius-sm)] hover:bg-[var(--bg-surface-elevated)] transition-colors cursor-pointer"
+            aria-label="Close Ask Pulse drawer"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Scrollable Content Body */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 flex flex-col gap-4 min-h-0">
           {/* Workload Context Banner */}
-          <div className="p-3 bg-[var(--bg-surface-elevated)] rounded-[var(--radius-md)] border border-[var(--border-soft)] text-xs flex items-center justify-between">
+          <div className="p-3 bg-[var(--bg-surface-elevated)] rounded-[var(--radius-md)] border border-[var(--border-soft)] text-xs flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2 text-[var(--text-secondary)]">
               <ListTodo size={14} className="text-[var(--primary)]" />
               <span>Active Workload</span>
@@ -201,52 +202,9 @@ export const AskPulseDrawer = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {/* Input Form */}
-          {!result && (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
-              <div className="relative">
-                <textarea
-                  ref={inputRef}
-                  value={query}
-                  onChange={(e) => {
-                    setQuery(e.target.value);
-                    if (error) setError(null);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit();
-                    }
-                  }}
-                  placeholder="Ask anything about planning, focus, or organizing your study tasks... (press Enter to submit)"
-                  rows={3}
-                  maxLength={1000}
-                  disabled={loading}
-                  className="w-full bg-[var(--bg-surface-elevated)] border border-[var(--border)] focus:border-[var(--primary)] rounded-[var(--radius-lg)] p-3 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none resize-none transition-colors shadow-xs"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono text-[var(--text-muted)]">
-                  {query.length}/1000 chars
-                </span>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="sm"
-                  disabled={!query.trim() || loading}
-                  icon={loading ? RefreshCw : Send}
-                  className={`px-4 shadow-xs ${loading ? '[&_svg]:animate-spin' : ''}`}
-                >
-                  {loading ? 'Consulting Pulse…' : 'Ask Assistant'}
-                </Button>
-              </div>
-            </form>
-          )}
-
           {/* Loading Indicator */}
           {loading && (
-            <div className="p-6 bg-[var(--bg-surface-elevated)] rounded-[var(--radius-lg)] border border-[var(--border-soft)] flex flex-col items-center justify-center gap-3 text-center animate-pulse">
+            <div className="p-6 bg-[var(--bg-surface-elevated)] rounded-[var(--radius-lg)] border border-[var(--border-soft)] flex flex-col items-center justify-center gap-3 text-center animate-pulse my-auto">
               <div className="p-3 bg-[var(--accent-soft)] text-[var(--accent)] rounded-full">
                 <Sparkles size={20} className="animate-spin" />
               </div>
@@ -361,34 +319,85 @@ export const AskPulseDrawer = ({ isOpen, onClose }) => {
                     </Button>
                   </div>
                 )}
-
-                {/* Reset / Ask Another Question Button */}
-                <div className="pt-2 flex items-center justify-between border-t border-[var(--border-soft)]">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleReset}
-                    className="text-xs text-[var(--primary)] font-semibold"
-                  >
-                    <span>Ask another question</span>
-                    <ArrowRight size={13} />
-                  </Button>
-                </div>
               </Motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Footer Actions */}
-        <div className="pt-4 border-t border-[var(--border-soft)] mt-4">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={onClose}
-            className="w-full text-xs font-medium"
-          >
-            Close Assistant
-          </Button>
+        {/* Stable Composer & Footer Container */}
+        <div className="p-4 sm:p-5 border-t border-[var(--border-soft)] bg-[var(--bg-surface)] shrink-0 flex flex-col gap-3">
+          {!result ? (
+            <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
+              <div className="relative">
+                <textarea
+                  ref={inputRef}
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    if (error) setError(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit();
+                    }
+                  }}
+                  placeholder="Ask anything about planning, focus, or study tasks... (Enter to submit)"
+                  rows={2}
+                  maxLength={1000}
+                  disabled={loading}
+                  className="w-full bg-[var(--bg-surface-elevated)] border border-[var(--border)] focus:border-[var(--primary)] rounded-[var(--radius-lg)] p-2.5 sm:p-3 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none resize-none transition-colors shadow-xs"
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono text-[var(--text-muted)]">
+                  {query.length}/1000 chars
+                </span>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  disabled={!query.trim() || loading}
+                  icon={loading ? RefreshCw : Send}
+                  className={`px-4 shadow-xs ${loading ? '[&_svg]:animate-spin' : ''}`}
+                >
+                  {loading ? 'Consulting Pulse…' : 'Ask Assistant'}
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <div className="flex items-center justify-between gap-3">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleReset}
+                icon={ArrowRight}
+                className="text-xs"
+              >
+                Ask another question
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="text-xs text-[var(--text-secondary)]"
+              >
+                Close Assistant
+              </Button>
+            </div>
+          )}
+
+          {!result && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onClose}
+              className="w-full text-xs font-medium py-1.5"
+            >
+              Close Assistant
+            </Button>
+          )}
         </div>
       </Motion.div>
     </div>

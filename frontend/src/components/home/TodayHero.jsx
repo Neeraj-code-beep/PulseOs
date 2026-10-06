@@ -5,7 +5,7 @@ import { EditorialHeading } from '../ui/EditorialHeading';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../context/useAuth';
 
-export const TodayHero = ({ openCount = 0, onPlanClick, onFocusClick }) => {
+export const TodayHero = ({ openCount = 0, onPlanClick }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -54,24 +54,14 @@ export const TodayHero = ({ openCount = 0, onPlanClick, onFocusClick }) => {
             </p>
           </div>
 
-          {/* Quick Actions */}
-          <div className="flex items-center gap-3 shrink-0">
-            <Button
-              variant="primary"
-              size="md"
-              onClick={onFocusClick || (() => navigate('/focus'))}
-              icon={Play}
-              className="bg-[var(--focus)] hover:bg-[var(--focus)]/90 shadow-md font-semibold text-xs"
-            >
-              <span>Start Focus</span>
-            </Button>
-
+          {/* Hero Quick Actions — Restrained to let NextBestAction be the clear #1 focal point */}
+          <div className="flex items-center gap-2.5 shrink-0">
             <Button
               variant="secondary"
-              size="md"
+              size="sm"
               onClick={onPlanClick || (() => navigate('/tasks?add=true'))}
               icon={Plus}
-              className="border-[var(--border)] shadow-xs font-semibold text-xs"
+              className="border-[var(--border)] text-xs font-semibold"
             >
               <span>Add Task</span>
             </Button>

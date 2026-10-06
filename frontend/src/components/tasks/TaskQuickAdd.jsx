@@ -1,4 +1,5 @@
 import { useState, useContext, useEffect, useRef } from 'react';
+import { motion as Motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { TodoContext } from '../../context/TodoContext';
 import { Button } from '../ui/Button';
 import { Plus, Calendar, Bell, Flag, Clock, X } from 'lucide-react';
@@ -91,21 +92,28 @@ export const TaskQuickAdd = ({ autoFocus = false, onComplete }) => {
     }
   };
 
+  const shouldReduceMotion = useReducedMotion();
+
   if (!isExpanded) {
     return (
-      <button
+      <Motion.button
+        type="button"
+        whileTap={shouldReduceMotion ? undefined : { scale: 0.995 }}
         onClick={handleExpand}
         className="w-full flex items-center gap-2.5 px-4 py-2.5 bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-md)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)] transition-all cursor-pointer shadow-xs text-xs font-medium"
       >
         <Plus size={15} className="text-[var(--primary)]" />
         <span>Add a task...</span>
-      </button>
+      </Motion.button>
     );
   }
 
   return (
     <>
-      <form
+      <Motion.form
+        initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.99 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
         onSubmit={handleSubmit}
         onKeyDown={handleKeyDown}
         className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-4 shadow-md flex flex-col gap-3 transition-all"
@@ -122,7 +130,8 @@ export const TaskQuickAdd = ({ autoFocus = false, onComplete }) => {
           <button
             type="button"
             onClick={handleCancel}
-            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-1 rounded-md cursor-pointer"
+            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-1 rounded-md cursor-pointer transition-colors active:scale-95"
+            aria-label="Cancel quick add"
           >
             <X size={16} />
           </button>
@@ -133,9 +142,9 @@ export const TaskQuickAdd = ({ autoFocus = false, onComplete }) => {
           <button
             type="button"
             onClick={() => setActiveTab(activeTab === 'due' ? null : 'due')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-sm)] border text-[11px] transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-sm)] border text-[11px] transition-colors cursor-pointer active:scale-95 ${
               dueDate
-                ? 'bg-[var(--primary-soft)] text-[var(--primary)] border-[var(--primary)]/30'
+                ? 'bg-[var(--primary-soft)] text-[var(--primary)] border-[var(--primary)]/30 font-medium'
                 : 'border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface-elevated)]'
             }`}
           >
@@ -146,9 +155,9 @@ export const TaskQuickAdd = ({ autoFocus = false, onComplete }) => {
           <button
             type="button"
             onClick={() => setActiveTab(activeTab === 'reminder' ? null : 'reminder')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-sm)] border text-[11px] transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-sm)] border text-[11px] transition-colors cursor-pointer active:scale-95 ${
               reminderTime
-                ? 'bg-[var(--accent-soft)] text-[var(--warning)] border-[var(--warning)]/30'
+                ? 'bg-[var(--accent-soft)] text-[var(--warning)] border-[var(--warning)]/30 font-medium'
                 : 'border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface-elevated)]'
             }`}
           >
@@ -159,9 +168,9 @@ export const TaskQuickAdd = ({ autoFocus = false, onComplete }) => {
           <button
             type="button"
             onClick={() => setActiveTab(activeTab === 'priority' ? null : 'priority')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-sm)] border text-[11px] transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-sm)] border text-[11px] transition-colors cursor-pointer active:scale-95 ${
               priority === 'high'
-                ? 'bg-[var(--danger)]/10 text-[var(--danger)] border-[var(--danger)]/30'
+                ? 'bg-[var(--danger)]/10 text-[var(--danger)] border-[var(--danger)]/30 font-semibold'
                 : 'border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface-elevated)]'
             }`}
           >
@@ -172,9 +181,9 @@ export const TaskQuickAdd = ({ autoFocus = false, onComplete }) => {
           <button
             type="button"
             onClick={() => setActiveTab(activeTab === 'estimate' ? null : 'estimate')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-sm)] border text-[11px] transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-sm)] border text-[11px] transition-colors cursor-pointer active:scale-95 ${
               estimatedMinutes
-                ? 'bg-[var(--focus-soft)] text-[var(--focus)] border-[var(--focus)]/30'
+                ? 'bg-[var(--focus-soft)] text-[var(--focus)] border-[var(--focus)]/30 font-medium'
                 : 'border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface-elevated)]'
             }`}
           >
@@ -183,79 +192,87 @@ export const TaskQuickAdd = ({ autoFocus = false, onComplete }) => {
           </button>
         </div>
 
-        {/* Expanded Sub-Input Panel */}
-        {activeTab && (
-          <div className="p-3 bg-[var(--bg-surface-elevated)] rounded-[var(--radius-md)] border border-[var(--border-soft)] text-xs">
-            {activeTab === 'due' && (
-              <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-medium text-[var(--text-muted)]">Set Due Date</label>
-                <input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="bg-[var(--bg-surface)] p-1.5 rounded border border-[var(--border)] text-xs text-[var(--text-primary)] outline-none"
-                />
-              </div>
-            )}
+        {/* Expanded Sub-Input Panel with subtle entrance */}
+        <AnimatePresence>
+          {activeTab && (
+            <Motion.div
+              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
+              transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+              className="p-3 bg-[var(--bg-surface-elevated)] rounded-[var(--radius-md)] border border-[var(--border-soft)] text-xs"
+            >
+              {activeTab === 'due' && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] font-medium text-[var(--text-muted)]">Set Due Date</label>
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className="w-full max-w-xs bg-[var(--bg-surface)] p-1.5 rounded border border-[var(--border)] text-xs text-[var(--text-primary)] outline-none"
+                  />
+                </div>
+              )}
 
-            {activeTab === 'reminder' && (
-              <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-medium text-[var(--text-muted)]">Set Reminder Time</label>
-                <input
-                  type="datetime-local"
-                  value={reminderTime}
-                  onChange={(e) => setReminderTime(e.target.value)}
-                  className="bg-[var(--bg-surface)] p-1.5 rounded border border-[var(--border)] text-xs text-[var(--text-primary)] outline-none"
-                />
-              </div>
-            )}
+              {activeTab === 'reminder' && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] font-medium text-[var(--text-muted)]">Set Reminder Time</label>
+                  <input
+                    type="datetime-local"
+                    value={reminderTime}
+                    onChange={(e) => setReminderTime(e.target.value)}
+                    className="w-full max-w-xs bg-[var(--bg-surface)] p-1.5 rounded border border-[var(--border)] text-xs text-[var(--text-primary)] outline-none"
+                  />
+                </div>
+              )}
 
-            {activeTab === 'priority' && (
-              <div className="flex items-center gap-2">
-                {['low', 'medium', 'high'].map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => setPriority(p)}
-                    className={`px-3 py-1 rounded text-xs capitalize cursor-pointer ${
-                      priority === p
-                        ? 'bg-[var(--primary)] text-white font-medium'
-                        : 'bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-secondary)]'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-            )}
+              {activeTab === 'priority' && (
+                <div className="flex flex-wrap items-center gap-2">
+                  {['low', 'medium', 'high'].map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setPriority(p)}
+                      className={`px-3 py-1 rounded text-xs capitalize cursor-pointer transition-colors active:scale-95 ${
+                        priority === p
+                          ? 'bg-[var(--primary)] text-white font-medium shadow-xs'
+                          : 'bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              )}
 
-            {activeTab === 'estimate' && (
-              <div className="flex items-center gap-2">
-                {[15, 25, 45, 60].map((mins) => (
-                  <button
-                    key={mins}
-                    type="button"
-                    onClick={() => setEstimatedMinutes(mins.toString())}
-                    className={`px-2.5 py-1 rounded text-xs cursor-pointer ${
-                      estimatedMinutes === mins.toString()
-                        ? 'bg-[var(--focus)] text-white font-medium'
-                        : 'bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-secondary)]'
-                    }`}
-                  >
-                    {mins}m
-                  </button>
-                ))}
-                <input
-                  type="number"
-                  placeholder="Custom"
-                  value={estimatedMinutes}
-                  onChange={(e) => setEstimatedMinutes(e.target.value)}
-                  className="w-20 bg-[var(--bg-surface)] p-1 rounded border border-[var(--border)] text-xs text-[var(--text-primary)] outline-none"
-                />
-              </div>
-            )}
-          </div>
-        )}
+              {activeTab === 'estimate' && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {[15, 25, 45, 60].map((mins) => (
+                    <button
+                      key={mins}
+                      type="button"
+                      onClick={() => setEstimatedMinutes(mins.toString())}
+                      className={`px-2.5 py-1 rounded text-xs cursor-pointer transition-colors active:scale-95 ${
+                        estimatedMinutes === mins.toString()
+                          ? 'bg-[var(--focus)] text-white font-medium shadow-xs'
+                          : 'bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)]'
+                      }`}
+                    >
+                      {mins}m
+                    </button>
+                  ))}
+                  <input
+                    type="number"
+                    placeholder="Custom"
+                    value={estimatedMinutes}
+                    onChange={(e) => setEstimatedMinutes(e.target.value)}
+                    className="w-20 bg-[var(--bg-surface)] p-1 rounded border border-[var(--border)] text-xs text-[var(--text-primary)] outline-none"
+                  />
+                </div>
+              )}
+            </Motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Action Buttons */}
         <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--border-soft)]">
@@ -272,7 +289,7 @@ export const TaskQuickAdd = ({ autoFocus = false, onComplete }) => {
             Add task
           </Button>
         </div>
-      </form>
+      </Motion.form>
 
       <NotificationPermissionDialog
         isOpen={showDialog}

@@ -1,4 +1,5 @@
 import { useContext } from 'react';
+import { motion as Motion, useReducedMotion } from 'framer-motion';
 import { useFocus } from '../../context/useFocus';
 import { TodoContext } from '../../context/TodoContext';
 import { CheckCircle2, Play, Check } from 'lucide-react';
@@ -7,6 +8,7 @@ import { Button } from '../ui/Button';
 export const SessionComplete = () => {
   const { plannedMinutes, selectedTaskId, resetTimer } = useFocus();
   const { todos, updateTodo } = useContext(TodoContext);
+  const shouldReduceMotion = useReducedMotion();
 
   const selectedTodo = todos.find((t) => (t._id || t.id) === selectedTaskId);
 
@@ -17,7 +19,12 @@ export const SessionComplete = () => {
   };
 
   return (
-    <div className="w-full bg-[var(--bg-surface)] border border-[var(--focus)]/30 rounded-[var(--radius-lg)] p-6 text-center flex flex-col items-center gap-4 shadow-lg animate-in fade-in zoom-in-95 duration-200">
+    <Motion.div
+      initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.98, y: shouldReduceMotion ? 0 : 6 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full bg-[var(--bg-surface)] border border-[var(--focus)]/30 rounded-[var(--radius-lg)] p-6 text-center flex flex-col items-center gap-4 shadow-lg"
+    >
       <div className="p-3 rounded-full bg-[var(--focus-soft)] text-[var(--focus)]">
         <CheckCircle2 size={36} />
       </div>
@@ -62,6 +69,6 @@ export const SessionComplete = () => {
           </Button>
         )}
       </div>
-    </div>
+    </Motion.div>
   );
 };
