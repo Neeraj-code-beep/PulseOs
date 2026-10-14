@@ -193,11 +193,11 @@ export const Tasks = () => {
                 <Tag size={11} className="text-[var(--accent)]" />
                 Filter by Subject
               </span>
-              <div className="flex flex-wrap items-center gap-1.5">
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 max-w-full">
                 <button
                   type="button"
                   onClick={() => setActiveTag(null)}
-                  className={`px-2.5 py-1 text-[11px] font-medium rounded-[var(--radius-sm)] border transition-colors cursor-pointer ${
+                  className={`px-2.5 py-1 text-[11px] font-medium rounded-[var(--radius-sm)] border transition-colors cursor-pointer shrink-0 ${
                     !safeActiveTag
                       ? 'bg-[var(--primary)] text-white border-[var(--primary)] shadow-xs'
                       : 'bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
@@ -210,7 +210,7 @@ export const Tasks = () => {
                     key={tag}
                     type="button"
                     onClick={() => setActiveTag(safeActiveTag === tag ? null : tag)}
-                    className={`px-2.5 py-1 text-[11px] font-mono font-medium rounded-[var(--radius-sm)] border transition-colors cursor-pointer ${
+                    className={`px-2.5 py-1 text-[11px] font-mono font-medium rounded-[var(--radius-sm)] border transition-colors cursor-pointer shrink-0 ${
                       safeActiveTag === tag
                         ? 'bg-[var(--accent-soft)] text-[var(--accent)] border-[var(--accent)]/30 shadow-xs'
                         : 'bg-[var(--bg-surface-elevated)] text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'

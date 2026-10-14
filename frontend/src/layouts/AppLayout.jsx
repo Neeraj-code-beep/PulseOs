@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion as Motion, useReducedMotion } from 'framer-motion';
 import {
@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { Button } from '../components/ui/Button';
+import { DropdownMenu } from '../components/ui/DropdownMenu';
 import { Footer } from '../components/layout/Footer';
 import { AskPulseDrawer } from '../components/ai/AskPulseDrawer';
 import { useFocus } from '../context/useFocus';
@@ -22,6 +23,8 @@ export const AppLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isAiOpen, setIsAiOpen] = useState(false);
+  const userMenuTriggerRef = useRef(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { timerState } = useFocus();
   const { user, logout } = useAuth();
   const isFocusActive = timerState === 'RUNNING';
@@ -91,29 +94,69 @@ export const AppLayout = ({ children }) => {
           </nav>
 
           {/* Right Header Actions */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             <button
               onClick={() => setIsAiOpen(true)}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border-soft)] hover:border-[var(--border)] rounded-[var(--radius-md)] transition-colors cursor-pointer active:scale-[0.98]"
+              aria-label="Open Ask Pulse productivity copilot"
+              title="Ask Pulse"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border-soft)] hover:border-[var(--border)] rounded-[var(--radius-md)] transition-colors cursor-pointer active:scale-[0.98]"
             >
-              <Sparkles size={14} className="text-[var(--accent)]" />
-              <span>Ask Pulse</span>
+              <Sparkles size={14} className="text-[var(--accent)] shrink-0" />
+              <span className="hidden sm:inline">Ask Pulse</span>
             </button>
             <ThemeToggle />
 
-            {/* Authenticated User pill & Logout button */}
+            {/* Authenticated User pill & Dropdown Menu */}
             {user && (
-              <div className="hidden sm:flex items-center gap-1.5 pl-2 border-l border-[var(--border-soft)]">
-                <span
+              <div className="flex items-center gap-1 sm:gap-1.5 pl-1.5 sm:pl-2 border-l border-[var(--border-soft)]">
+                <button
+                  ref={userMenuTriggerRef}
+                  type="button"
+                  onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                  aria-label={`User account menu for ${user.name || user.email}`}
+                  aria-haspopup="true"
+                  aria-expanded={isUserMenuOpen}
                   title={user.email}
-                  className="w-7 h-7 rounded-full bg-[var(--primary-soft)] text-[var(--primary)] font-bold text-xs flex items-center justify-center font-mono border border-[var(--primary)]/20"
+                  className="w-7 h-7 rounded-full bg-[var(--primary-soft)] text-[var(--primary)] font-bold text-xs flex items-center justify-center font-mono border border-[var(--primary)]/20 cursor-pointer hover:ring-2 hover:ring-[var(--primary)]/30 transition-all shrink-0"
                 >
                   {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                </span>
+                </button>
+
+                <DropdownMenu
+                  isOpen={isUserMenuOpen}
+                  onClose={() => setIsUserMenuOpen(false)}
+                  triggerRef={userMenuTriggerRef}
+                  align="end"
+                  className="w-48 p-1"
+                >
+                  <div className="px-3 py-2 border-b border-[var(--border-soft)]">
+                    <p className="text-xs font-semibold text-[var(--text-primary)] truncate font-sans">
+                      {user.name || 'Student'}
+                    </p>
+                    <p className="text-[11px] text-[var(--text-muted)] truncate font-mono">
+                      {user.email}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      logout();
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-xs text-[var(--danger)] hover:bg-[var(--danger)]/10 text-left cursor-pointer w-full rounded-[var(--radius-sm)] transition-colors mt-1"
+                    role="menuitem"
+                  >
+                    <LogOut size={14} />
+                    <span>Log out</span>
+                  </button>
+                </DropdownMenu>
+
+                {/* Direct desktop logout button */}
                 <button
                   onClick={logout}
                   title="Logout of PulseOS"
-                  className="p-1.5 text-[var(--text-muted)] hover:text-[var(--danger)] rounded-[var(--radius-md)] hover:bg-[var(--bg-surface-elevated)] transition-colors cursor-pointer"
+                  aria-label="Logout of PulseOS"
+                  className="hidden sm:flex p-1.5 text-[var(--text-muted)] hover:text-[var(--danger)] rounded-[var(--radius-md)] hover:bg-[var(--bg-surface-elevated)] transition-colors cursor-pointer"
                 >
                   <LogOut size={16} />
                 </button>
