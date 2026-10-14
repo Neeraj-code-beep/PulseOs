@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 
 const AuthRoutes = require('./routes/AuthRoutes');
 const TodoRoutes = require('./routes/TodoRoutes');
@@ -11,6 +12,14 @@ const app = express();
 
 // Trust first proxy hop in production deployments (e.g. Render, Railway, AWS ALB, Nginx)
 app.set('trust proxy', 1);
+
+// HTTP security headers
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // Backend serves only JSON APIs; frontend SPA manages its own CSP
+    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow cross-origin API requests from frontend
+  }),
+);
 
 // Safe CORS configuration with local development fallback
 const allowedOrigins = process.env.CORS_ORIGIN
