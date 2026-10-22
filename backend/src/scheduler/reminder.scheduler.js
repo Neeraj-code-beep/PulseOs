@@ -64,17 +64,35 @@ async function processDueReminders(specificUserId) {
   }
 }
 
+let scheduledTask = null;
+
 /**
  * Start reminder cron scheduler (runs once every minute).
  */
 function startReminderScheduler() {
+  if (scheduledTask) {
+    return scheduledTask;
+  }
   console.log('Reminder scheduler initialized (running every 1 minute)...');
-  cron.schedule('* * * * *', () => {
+  scheduledTask = cron.schedule('* * * * *', () => {
     processDueReminders();
   });
+  return scheduledTask;
+}
+
+/**
+ * Stop reminder cron scheduler cleanly.
+ */
+function stopReminderScheduler() {
+  if (scheduledTask) {
+    scheduledTask.stop();
+    scheduledTask = null;
+    console.log('Reminder scheduler stopped.');
+  }
 }
 
 module.exports = {
   startReminderScheduler,
+  stopReminderScheduler,
   processDueReminders,
 };

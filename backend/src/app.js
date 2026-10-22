@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 
+const HealthRoutes = require('./routes/HealthRoutes');
 const AuthRoutes = require('./routes/AuthRoutes');
 const TodoRoutes = require('./routes/TodoRoutes');
 const FocusRoutes = require('./routes/FocusRoutes');
@@ -35,6 +36,8 @@ app.use(
 app.use(express.json());
 
 // Routes
+app.use('/api/health', HealthRoutes);
+app.use('/health', HealthRoutes);
 app.use('/api/auth', AuthRoutes);
 app.use('/api/todos', TodoRoutes);
 app.use('/api/focus', FocusRoutes);

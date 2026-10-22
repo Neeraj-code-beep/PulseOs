@@ -12,4 +12,13 @@ function connectToDB() {
     });
 }
 
+function disconnectDB(force = false) {
+  if (mongoose.connection && mongoose.connection.readyState !== 0) {
+    return mongoose.connection.close(force);
+  }
+  return Promise.resolve();
+}
+
 module.exports = connectToDB;
+module.exports.connectToDB = connectToDB;
+module.exports.disconnectDB = disconnectDB;

@@ -99,6 +99,34 @@ function getIO() {
   return io;
 }
 
+function closeSocket(timeoutMs = 3000) {
+  return new Promise((resolve) => {
+    if (!io) {
+      return resolve();
+    }
+    let resolved = false;
+    const timer = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        io = null;
+        resolve();
+      }
+    }, timeoutMs);
+    if (typeof timer.unref === 'function') {
+      timer.unref();
+    }
+
+    io.close(() => {
+      if (!resolved) {
+        resolved = true;
+        clearTimeout(timer);
+        io = null;
+        resolve();
+      }
+    });
+  });
+}
+
 function getConnectedClientCount() {
   if (!io) return 0;
   return io.sockets.sockets.size;
@@ -117,6 +145,7 @@ function getConnectedUserCount() {
 
 module.exports = {
   initializeSocket,
+  closeSocket,
   getIO,
   getConnectedClientCount,
   getConnectedUserCount,
