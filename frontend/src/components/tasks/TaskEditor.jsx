@@ -17,6 +17,13 @@ import {
   ListChecks,
 } from 'lucide-react';
 import { useNotificationPermission } from '../../utils/useNotificationPermission';
+import {
+  formatDateInput,
+  formatDateTimeLocal,
+  validateTaskFormDates,
+  validateTaskTag,
+  isAmbiguousLegacyDate,
+} from '../../utils/taskUtils';
 import { NotificationPermissionDialog } from '../notifications/NotificationPermissionDialog';
 import { TaskBreakdownPanel } from '../ai/TaskBreakdownPanel';
 import { TaskEstimatorPanel } from '../ai/TaskEstimatorPanel';
@@ -45,18 +52,17 @@ export const TaskEditor = ({ task, onSave, onClose }) => {
 
   const [title, setTitle] = useState(task.title || '');
   const [dueDate, setDueDate] = useState(
-    task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+    task.dueDate ? formatDateInput(task.dueDate) : '',
   );
   const [reminderTime, setReminderTime] = useState(
-    task.reminderTime
-      ? new Date(task.reminderTime).toISOString().slice(0, 16)
-      : '',
+    task.reminderTime ? formatDateTimeLocal(task.reminderTime) : '',
   );
   const [priority, setPriority] = useState(task.priority || 'medium');
   const [estimatedMinutes, setEstimatedMinutes] = useState(
     task.estimatedMinutes || '',
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState('');
   const [aiMode, setAiMode] = useState(null); // null | 'breakdown' | 'estimate' | 'schedule'
 
   // Subtask UI state
@@ -127,23 +133,14 @@ export const TaskEditor = ({ task, onSave, onClose }) => {
 
   // Tag actions
   const handleAddTag = async () => {
-    const clean = newTag.trim().toLowerCase();
-    if (!clean) return;
-    if (clean.length > 30) {
-      setTagError('Tag cannot exceed 30 characters');
-      return;
-    }
-    if (tags.includes(clean)) {
-      setTagError('Tag already exists');
-      return;
-    }
-    if (tags.length >= 5) {
-      setTagError('Maximum 5 tags allowed');
+    const validation = validateTaskTag(newTag, tags);
+    if (!validation.valid) {
+      setTagError(validation.error);
       return;
     }
     setTagError('');
     try {
-      await addTaskTag(taskId, clean);
+      await addTaskTag(taskId, validation.tag);
       setNewTag('');
     } catch (err) {
       setTagError(err.response?.data?.message || 'Failed to add tag');
@@ -158,19 +155,20 @@ export const TaskEditor = ({ task, onSave, onClose }) => {
     }
   };
 
-  const executeSave = async () => {
+  const executeSave = async (serializedDueDate, serializedReminderTime, formatVersion) => {
     setIsLoading(true);
     try {
       await onSave({
         title: title.trim(),
-        dueDate: dueDate ? new Date(dueDate).toISOString() : null,
-        reminderTime: reminderTime ? new Date(reminderTime).toISOString() : null,
+        dueDate: serializedDueDate,
+        dueDateFormatVersion: formatVersion,
+        reminderTime: serializedReminderTime,
         priority,
         estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : null,
       });
       onClose();
-    } catch {
-      // Handled in provider
+    } catch (err) {
+      setFormError(err.response?.data?.message || err.message || 'Failed to save task.');
     } finally {
       setIsLoading(false);
     }
@@ -178,20 +176,42 @@ export const TaskEditor = ({ task, onSave, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title || !title.trim()) return;
+    setFormError('');
+    const cleanTitle = title ? title.trim() : '';
+    if (!cleanTitle) {
+      setFormError('Task title is required.');
+      return;
+    }
 
-    // Check if reminderTime was changed
+    const dateValidation = validateTaskFormDates({ dueDate, reminderTime });
+    if (!dateValidation.valid) {
+      setFormError(dateValidation.error);
+      return;
+    }
+
+    // Determine whether user modified date/reminder fields in the form
+    const originalDueDate = task.dueDate ? formatDateInput(task.dueDate) : '';
+    const dueDateChanged = dueDate !== originalDueDate;
+
     const originalReminder = task.reminderTime
-      ? new Date(task.reminderTime).toISOString().slice(0, 16)
+      ? formatDateTimeLocal(task.reminderTime)
       : '';
-    const reminderChanged = reminderTime && reminderTime !== originalReminder;
+    const reminderChanged = reminderTime !== originalReminder;
 
-    if (reminderChanged) {
+    // Preserve exact stored database values when user did not edit date/reminder fields
+    const finalDueDate = dueDateChanged ? dateValidation.dueDate : (task.dueDate ?? null);
+    // Explicit provenance: changing dueDate deliberately marks as canonical version 2; untouched leaves version unchanged
+    const finalVersion = dueDateChanged
+      ? (dateValidation.dueDate ? 2 : null)
+      : (task.dueDateFormatVersion ?? null);
+    const finalReminderTime = reminderChanged ? dateValidation.reminderTime : (task.reminderTime ?? null);
+
+    if (reminderChanged && finalReminderTime) {
       checkAndPromptPermission(() => {
-        executeSave();
+        executeSave(finalDueDate, finalReminderTime, finalVersion);
       });
     } else {
-      executeSave();
+      executeSave(finalDueDate, finalReminderTime, finalVersion);
     }
   };
 
@@ -249,6 +269,12 @@ export const TaskEditor = ({ task, onSave, onClose }) => {
 
           {/* Scrollable Content Body */}
           <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
+            {formError && (
+              <div className="p-2.5 bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-[var(--radius-md)] text-xs text-[var(--danger)] font-medium">
+                {formError}
+              </div>
+            )}
+
             {/* Title */}
             <Input
               label="Title"
@@ -270,6 +296,11 @@ export const TaskEditor = ({ task, onSave, onClose }) => {
                   onChange={(e) => setDueDate(e.target.value)}
                   className="p-2 sm:p-1.5 bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[var(--radius-md)] text-[var(--text-primary)] outline-none text-xs"
                 />
+                {task.dueDate && isAmbiguousLegacyDate(task.dueDate, task.dueDateFormatVersion) && dueDate === (task.dueDate ? formatDateInput(task.dueDate) : '') && (
+                  <span className="text-[10px] text-[var(--warning)] leading-tight">
+                    Legacy date (timezone unverified). Select a date to confirm & standardize.
+                  </span>
+                )}
               </div>
 
               <div className="flex flex-col gap-1">

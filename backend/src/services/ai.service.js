@@ -1,6 +1,115 @@
 const TodoModel = require('../models/Todo');
 const aiProvider = require('../integrations/ai/ai.provider');
 
+const isValidCalendarDate = (year, month, day) => {
+  if (isNaN(year) || isNaN(month) || isNaN(day)) return false;
+  if (month < 1 || month > 12 || day < 1 || day > 31) return false;
+  const d = new Date(Date.UTC(year, month - 1, day));
+  return (
+    !isNaN(d.getTime()) &&
+    d.getUTCFullYear() === year &&
+    d.getUTCMonth() === month - 1 &&
+    d.getUTCDate() === day
+  );
+};
+
+/**
+ * Safely formats a task's due date for AI prompt context.
+ * Interprets canonical UTC-midnight dates as exact calendar dates only when explicit provenance is present.
+ * Distinguishes and explicitly flags unmarked historical timestamps without guessing original timezones.
+ *
+ * @param {Date|string|Object|null} dueDateInput
+ * @param {number|null} [formatVersion=null]
+ * @returns {string} Formatted string for AI prompts
+ */
+const formatAiTaskDueDate = (dueDateInput, formatVersion = null) => {
+  if (!dueDateInput) return 'None';
+
+  let rawDate = dueDateInput;
+  let version = formatVersion;
+
+  if (typeof dueDateInput === 'object' && !(dueDateInput instanceof Date) && dueDateInput !== null) {
+    rawDate = dueDateInput.dueDate;
+    version = dueDateInput.dueDateFormatVersion !== undefined ? dueDateInput.dueDateFormatVersion : formatVersion;
+  }
+
+  if (!rawDate) return 'None';
+
+  if (typeof rawDate === 'string') {
+    const trimmed = rawDate.trim();
+    if (!trimmed) return 'None';
+
+    const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+    if (dateOnlyMatch) {
+      const year = Number(dateOnlyMatch[1]);
+      const month = Number(dateOnlyMatch[2]);
+      const day = Number(dateOnlyMatch[3]);
+      if (!isValidCalendarDate(year, month, day)) {
+        return 'None (Invalid Date)';
+      }
+      return trimmed;
+    }
+
+    const isoMatch = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(?:Z|([+-]\d{2}:?\d{2}))?$/i.exec(trimmed);
+    if (isoMatch) {
+      const year = Number(isoMatch[1]);
+      const month = Number(isoMatch[2]);
+      const day = Number(isoMatch[3]);
+      if (!isValidCalendarDate(year, month, day)) {
+        return 'None (Invalid Date)';
+      }
+
+      const d = new Date(trimmed);
+      if (isNaN(d.getTime())) return 'None (Invalid Date)';
+
+      const isUtcMidnight =
+        d.getUTCHours() === 0 &&
+        d.getUTCMinutes() === 0 &&
+        d.getUTCSeconds() === 0 &&
+        d.getUTCMilliseconds() === 0 &&
+        (trimmed.endsWith('Z') || trimmed.includes('+00') || trimmed.includes('-00'));
+
+      const dateStr = `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+      // Explicitly canonical ONLY if UTC midnight AND explicit version marker (version 2)
+      if (isUtcMidnight && (version === 2 || version === '2')) {
+        return dateStr;
+      }
+
+      // If UTC midnight but UNMARKED (legacy UTC record with unverified provenance):
+      if (isUtcMidnight) {
+        return `${dateStr} (Historical UTC-midnight timestamp, unverified calendar provenance)`;
+      }
+
+      // Ambiguous legacy record with non-zero UTC time or non-UTC offset
+      return `${dateStr} (Legacy timestamp: ${trimmed}, original timezone unverified)`;
+    }
+
+    return 'None (Invalid Date)';
+  }
+
+  if (rawDate instanceof Date) {
+    if (isNaN(rawDate.getTime())) return 'None (Invalid Date)';
+    const iso = rawDate.toISOString();
+    const dateStr = iso.split('T')[0];
+    const isUtcMidnight =
+      rawDate.getUTCHours() === 0 &&
+      rawDate.getUTCMinutes() === 0 &&
+      rawDate.getUTCSeconds() === 0 &&
+      rawDate.getUTCMilliseconds() === 0;
+
+    if (isUtcMidnight && (version === 2 || version === '2')) {
+      return dateStr;
+    }
+    if (isUtcMidnight) {
+      return `${dateStr} (Historical UTC-midnight timestamp, unverified calendar provenance)`;
+    }
+    return `${dateStr} (Legacy timestamp: ${iso}, original timezone unverified)`;
+  }
+
+  return 'None (Invalid Date)';
+};
+
 /**
  * Validates task breakdown input parameters.
  */
@@ -34,7 +143,7 @@ const buildPrompt = (title, context) => {
   const contextDetails = [];
   if (context.subject) contextDetails.push(`Subject: ${context.subject}`);
   if (context.priority) contextDetails.push(`Priority: ${context.priority}`);
-  if (context.dueDate) contextDetails.push(`Due Date: ${context.dueDate}`);
+  if (context.dueDate) contextDetails.push(`Due Date: ${formatAiTaskDueDate(context.dueDate, context.dueDateFormatVersion)}`);
   if (context.estimatedMinutes) contextDetails.push(`Current Estimate: ${context.estimatedMinutes} minutes`);
 
   const contextBlock = contextDetails.length > 0 ? `\nTask Context:\n- ${contextDetails.join('\n- ')}` : '';
@@ -172,7 +281,7 @@ const validateEstimationInput = ({ title, context }) => {
 const buildEstimationPrompt = (title, context) => {
   const contextDetails = [];
   if (context.priority) contextDetails.push(`Priority: ${context.priority}`);
-  if (context.dueDate) contextDetails.push(`Due Date: ${context.dueDate}`);
+  if (context.dueDate) contextDetails.push(`Due Date: ${formatAiTaskDueDate(context.dueDate, context.dueDateFormatVersion)}`);
   if (context.currentEstimate) contextDetails.push(`Current Estimate: ${context.currentEstimate} minutes`);
 
   const contextBlock = contextDetails.length > 0 ? `\nTask Context:\n- ${contextDetails.join('\n- ')}` : '';
@@ -473,7 +582,7 @@ const buildAskPrompt = (query, activeTasks = []) => {
       (t, idx) =>
         `${idx + 1}. "${t.title}" (Priority: ${t.priority || 'medium'}, Estimate: ${
           t.estimatedMinutes ? `${t.estimatedMinutes}m` : 'unspecified'
-        }, Due: ${t.dueDate ? new Date(t.dueDate).toISOString().split('T')[0] : 'None'})`
+        }, Due: ${formatAiTaskDueDate(t)})`
     )
     .join('\n');
 
@@ -630,5 +739,6 @@ module.exports = {
   validateAskInput,
   buildAskPrompt,
   parseAndValidateAskOutput,
+  formatAiTaskDueDate,
 };
 

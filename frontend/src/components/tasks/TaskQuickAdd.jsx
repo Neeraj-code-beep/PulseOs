@@ -4,6 +4,7 @@ import { TodoContext } from '../../context/TodoContext';
 import { Button } from '../ui/Button';
 import { Plus, Calendar, Bell, Flag, Clock, X } from 'lucide-react';
 import { useNotificationPermission } from '../../utils/useNotificationPermission';
+import { validateTaskFormDates } from '../../utils/taskUtils';
 import { NotificationPermissionDialog } from '../notifications/NotificationPermissionDialog';
 
 export const TaskQuickAdd = ({ autoFocus = false, onComplete }) => {
@@ -18,6 +19,7 @@ export const TaskQuickAdd = ({ autoFocus = false, onComplete }) => {
   const [priority, setPriority] = useState('medium');
   const [estimatedMinutes, setEstimatedMinutes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [activeTab, setActiveTab] = useState(null);
   const titleInputRef = useRef(null);
 
@@ -32,6 +34,7 @@ export const TaskQuickAdd = ({ autoFocus = false, onComplete }) => {
 
   const handleExpand = () => {
     setIsExpanded(true);
+    setErrorMessage('');
     setTimeout(() => {
       titleInputRef.current?.focus();
     }, 50);
@@ -44,17 +47,19 @@ export const TaskQuickAdd = ({ autoFocus = false, onComplete }) => {
     setReminderTime('');
     setPriority('medium');
     setEstimatedMinutes('');
+    setErrorMessage('');
     setActiveTab(null);
     if (onComplete) onComplete();
   };
 
-  const executeAddTodo = async () => {
+  const executeAddTodo = async (serializedDueDate, serializedReminderTime) => {
     setIsLoading(true);
     try {
       await addTodo({
         title: title.trim(),
-        dueDate: dueDate ? new Date(dueDate).toISOString() : null,
-        reminderTime: reminderTime ? new Date(reminderTime).toISOString() : null,
+        dueDate: serializedDueDate,
+        dueDateFormatVersion: serializedDueDate ? 2 : null,
+        reminderTime: serializedReminderTime,
         priority,
         estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : null,
       });
@@ -64,10 +69,11 @@ export const TaskQuickAdd = ({ autoFocus = false, onComplete }) => {
       setReminderTime('');
       setPriority('medium');
       setEstimatedMinutes('');
+      setErrorMessage('');
       setActiveTab(null);
       if (onComplete) onComplete();
-    } catch {
-      // Handled in provider
+    } catch (err) {
+      setErrorMessage(err.response?.data?.message || err.message || 'Failed to add task.');
     } finally {
       setIsLoading(false);
     }
@@ -75,14 +81,22 @@ export const TaskQuickAdd = ({ autoFocus = false, onComplete }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title || !title.trim()) return;
+    setErrorMessage('');
+    const cleanTitle = title ? title.trim() : '';
+    if (!cleanTitle) return;
+
+    const dateValidation = validateTaskFormDates({ dueDate, reminderTime });
+    if (!dateValidation.valid) {
+      setErrorMessage(dateValidation.error);
+      return;
+    }
 
     if (reminderTime) {
       checkAndPromptPermission(() => {
-        executeAddTodo();
+        executeAddTodo(dateValidation.dueDate, dateValidation.reminderTime);
       });
     } else {
-      executeAddTodo();
+      executeAddTodo(dateValidation.dueDate, dateValidation.reminderTime);
     }
   };
 
@@ -137,6 +151,12 @@ export const TaskQuickAdd = ({ autoFocus = false, onComplete }) => {
           </button>
         </div>
 
+        {errorMessage && (
+          <div className="p-2 bg-[var(--danger)]/10 border border-[var(--danger)]/30 rounded-[var(--radius-sm)] text-xs text-[var(--danger)] font-medium">
+            {errorMessage}
+          </div>
+        )}
+
         {/* Progressive Control Strip */}
         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[var(--border-soft)] text-xs">
           <button
@@ -162,7 +182,15 @@ export const TaskQuickAdd = ({ autoFocus = false, onComplete }) => {
             }`}
           >
             <Bell size={13} />
-            <span>{reminderTime ? new Date(reminderTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Reminder'}</span>
+            <span>
+              {(() => {
+                if (!reminderTime) return 'Reminder';
+                const d = new Date(reminderTime);
+                return !isNaN(d.getTime())
+                  ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  : 'Reminder';
+              })()}
+            </span>
           </button>
 
           <button

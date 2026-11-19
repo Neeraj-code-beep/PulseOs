@@ -1,5 +1,4 @@
-const mongoose = require('mongoose');
-require('dotenv').config();
+const { connectTestDb, disconnectTestDb, createTestTracker } = require('./testDbGuard');
 const UserModel = require('../models/User');
 const TodoModel = require('../models/Todo');
 const FocusSessionModel = require('../models/FocusSession');
@@ -7,24 +6,14 @@ const todoController = require('../controllers/todo.controller');
 const focusController = require('../controllers/focus.controller');
 const analyticsService = require('../services/analytics.service');
 
+// Ensure a safe JWT secret exists for isolated testing if not set
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'test_jwt_secret_pulseos_1234567890';
+}
+
 const runOwnershipTests = async () => {
-  const mongoUri = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/pulseos_test';
-  console.log('Connecting to DB for User Data Ownership test suite...');
-
-  await mongoose.connect(mongoUri);
-  console.log('Connected to DB for Data Ownership suite.');
-
-  // Clean collections & sync indexes before running tests
-  try {
-    await UserModel.collection.dropIndexes();
-  } catch {
-    // ignore if collection didn't exist
-  }
-  await UserModel.syncIndexes();
-  await UserModel.deleteMany({});
-  await TodoModel.deleteMany({});
-  await FocusSessionModel.deleteMany({});
-
+  await connectTestDb();
+  const tracker = createTestTracker();
 
   console.log('\n--- Running User Data Ownership Test Matrix (10-19) ---\n');
 
@@ -48,12 +37,14 @@ const runOwnershipTests = async () => {
       email: 'usera@example.com',
       passwordHash: 'hash_a_12345678',
     });
+    tracker.trackUser(userA);
 
     const userB = await UserModel.create({
       name: 'User B',
       email: 'userb@example.com',
       passwordHash: 'hash_b_12345678',
     });
+    tracker.trackUser(userB);
 
     const reqA = { user: { userId: userA._id.toString() }, query: {} };
     const reqB = { user: { userId: userB._id.toString() }, query: {} };
@@ -450,10 +441,8 @@ const runOwnershipTests = async () => {
 
     console.log('\n--- ALL USER DATA OWNERSHIP TESTS PASSED SUCCESSFULLY! ---\n');
   } finally {
-    await UserModel.deleteMany({});
-    await TodoModel.deleteMany({});
-    await FocusSessionModel.deleteMany({});
-    await mongoose.connection.close();
+    await tracker.cleanup({ UserModel, TodoModel, FocusSessionModel });
+    await disconnectTestDb();
     console.log('Ownership test database connection closed.');
   }
 };

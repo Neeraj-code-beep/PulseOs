@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test": "node --import ./src/tests/registerLoader.js --test src/tests/*.test.js",
     "preview": "vite preview"
   },
   "dependencies": {

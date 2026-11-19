@@ -4,13 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { motion as Motion, useReducedMotion } from 'framer-motion';
 import { Sparkles, Calendar, Clock, AlertTriangle, Coffee, Play, Check } from 'lucide-react';
 import { proposeScheduleApi } from '../../services/aiApi';
+import { formatDateInput } from '../../utils/taskUtils';
 
 export const ScheduleProposalPanel = ({ taskId, title, estimatedMinutes, context, onClose }) => {
   const navigate = useNavigate();
   const shouldReduceMotion = useReducedMotion();
 
-  const todayStr = new Date().toISOString().split('T')[0];
-  const [date, setDate] = useState(context?.dueDate ? context.dueDate.split('T')[0] : todayStr);
+  const todayStr = formatDateInput(new Date());
+  const [date, setDate] = useState(context?.dueDate ? formatDateInput(context.dueDate) : todayStr);
   const [startTime, setStartTime] = useState('16:00');
   const [endTime, setEndTime] = useState('20:00');
 

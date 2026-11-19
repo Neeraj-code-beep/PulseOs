@@ -1,26 +1,17 @@
-const mongoose = require('mongoose');
-require('dotenv').config();
+const { connectTestDb, disconnectTestDb, createTestTracker } = require('./testDbGuard');
 const UserModel = require('../models/User');
 const authService = require('../services/auth.service');
 const authController = require('../controllers/auth.controller');
 const authMiddleware = require('../middleware/auth.middleware');
 
+// Ensure a safe JWT secret exists for isolated testing if not set
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'test_jwt_secret_pulseos_1234567890';
+}
+
 const runAuthTests = async () => {
-  const mongoUri = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/pulseos_test';
-  console.log(`Connecting to test database for Auth suite...`);
-  
-  await mongoose.connect(mongoUri);
-  console.log('Connected to DB for Auth test suite.');
-
-  // Clean User collection & sync indexes before running tests
-  try {
-    await UserModel.collection.dropIndexes();
-  } catch {
-    // ignore if collection didn't exist
-  }
-  await UserModel.syncIndexes();
-  await UserModel.deleteMany({});
-
+  await connectTestDb();
+  const tracker = createTestTracker();
 
   console.log('\n--- Running Backend Auth Test Matrix (9/9) ---\n');
 
@@ -46,8 +37,15 @@ const runAuthTests = async () => {
         password: 'strongpassword123',
       },
     };
+    // Pre-track user email so cleanup succeeds even if registration controller subsequently throws
+    tracker.trackUser({ email: req1.body.email });
+
     const res1 = mockRes();
     await authController.register(req1, res1);
+
+    if (res1.body?.data?.user) {
+      tracker.trackUser(res1.body.data.user);
+    }
 
     console.assert(res1.statusCode === 201, `1 Fail: expected 201, got ${res1.statusCode}`);
     console.assert(res1.body.success === true, '1 Fail: success should be true');
@@ -215,8 +213,8 @@ const runAuthTests = async () => {
 
     console.log('\n--- ALL AUTHENTICATION TESTS PASSED SUCCESSFULLY! ---\n');
   } finally {
-    await UserModel.deleteMany({});
-    await mongoose.connection.close();
+    await tracker.cleanup({ UserModel });
+    await disconnectTestDb();
     console.log('Auth test database connection closed.');
   }
 };

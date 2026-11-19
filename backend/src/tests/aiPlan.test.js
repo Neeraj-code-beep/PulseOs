@@ -1,22 +1,14 @@
-const mongoose = require('mongoose');
-require('dotenv').config();
 const UserModel = require('../models/User');
 const TodoModel = require('../models/Todo');
 const FocusSessionModel = require('../models/FocusSession');
 const aiPlanService = require('../services/aiPlan.service');
 const aiController = require('../controllers/ai.controller');
+const { connectTestDb, disconnectTestDb, createTestTracker } = require('./testDbGuard');
 
 const runAiPlanTests = async () => {
-  const mongoUri = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/pulseos_test';
-  console.log('Connecting to DB for AI Daily Plan test suite...');
-
-  await mongoose.connect(mongoUri);
-  console.log('Connected to DB for AI Daily Plan suite.');
-
-  // Clean collections
-  await UserModel.deleteMany({});
-  await TodoModel.deleteMany({});
-  await FocusSessionModel.deleteMany({});
+  console.log('Connecting to isolated DB for AI Daily Plan test suite...');
+  await connectTestDb();
+  const tracker = createTestTracker();
 
   const mockRes = () => {
     const res = {};
@@ -37,9 +29,10 @@ const runAiPlanTests = async () => {
     // 1. Setup User & Active Tasks
     const user = await UserModel.create({
       name: 'Plan Learner',
-      email: 'plan@example.com',
+      email: `plan-${Date.now()}@example.com`,
       passwordHash: 'hash12345678',
     });
+    tracker.trackUser(user);
 
     await TodoModel.create({
       userId: user._id,
@@ -117,10 +110,8 @@ const runAiPlanTests = async () => {
 
     console.log('\n--- ALL AI DAILY PLAN TESTS PASSED SUCCESSFULLY! ---\n');
   } finally {
-    await UserModel.deleteMany({});
-    await TodoModel.deleteMany({});
-    await FocusSessionModel.deleteMany({});
-    await mongoose.connection.close();
+    await tracker.cleanup({ UserModel, TodoModel, FocusSessionModel });
+    await disconnectTestDb();
     console.log('AI Plan test database connection closed.');
   }
 };

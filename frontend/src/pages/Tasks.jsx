@@ -11,6 +11,7 @@ import { Button } from '../components/ui/Button';
 import { SectionEyebrow } from '../components/ui/SectionEyebrow';
 import { EditorialHeading } from '../components/ui/EditorialHeading';
 import { CalendarDays, Clock, Bell, Play } from 'lucide-react';
+import { classifyTaskDueDate, compareTasksForExecution } from '../utils/taskUtils';
 
 export const Tasks = () => {
   const navigate = useNavigate();
@@ -27,14 +28,12 @@ export const Tasks = () => {
   const counts = useMemo(() => {
     const todayCount = todos.filter((t) => {
       if (t.completed) return false;
-      if (!t.dueDate) return true;
-      const d = new Date(t.dueDate);
-      return d <= new Date();
+      return classifyTaskDueDate(t.dueDate) === 'today';
     }).length;
 
     const upcomingCount = todos.filter((t) => {
-      if (t.completed || !t.dueDate) return false;
-      return new Date(t.dueDate) > new Date();
+      if (t.completed) return false;
+      return classifyTaskDueDate(t.dueDate) === 'upcoming';
     }).length;
 
     const completedCount = todos.filter((t) => t.completed).length;
@@ -63,7 +62,7 @@ export const Tasks = () => {
   // Total estimated workload calculation
   const totalWorkloadMins = useMemo(() => {
     return todos
-      .filter((t) => !t.completed && t.estimatedMinutes)
+      .filter((t) => !t.completed && typeof t.estimatedMinutes === 'number' && t.estimatedMinutes > 0)
       .reduce((acc, curr) => acc + curr.estimatedMinutes, 0);
   }, [todos]);
 
@@ -71,7 +70,8 @@ export const Tasks = () => {
   const nextReminderTodo = useMemo(() => {
     const active = todos
       .filter((t) => t.reminderTime && !t.completed && !t.reminderSent)
-      .sort((a, b) => new Date(a.reminderTime) - new Date(b.reminderTime));
+      .filter((t) => !isNaN(new Date(t.reminderTime).getTime()))
+      .sort((a, b) => new Date(a.reminderTime).getTime() - new Date(b.reminderTime).getTime());
     return active[0] || null;
   }, [todos]);
 
@@ -89,16 +89,9 @@ export const Tasks = () => {
       result = result.filter((t) => !t.completed);
 
       if (activeFilter === 'today') {
-        result = result.filter((t) => {
-          if (!t.dueDate) return true;
-          const d = new Date(t.dueDate);
-          return d <= new Date();
-        });
+        result = result.filter((t) => classifyTaskDueDate(t.dueDate) === 'today');
       } else if (activeFilter === 'upcoming') {
-        result = result.filter((t) => {
-          if (!t.dueDate) return false;
-          return new Date(t.dueDate) > new Date();
-        });
+        result = result.filter((t) => classifyTaskDueDate(t.dueDate) === 'upcoming');
       }
     }
 
@@ -110,30 +103,8 @@ export const Tasks = () => {
       });
     }
 
-    // Sorting
-    const priorityWeight = { high: 3, medium: 2, low: 1 };
-
-    result.sort((a, b) => {
-      if (a.completed !== b.completed) {
-        return a.completed ? 1 : -1;
-      }
-
-      if (a.dueDate && b.dueDate) {
-        const dA = new Date(a.dueDate).getTime();
-        const dB = new Date(b.dueDate).getTime();
-        if (dA !== dB) return dA - dB;
-      } else if (a.dueDate && !b.dueDate) {
-        return -1;
-      } else if (!a.dueDate && b.dueDate) {
-        return 1;
-      }
-
-      const pA = priorityWeight[a.priority] || 2;
-      const pB = priorityWeight[b.priority] || 2;
-      if (pA !== pB) return pB - pA;
-
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+    // Deterministic execution order sorting
+    result.sort(compareTasksForExecution);
 
     return result;
   }, [todos, activeFilter, safeActiveTag]);
@@ -333,3 +304,5 @@ export const Tasks = () => {
     </div>
   );
 };
+
+export default Tasks;

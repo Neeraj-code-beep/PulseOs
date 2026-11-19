@@ -1,6 +1,7 @@
 const TodoModel = require('../models/Todo');
 const analyticsService = require('./analytics.service');
 const aiProvider = require('../integrations/ai/ai.provider');
+const { formatAiTaskDueDate } = require('./ai.service');
 
 /**
  * Builds AI Daily Planning and Recommendation Insights by synthesizing:
@@ -35,7 +36,7 @@ const generateDailyPlan = async (userId, availability = {}) => {
           .map(
             (t, i) =>
               `${i + 1}. "${t.title}" (Priority: ${t.priority}, Est: ${t.estimatedMinutes || 'unspecified'}m, Due: ${
-                t.dueDate ? t.dueDate.toISOString().split('T')[0] : 'None'
+                formatAiTaskDueDate(t)
               })`
           )
           .join('\n')

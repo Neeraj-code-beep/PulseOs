@@ -3,6 +3,7 @@ import { useSocket } from '../../context/useSocket';
 import { TodoContext } from '../../context/TodoContext';
 import { showBrowserNotification } from '../../utils/Notification';
 import { toast } from 'react-toastify';
+import { registerReminderHandler } from '../../utils/taskUtils';
 
 export const ReminderListener = () => {
   const { socket } = useSocket();
@@ -11,9 +12,7 @@ export const ReminderListener = () => {
   useEffect(() => {
     if (!socket) return;
 
-    const handleReminder = (payload) => {
-      if (!payload || !payload.id || !payload.title) return;
-
+    return registerReminderHandler(socket, (payload) => {
       // 1. Synchronize local Todo state so reminder is marked sent
       if (markReminderSentLocally) {
         markReminderSentLocally(payload.id);
@@ -30,13 +29,7 @@ export const ReminderListener = () => {
         body: payload.title,
         tag: `todo-reminder-${payload.id}`,
       });
-    };
-
-    socket.on('todo:reminder', handleReminder);
-
-    return () => {
-      socket.off('todo:reminder', handleReminder);
-    };
+    });
   }, [socket, markReminderSentLocally]);
 
   return null;

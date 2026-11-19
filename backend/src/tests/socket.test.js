@@ -1,7 +1,5 @@
-const mongoose = require('mongoose');
 const http = require('http');
 const { io: Client } = require('socket.io-client');
-require('dotenv').config();
 
 const app = require('../app');
 const UserModel = require('../models/User');
@@ -12,17 +10,12 @@ const { initializeSocket } = require('../sockets/socket');
 const todoController = require('../controllers/todo.controller');
 const focusController = require('../controllers/focus.controller');
 const { processDueReminders } = require('../scheduler/reminder.scheduler');
+const { connectTestDb, disconnectTestDb, createTestTracker } = require('./testDbGuard');
 
 const runSocketTests = async () => {
-  const mongoUri = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/pulseos_test';
-  console.log('Connecting to DB for Socket.IO test suite...');
-
-  await mongoose.connect(mongoUri);
-  console.log('Connected to DB for Socket test suite.');
-
-  // Clean collections
-  await UserModel.deleteMany({});
-  await TodoModel.deleteMany({});
+  console.log('Connecting to isolated DB for Socket.IO test suite...');
+  await connectTestDb();
+  const tracker = createTestTracker();
 
   // Setup HTTP server & Socket.IO server
   const server = http.createServer(app);
@@ -54,15 +47,17 @@ const runSocketTests = async () => {
     // Create User A and User B with tokens
     const resultA = await authService.registerUser({
       name: 'Socket User A',
-      email: 'socketa@example.com',
+      email: `socketa-${Date.now()}@example.com`,
       password: 'strongpassword123',
     });
+    tracker.trackUser(resultA.user);
 
     const resultB = await authService.registerUser({
       name: 'Socket User B',
-      email: 'socketb@example.com',
+      email: `socketb-${Date.now()}@example.com`,
       password: 'strongpassword123',
     });
+    tracker.trackUser(resultB.user);
 
     const tokenA = resultA.token;
     const userIdA = resultA.user._id;
@@ -263,10 +258,8 @@ const runSocketTests = async () => {
     if (clientSocketA) clientSocketA.disconnect();
     if (clientSocketB) clientSocketB.disconnect();
     server.close();
-    await UserModel.deleteMany({});
-    await TodoModel.deleteMany({});
-    await FocusSessionModel.deleteMany({});
-    await mongoose.connection.close();
+    await tracker.cleanup({ UserModel, TodoModel, FocusSessionModel });
+    await disconnectTestDb();
     console.log('Socket test database connection closed.');
   }
 };

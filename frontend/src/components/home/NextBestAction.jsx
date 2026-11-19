@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Play, Clock, AlertTriangle, CheckCircle2, ArrowRight } from 'lucide-react';
-import { formatDateDisplay, formatEstimate } from '../../utils/taskUtils';
+import { formatDateDisplay, formatEstimate, getNextBestAction, getNextActionRationale } from '../../utils/taskUtils';
 import { FocusContext } from '../../context/FocusContext';
 import { SurfaceCard } from '../ui/SurfaceCard';
 import { Button } from '../ui/Button';
@@ -10,10 +10,9 @@ export const NextBestAction = ({ todos = [], onToggleComplete }) => {
   const navigate = useNavigate();
   const { setSelectedTaskId } = useContext(FocusContext);
 
-  // Filter uncompleted tasks
-  const uncompleted = todos.filter((t) => !t.completed);
+  const bestTask = getNextBestAction(todos);
 
-  if (uncompleted.length === 0) {
+  if (!bestTask) {
     return (
       <SurfaceCard className="p-6 border-dashed border-[var(--border)] text-center flex flex-col items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-[var(--primary-soft)] text-[var(--primary)] flex items-center justify-center">
@@ -37,52 +36,10 @@ export const NextBestAction = ({ todos = [], onToggleComplete }) => {
     );
   }
 
-  // Deterministic Next Best Action selection algorithm
-  const sorted = [...uncompleted].sort((a, b) => {
-    const aDateInfo = formatDateDisplay(a.dueDate);
-    const bDateInfo = formatDateDisplay(b.dueDate);
-
-    // 1. Overdue tasks take absolute precedence
-    if (aDateInfo?.isOverdue && !bDateInfo?.isOverdue) return -1;
-    if (!aDateInfo?.isOverdue && bDateInfo?.isOverdue) return 1;
-
-    // 2. Priority weighting (high > medium > low)
-    const priorityWeight = { high: 3, medium: 2, low: 1 };
-    const pA = priorityWeight[a.priority] || 1;
-    const pB = priorityWeight[b.priority] || 1;
-    if (pA !== pB) return pB - pA;
-
-    // 3. Due date proximity
-    if (a.dueDate && b.dueDate) {
-      return new Date(a.dueDate) - new Date(b.dueDate);
-    }
-    if (a.dueDate) return -1;
-    if (b.dueDate) return 1;
-
-    // 4. Creation time
-    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-  });
-
-  const bestTask = sorted[0];
   const id = bestTask._id || bestTask.id;
-  const dateInfo = formatDateDisplay(bestTask.dueDate);
+  const dateInfo = formatDateDisplay(bestTask.dueDate, bestTask.dueDateFormatVersion);
   const estText = formatEstimate(bestTask.estimatedMinutes);
-
-  // Rationale label generator
-  const getRationale = () => {
-    if (dateInfo?.isOverdue) {
-      return { text: 'Overdue Priority', variant: 'danger' };
-    }
-    if (bestTask.priority === 'high') {
-      return { text: 'High Priority Assignment', variant: 'primary' };
-    }
-    if (dateInfo) {
-      return { text: `Due ${dateInfo.label}`, variant: 'accent' };
-    }
-    return { text: 'Recommended Next Focus Target', variant: 'neutral' };
-  };
-
-  const rationale = getRationale();
+  const rationale = getNextActionRationale(bestTask);
 
   const handleStartFocus = () => {
     setSelectedTaskId(id);
@@ -137,7 +94,7 @@ export const NextBestAction = ({ todos = [], onToggleComplete }) => {
             </span>
           )}
 
-          {dateInfo && (
+          {dateInfo && dateInfo.text && (
             <span
               className={`flex items-center gap-1 px-2 py-0.5 rounded-[var(--radius-sm)] ${
                 dateInfo.isOverdue
@@ -146,7 +103,7 @@ export const NextBestAction = ({ todos = [], onToggleComplete }) => {
               }`}
             >
               {dateInfo.isOverdue && <AlertTriangle size={12} />}
-              {dateInfo.label}
+              {dateInfo.text}
             </span>
           )}
         </div>

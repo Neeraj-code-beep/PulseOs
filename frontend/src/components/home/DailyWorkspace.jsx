@@ -1,4 +1,4 @@
-import { formatDateDisplay, formatEstimate } from '../../utils/taskUtils';
+import { formatDateDisplay, formatEstimate, isDueTodayOrOverdue, isCompletedToday } from '../../utils/taskUtils';
 import { ArrowRight, Clock, Plus, Check, CalendarDays } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SectionEyebrow } from '../ui/SectionEyebrow';
@@ -12,11 +12,11 @@ export const DailyWorkspace = ({ todos = [], isLoading = false, onToggleComplete
   const todayTodos = todos.filter((t) => {
     if (t.completed) return false;
     if (!t.dueDate) return true;
-    const d = new Date(t.dueDate);
-    return d <= new Date();
+    return isDueTodayOrOverdue(t.dueDate);
   });
 
-  const completedToday = todos.filter((t) => t.completed);
+  const completedToday = todos.filter((t) => isCompletedToday(t));
+
   const totalToday = todayTodos.length + completedToday.length;
   const progressPercent = totalToday > 0 ? Math.round((completedToday.length / totalToday) * 100) : 0;
 
@@ -84,7 +84,7 @@ export const DailyWorkspace = ({ todos = [], isLoading = false, onToggleComplete
           <SurfaceCard className="p-0 divide-y divide-[var(--border-soft)] shadow-xs overflow-hidden">
             {todayTodos.slice(0, 8).map((todo) => {
               const id = todo._id || todo.id;
-              const dateInfo = formatDateDisplay(todo.dueDate);
+              const dateInfo = formatDateDisplay(todo.dueDate, todo.dueDateFormatVersion);
               const estText = formatEstimate(todo.estimatedMinutes);
 
               return (
@@ -126,3 +126,4 @@ export const DailyWorkspace = ({ todos = [], isLoading = false, onToggleComplete
   );
 };
 
+export default DailyWorkspace;

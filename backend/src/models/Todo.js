@@ -45,6 +45,15 @@ const ToDoSchema = new mongoose.Schema(
       default: null,
     },
 
+    dueDateFormatVersion: {
+      type: Number,
+      default: null,
+      validate: {
+        validator: (v) => v === null || v === 2,
+        message: 'dueDateFormatVersion must be 2 or null',
+      },
+    },
+
     priority: {
       type: String,
       enum: ['low', 'medium', 'high'],

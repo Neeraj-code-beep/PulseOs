@@ -1,6 +1,90 @@
 const TodoModel = require('../models/Todo');
 const mongoose = require('mongoose');
 
+// Helper to validate calendar date arithmetic (rejects month > 12, Feb 31, etc.)
+const isValidCalendarDate = (year, month, day) => {
+  if (isNaN(year) || isNaN(month) || isNaN(day)) return false;
+  if (month < 1 || month > 12 || day < 1 || day > 31) return false;
+  const d = new Date(Date.UTC(year, month - 1, day));
+  return (
+    !isNaN(d.getTime()) &&
+    d.getUTCFullYear() === year &&
+    d.getUTCMonth() === month - 1 &&
+    d.getUTCDate() === day
+  );
+};
+
+// Strict date and calendar arithmetic validator for dueDate inputs
+const parseAndValidateDueDate = (dueDateInput) => {
+  if (dueDateInput === null || dueDateInput === '') {
+    return { valid: true, value: null, version: null };
+  }
+
+  if (typeof dueDateInput !== 'string' && !(dueDateInput instanceof Date)) {
+    return { valid: false, message: 'Invalid dueDate format.' };
+  }
+
+  if (typeof dueDateInput === 'string') {
+    const trimmed = dueDateInput.trim();
+    if (!trimmed) {
+      return { valid: true, value: null, version: null };
+    }
+
+    // 1. Date-only format: YYYY-MM-DD
+    const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+    if (dateOnlyMatch) {
+      const year = Number(dateOnlyMatch[1]);
+      const month = Number(dateOnlyMatch[2]);
+      const day = Number(dateOnlyMatch[3]);
+      if (!isValidCalendarDate(year, month, day)) {
+        return { valid: false, message: 'Invalid dueDate format.' };
+      }
+      const d = new Date(Date.UTC(year, month - 1, day));
+      return { valid: true, value: d, version: 2 };
+    }
+
+    // 2. ISO timestamp format: YYYY-MM-DDTHH:mm:ss.sssZ or offset
+    const isoMatch = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(?:Z|([+-]\d{2}:?\d{2}))?$/i.exec(trimmed);
+    if (isoMatch) {
+      const year = Number(isoMatch[1]);
+      const month = Number(isoMatch[2]);
+      const day = Number(isoMatch[3]);
+      if (!isValidCalendarDate(year, month, day)) {
+        return { valid: false, message: 'Invalid dueDate format.' };
+      }
+      const d = new Date(trimmed);
+      if (isNaN(d.getTime())) {
+        return { valid: false, message: 'Invalid dueDate format.' };
+      }
+
+      const isUtcMidnight =
+        d.getUTCHours() === 0 &&
+        d.getUTCMinutes() === 0 &&
+        d.getUTCSeconds() === 0 &&
+        d.getUTCMilliseconds() === 0 &&
+        (trimmed.endsWith('Z') || trimmed.includes('+00') || trimmed.includes('-00'));
+
+      return { valid: true, value: d, version: isUtcMidnight ? 2 : null };
+    }
+
+    return { valid: false, message: 'Invalid dueDate format.' };
+  }
+
+  if (dueDateInput instanceof Date) {
+    if (isNaN(dueDateInput.getTime())) {
+      return { valid: false, message: 'Invalid dueDate format.' };
+    }
+    const isUtcMidnight =
+      dueDateInput.getUTCHours() === 0 &&
+      dueDateInput.getUTCMinutes() === 0 &&
+      dueDateInput.getUTCSeconds() === 0 &&
+      dueDateInput.getUTCMilliseconds() === 0;
+    return { valid: true, value: dueDateInput, version: isUtcMidnight ? 2 : null };
+  }
+
+  return { valid: false, message: 'Invalid dueDate format.' };
+};
+
 // Helper to validate and normalize tags array
 const parseAndValidateTags = (tagsInput) => {
   if (tagsInput === undefined || tagsInput === null) return { valid: true, value: undefined };
@@ -157,15 +241,17 @@ const createTodo = async (req, res) => {
     }
 
     let parsedDueDate = null;
-    if (dueDate) {
-      const dateVal = new Date(dueDate);
-      if (isNaN(dateVal.getTime())) {
+    let derivedDueDateVersion = null;
+    if (dueDate !== undefined && dueDate !== null && dueDate !== '') {
+      const dueValidation = parseAndValidateDueDate(dueDate);
+      if (!dueValidation.valid) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid dueDate format.',
+          message: dueValidation.message || 'Invalid dueDate format.',
         });
       }
-      parsedDueDate = dateVal;
+      parsedDueDate = dueValidation.value;
+      derivedDueDateVersion = dueValidation.version;
     }
 
     let parsedPriority = 'medium';
@@ -212,6 +298,7 @@ const createTodo = async (req, res) => {
       userId,
       title: title.trim(),
       dueDate: parsedDueDate,
+      dueDateFormatVersion: derivedDueDateVersion,
       priority: parsedPriority,
       estimatedMinutes: parsedEstMinutes,
       reminderTime: parsedReminderTime,
@@ -313,18 +400,15 @@ const updateTodo = async (req, res) => {
     }
 
     if (req.body.dueDate !== undefined) {
-      if (req.body.dueDate === null || req.body.dueDate === '') {
-        updates.dueDate = null;
-      } else {
-        const dateVal = new Date(req.body.dueDate);
-        if (isNaN(dateVal.getTime())) {
-          return res.status(400).json({
-            success: false,
-            message: 'Invalid dueDate format.',
-          });
-        }
-        updates.dueDate = dateVal;
+      const dueValidation = parseAndValidateDueDate(req.body.dueDate);
+      if (!dueValidation.valid) {
+        return res.status(400).json({
+          success: false,
+          message: dueValidation.message || 'Invalid dueDate format.',
+        });
       }
+      updates.dueDate = dueValidation.value;
+      updates.dueDateFormatVersion = dueValidation.version;
     }
 
     if (req.body.priority !== undefined) {

@@ -23,7 +23,7 @@ export const TaskItem = ({ todo, onToggleComplete, onDelete, onEdit }) => {
   const triggerRef = useRef(null);
   const id = todo._id || todo.id;
 
-  const dateInfo = formatDateDisplay(todo.dueDate);
+  const dateInfo = formatDateDisplay(todo.dueDate, todo.dueDateFormatVersion);
   const formattedEst = formatEstimate(todo.estimatedMinutes);
 
   const subtasks = Array.isArray(todo.subtasks) ? todo.subtasks : [];
@@ -136,16 +136,26 @@ export const TaskItem = ({ todo, onToggleComplete, onDelete, onEdit }) => {
             {/* Due Date */}
             {dateInfo && (
               <span
+                title={dateInfo.label || dateInfo.text}
                 className={`flex items-center gap-1 font-sans text-[11px] sm:text-xs shrink-0 ${
-                  dateInfo.isOverdue && !todo.completed
-                    ? 'text-[var(--danger)] font-medium'
-                    : dateInfo.isToday && !todo.completed
-                      ? 'text-[var(--primary)] font-medium'
-                      : ''
+                  dateInfo.isInvalid
+                    ? 'text-[var(--danger)] font-medium bg-[var(--danger)]/10 px-1.5 py-0.5 rounded border border-[var(--danger)]/20'
+                    : dateInfo.isLegacy
+                      ? 'text-[var(--warning)] font-medium bg-[var(--warning)]/10 px-1.5 py-0.5 rounded border border-[var(--warning)]/20'
+                      : dateInfo.isOverdue && !todo.completed
+                        ? 'text-[var(--danger)] font-medium'
+                        : dateInfo.isToday && !todo.completed
+                          ? 'text-[var(--primary)] font-medium'
+                          : ''
                 }`}
               >
                 <Calendar size={12} />
                 {dateInfo.text}
+                {dateInfo.isLegacy && (
+                  <span className="text-[10px] opacity-80 font-normal">
+                    (Legacy)
+                  </span>
+                )}
               </span>
             )}
 

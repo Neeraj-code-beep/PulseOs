@@ -1,22 +1,16 @@
 const mongoose = require('mongoose');
-require('dotenv').config();
+const { connectTestDb, disconnectTestDb, createTestTracker } = require('./testDbGuard');
 const TodoModel = require('../models/Todo');
 const FocusSessionModel = require('../models/FocusSession');
 const analyticsService = require('../services/analytics.service');
 const analyticsController = require('../controllers/analytics.controller');
 
 const runTests = async () => {
-  const mongoUri = process.env.MONGO_URL || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/pulseos_test';
-  console.log(`Connecting to test database: ${mongoUri}`);
-  
-  await mongoose.connect(mongoUri);
-  console.log('Connected to DB for analytics test suite.');
-
-  // Clean collections before test run
-  await TodoModel.deleteMany({});
-  await FocusSessionModel.deleteMany({});
+  await connectTestDb();
+  const tracker = createTestTracker();
 
   const testUserId = new mongoose.Types.ObjectId();
+  tracker.trackUser(testUserId);
   const testUserReq = { user: { userId: testUserId.toString() } };
 
   console.log('\n--- Running Backend Analytics Test Matrix ---\n');
@@ -248,10 +242,9 @@ const runTests = async () => {
 
     console.log('\n--- ALL BACKEND ANALYTICS TESTS PASSED SUCCESSFULLY! ---\n');
   } finally {
-    // Clean up test data
-    await TodoModel.deleteMany({});
-    await FocusSessionModel.deleteMany({});
-    await mongoose.connection.close();
+    // Clean up test data scoped to test user
+    await tracker.cleanup({ TodoModel, FocusSessionModel });
+    await disconnectTestDb();
     console.log('Database connection closed.');
   }
 };
