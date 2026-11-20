@@ -1,3 +1,4 @@
+const assert = require('assert');
 const UserModel = require('../models/User');
 const TodoModel = require('../models/Todo');
 const FocusSessionModel = require('../models/FocusSession');
@@ -23,6 +24,7 @@ const runAiPlanTests = async () => {
     return res;
   };
 
+  let testError = null;
   try {
     console.log('\n--- Running AI Daily Plan Test Matrix ---\n');
 
@@ -67,11 +69,11 @@ const runAiPlanTests = async () => {
       endTime: '05:00 PM',
     });
 
-    console.assert(typeof planResult.dailyGoal === 'string', '1 Fail: dailyGoal string missing');
-    console.assert(planResult.workloadSummary.openTasksCount === 2, `2 Fail: expected 2 open tasks, got ${planResult.workloadSummary.openTasksCount}`);
-    console.assert(Array.isArray(planResult.recommendations) && planResult.recommendations.length > 0, '3 Fail: recommendations empty');
-    console.assert(Array.isArray(planResult.proposedPlan) && planResult.proposedPlan.length > 0, '4 Fail: proposedPlan empty');
-    console.assert(typeof planResult.isFallback === 'boolean', '5 Fail: isFallback boolean property missing');
+    assert(typeof planResult.dailyGoal === 'string', '1 Fail: dailyGoal string missing');
+    assert(planResult.workloadSummary.openTasksCount === 2, `2 Fail: expected 2 open tasks, got ${planResult.workloadSummary.openTasksCount}`);
+    assert(Array.isArray(planResult.recommendations) && planResult.recommendations.length > 0, '3 Fail: recommendations empty');
+    assert(Array.isArray(planResult.proposedPlan) && planResult.proposedPlan.length > 0, '4 Fail: proposedPlan empty');
+    assert(typeof planResult.isFallback === 'boolean', '5 Fail: isFallback boolean property missing');
     console.log('PASS [1]: Service generates valid structured daily focus plan synthesizing tasks, focus history, and completion metrics');
 
     // 3. Test Controller Endpoint
@@ -82,10 +84,10 @@ const runAiPlanTests = async () => {
     const res = mockRes();
     await aiController.getDailyPlan(req, res);
 
-    console.assert(res.statusCode === 200, `5 Fail: expected 200, got ${res.statusCode}`);
-    console.assert(res.body.success === true, '6 Fail: success should be true');
-    console.assert(res.body.data.workloadSummary.openTasksCount === 2, '7 Fail: controller payload mismatch');
-    console.assert(typeof res.body.data.isFallback === 'boolean', '8 Fail: controller response isFallback boolean missing');
+    assert(res.statusCode === 200, `5 Fail: expected 200, got ${res.statusCode}`);
+    assert(res.body.success === true, '6 Fail: success should be true');
+    assert(res.body.data.workloadSummary.openTasksCount === 2, '7 Fail: controller payload mismatch');
+    assert(typeof res.body.data.isFallback === 'boolean', '8 Fail: controller response isFallback boolean missing');
     console.log('PASS [2]: Controller GET /api/ai/daily-plan returns 200 OK with formatted recommendations');
 
     // 4. Test AI Daily Plan Fallback when AI service throws error
@@ -100,18 +102,40 @@ const runAiPlanTests = async () => {
         startTime: '09:00 AM',
         endTime: '05:00 PM',
       });
-      console.assert(fallbackResult.isFallback === true, '3 Fail: isFallback should be true when AI service errors');
-      console.assert(fallbackResult.proposedPlan.length > 0, '3 Fail: fallback proposedPlan should not be empty');
-      console.assert(fallbackResult.recommendations.length > 0, '3 Fail: fallback recommendations should not be empty');
+      assert(fallbackResult.isFallback === true, '3 Fail: isFallback should be true when AI service errors');
+      assert(fallbackResult.proposedPlan.length > 0, '3 Fail: fallback proposedPlan should not be empty');
+      assert(fallbackResult.recommendations.length > 0, '3 Fail: fallback recommendations should not be empty');
       console.log('PASS [3]: Fallback plan triggered gracefully with isFallback: true on AI service failure');
     } finally {
       aiProvider.generateText = originalGenerateText;
     }
 
     console.log('\n--- ALL AI DAILY PLAN TESTS PASSED SUCCESSFULLY! ---\n');
+  } catch (err) {
+    testError = err;
   } finally {
-    await tracker.cleanup({ UserModel, TodoModel, FocusSessionModel });
-    await disconnectTestDb();
+    const cleanupErrors = [];
+    try {
+      await tracker.cleanup({ UserModel, TodoModel, FocusSessionModel });
+    } catch (err) {
+      cleanupErrors.push(err);
+      console.error('[aiPlan.test] Error during tracker cleanup:', err.message);
+    }
+    try {
+      await disconnectTestDb();
+    } catch (err) {
+      cleanupErrors.push(err);
+      console.error('[aiPlan.test] Error during disconnect:', err.message);
+    }
+    if (testError) {
+      if (cleanupErrors.length > 0) {
+        console.error('[aiPlan.test] Additional errors during cleanup:', cleanupErrors);
+      }
+      throw testError;
+    }
+    if (cleanupErrors.length > 0) {
+      throw cleanupErrors[0];
+    }
     console.log('AI Plan test database connection closed.');
   }
 };

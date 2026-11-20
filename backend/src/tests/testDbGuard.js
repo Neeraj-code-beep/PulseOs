@@ -308,26 +308,82 @@ function getTestMongoUri() {
   return testUri.trim();
 }
 
+// Internal connection tracking for ownership and safe lifecycle management
+let isGuardOwnedConnection = false;
+let guardConnectedDbName = null;
+let guardConnectedUri = null;
+
 /**
  * Connects mongoose to the validated test database.
+ * Hardened to prevent reusing unverified connections, cross-database pollution,
+ * or leaving corrupted connection state.
  * @param {Object} [options] Mongoose connect options
  * @returns {Promise<mongoose.Connection>}
  */
 async function connectTestDb(options = {}) {
   const uri = getTestMongoUri();
+  const parsed = parseMongoUri(uri);
+  const expectedDbName = parsed.dbName;
   const sanitized = sanitizeMongoUri(uri);
 
-  console.log(`[testDbGuard] Connecting to verified test database: ${sanitized}`);
-  await mongoose.connect(uri, options);
+  // 1. Inspect existing Mongoose connection state before attempting any action
+  const currentReadyState = mongoose.connection.readyState;
+  if (currentReadyState !== 0) {
+    // If an existing connection is active or transitioning:
+    if (!isGuardOwnedConnection) {
+      throw new Error(
+        `DATABASE SAFETY VIOLATION: Existing active Mongoose connection (readyState=${currentReadyState}, db="${mongoose.connection.name}") was not established by testDbGuard. ` +
+        'Refusing to reuse or modify unverified connection to prevent cross-database pollution.'
+      );
+    }
 
-  // Post-connection sanity verification on active mongoose connection
+    // Verify the existing guard connection is connected to the exact expected database
+    const activeDbName = mongoose.connection.name;
+    if (activeDbName !== expectedDbName || !ALLOWED_TEST_DB_PATTERN.test(activeDbName) || FORBIDDEN_DB_NAMES.has(activeDbName.toLowerCase())) {
+      throw new Error(
+        `DATABASE SAFETY VIOLATION: Active test connection is connected to "${activeDbName}", but test expected "${expectedDbName}". ` +
+        'Connection target mismatch.'
+      );
+    }
+
+    console.log(`[testDbGuard] Reusing verified test database connection: "${activeDbName}".`);
+    return mongoose.connection;
+  }
+
+  // 2. Connect to the validated test database
+  console.log(`[testDbGuard] Connecting to verified test database: ${sanitized}`);
+  try {
+    await mongoose.connect(uri, options);
+  } catch (connectError) {
+    // Ensure failed connection attempts do not leave misleading connection state
+    isGuardOwnedConnection = false;
+    guardConnectedDbName = null;
+    guardConnectedUri = null;
+    if (mongoose.connection.readyState !== 0) {
+      try {
+        await mongoose.connection.close(true);
+      } catch (_) {
+        // Ignore secondary error while aborting failed connection
+      }
+    }
+    throw connectError;
+  }
+
+  // 3. Post-connection sanity verification on active mongoose connection
   const activeDbName = mongoose.connection.name;
-  if (!activeDbName || !ALLOWED_TEST_DB_PATTERN.test(activeDbName) || FORBIDDEN_DB_NAMES.has(activeDbName.toLowerCase())) {
+  if (!activeDbName || activeDbName !== expectedDbName || !ALLOWED_TEST_DB_PATTERN.test(activeDbName) || FORBIDDEN_DB_NAMES.has(activeDbName.toLowerCase())) {
+    isGuardOwnedConnection = false;
+    guardConnectedDbName = null;
+    guardConnectedUri = null;
     await mongoose.connection.close(true);
     throw new Error(
-      `DATABASE SAFETY VIOLATION: Active connection connected to non-test database "${activeDbName}". Connection aborted immediately.`
+      `DATABASE SAFETY VIOLATION: Active connection connected to non-test or mismatched database "${activeDbName}" (expected "${expectedDbName}"). Connection aborted immediately.`
     );
   }
+
+  isGuardOwnedConnection = true;
+  guardConnectedDbName = activeDbName;
+  guardConnectedUri = sanitized;
 
   console.log(`[testDbGuard] Successfully connected and verified test database "${activeDbName}".`);
   return mongoose.connection;
@@ -335,12 +391,33 @@ async function connectTestDb(options = {}) {
 
 /**
  * Cleanly disconnects mongoose from test database.
+ * Does not disconnect connections that this guard does not own.
+ * Safe when no connection was established.
+ * @param {boolean} [force=false]
  * @returns {Promise<void>}
  */
-async function disconnectTestDb() {
-  if (mongoose.connection && mongoose.connection.readyState !== 0) {
-    await mongoose.connection.close();
+async function disconnectTestDb(force = false) {
+  // If no connection was established or already closed, safe no-op
+  if (!mongoose.connection || mongoose.connection.readyState === 0) {
+    isGuardOwnedConnection = false;
+    guardConnectedDbName = null;
+    guardConnectedUri = null;
+    return;
+  }
+
+  // Do not blindly disconnect connections that this test guard does not own
+  if (!isGuardOwnedConnection) {
+    console.warn('[testDbGuard] Refusing to disconnect active connection not owned by testDbGuard.');
+    return;
+  }
+
+  try {
+    await mongoose.connection.close(force);
     console.log('[testDbGuard] Test database connection closed cleanly.');
+  } finally {
+    isGuardOwnedConnection = false;
+    guardConnectedDbName = null;
+    guardConnectedUri = null;
   }
 }
 
@@ -417,6 +494,22 @@ function createTestTracker() {
   };
 }
 
+function getGuardConnectionState() {
+  return {
+    isGuardOwnedConnection,
+    guardConnectedDbName,
+    guardConnectedUri,
+    readyState: mongoose.connection ? mongoose.connection.readyState : 0,
+    activeDbName: mongoose.connection ? mongoose.connection.name : null,
+  };
+}
+
+function _setGuardConnectionStateForTesting(owned, dbName, uri) {
+  isGuardOwnedConnection = owned;
+  guardConnectedDbName = dbName;
+  guardConnectedUri = uri;
+}
+
 module.exports = {
   validateTestUri,
   parseMongoUri,
@@ -426,6 +519,8 @@ module.exports = {
   createTestTracker,
   sanitizeMongoUri,
   extractDatabaseName,
+  getGuardConnectionState,
+  _setGuardConnectionStateForTesting,
   ALLOWED_TEST_DB_PATTERN,
   FORBIDDEN_DB_NAMES,
   ALLOWED_TEST_HOSTNAMES,

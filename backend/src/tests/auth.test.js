@@ -1,3 +1,4 @@
+const assert = require('assert');
 const { connectTestDb, disconnectTestDb, createTestTracker } = require('./testDbGuard');
 const UserModel = require('../models/User');
 const authService = require('../services/auth.service');
@@ -28,6 +29,7 @@ const runAuthTests = async () => {
     return res;
   };
 
+  let testError = null;
   try {
     // 1. Register Success
     const req1 = {
@@ -47,11 +49,11 @@ const runAuthTests = async () => {
       tracker.trackUser(res1.body.data.user);
     }
 
-    console.assert(res1.statusCode === 201, `1 Fail: expected 201, got ${res1.statusCode}`);
-    console.assert(res1.body.success === true, '1 Fail: success should be true');
-    console.assert(res1.body.data.user.email === 'student@example.com', '1 Fail: email mismatch');
-    console.assert(typeof res1.body.data.token === 'string', '1 Fail: token should be string');
-    console.assert(res1.body.data.user.passwordHash === undefined, '1 Fail: passwordHash leaked');
+    assert(res1.statusCode === 201, `1 Fail: expected 201, got ${res1.statusCode}`);
+    assert(res1.body.success === true, '1 Fail: success should be true');
+    assert(res1.body.data.user.email === 'student@example.com', '1 Fail: email mismatch');
+    assert(typeof res1.body.data.token === 'string', '1 Fail: token should be string');
+    assert(res1.body.data.user.passwordHash === undefined, '1 Fail: passwordHash leaked');
     console.log('PASS [1]: Registration success & user token generation');
 
     // 2. Duplicate Email Rejection
@@ -65,8 +67,8 @@ const runAuthTests = async () => {
     const res2 = mockRes();
     await authController.register(req2, res2);
 
-    console.assert(res2.statusCode === 400, `2 Fail: expected 400 for duplicate email, got ${res2.statusCode}`);
-    console.assert(res2.body.success === false, '2 Fail');
+    assert(res2.statusCode === 400, `2 Fail: expected 400 for duplicate email, got ${res2.statusCode}`);
+    assert(res2.body.success === false, '2 Fail');
     console.log('PASS [2]: Duplicate email rejected (case-insensitive)');
 
     // 3. Invalid Email Format Rejection
@@ -80,8 +82,8 @@ const runAuthTests = async () => {
     const res3 = mockRes();
     await authController.register(req3, res3);
 
-    console.assert(res3.statusCode === 400, `3 Fail: expected 400 for invalid email, got ${res3.statusCode}`);
-    console.assert(res3.body.success === false, '3 Fail');
+    assert(res3.statusCode === 400, `3 Fail: expected 400 for invalid email, got ${res3.statusCode}`);
+    assert(res3.body.success === false, '3 Fail');
     console.log('PASS [3]: Invalid email format rejected');
 
     // 4. Short Password Rejection
@@ -95,8 +97,8 @@ const runAuthTests = async () => {
     const res4 = mockRes();
     await authController.register(req4, res4);
 
-    console.assert(res4.statusCode === 400, `4 Fail: expected 400 for short password, got ${res4.statusCode}`);
-    console.assert(res4.body.success === false, '4 Fail');
+    assert(res4.statusCode === 400, `4 Fail: expected 400 for short password, got ${res4.statusCode}`);
+    assert(res4.body.success === false, '4 Fail');
     console.log('PASS [4]: Password shorter than 8 characters rejected');
 
     // 5. Login Success
@@ -109,9 +111,9 @@ const runAuthTests = async () => {
     const res5 = mockRes();
     await authController.login(req5, res5);
 
-    console.assert(res5.statusCode === 200, `5 Fail: expected 200 for login success, got ${res5.statusCode}`);
-    console.assert(res5.body.success === true, '5 Fail');
-    console.assert(typeof res5.body.data.token === 'string', '5 Fail: token missing');
+    assert(res5.statusCode === 200, `5 Fail: expected 200 for login success, got ${res5.statusCode}`);
+    assert(res5.body.success === true, '5 Fail');
+    assert(typeof res5.body.data.token === 'string', '5 Fail: token missing');
     const validToken = res5.body.data.token;
     console.log('PASS [5]: Login success returns valid user payload and JWT token');
 
@@ -125,9 +127,9 @@ const runAuthTests = async () => {
     const res6 = mockRes();
     await authController.login(req6, res6);
 
-    console.assert(res6.statusCode === 401, `6 Fail: expected 401 for wrong password, got ${res6.statusCode}`);
-    console.assert(res6.body.success === false, '6 Fail');
-    console.assert(res6.body.message === 'Invalid email or password.', '6 Fail: generic error missing');
+    assert(res6.statusCode === 401, `6 Fail: expected 401 for wrong password, got ${res6.statusCode}`);
+    assert(res6.body.success === false, '6 Fail');
+    assert(res6.body.message === 'Invalid email or password.', '6 Fail: generic error missing');
     console.log('PASS [6]: Invalid credentials rejected with generic error message');
 
     // 7. /me Endpoint Success with Bearer Token
@@ -142,14 +144,14 @@ const runAuthTests = async () => {
       nextCalled = true;
     });
 
-    console.assert(nextCalled === true, '7 Fail: authMiddleware did not call next()');
-    console.assert(req7.user && typeof req7.user.userId === 'string', '7 Fail: req.user.userId not populated');
+    assert(nextCalled === true, '7 Fail: authMiddleware did not call next()');
+    assert(req7.user && typeof req7.user.userId === 'string', '7 Fail: req.user.userId not populated');
 
     // Call /me controller with populated req.user
     const meRes = mockRes();
     await authController.me(req7, meRes);
-    console.assert(meRes.statusCode === 200, `7 Fail: /me controller returned ${meRes.statusCode}`);
-    console.assert(meRes.body.data.user.email === 'student@example.com', '7 Fail: user email mismatch');
+    assert(meRes.statusCode === 200, `7 Fail: /me controller returned ${meRes.statusCode}`);
+    assert(meRes.body.data.user.email === 'student@example.com', '7 Fail: user email mismatch');
     console.log('PASS [7]: GET /api/auth/me returns current authenticated user profile');
 
     // 8. /me Without Token Rejection
@@ -159,8 +161,8 @@ const runAuthTests = async () => {
     const res8 = mockRes();
     authMiddleware(req8, res8, () => {});
 
-    console.assert(res8.statusCode === 401, `8 Fail: expected 401 for missing token, got ${res8.statusCode}`);
-    console.assert(res8.body.success === false, '8 Fail');
+    assert(res8.statusCode === 401, `8 Fail: expected 401 for missing token, got ${res8.statusCode}`);
+    assert(res8.body.success === false, '8 Fail');
     console.log('PASS [8]: Request without Authorization header rejected with 401');
 
     // 9. Invalid Token Rejection
@@ -172,8 +174,8 @@ const runAuthTests = async () => {
     const res9 = mockRes();
     authMiddleware(req9, res9, () => {});
 
-    console.assert(res9.statusCode === 401, `9 Fail: expected 401 for invalid token, got ${res9.statusCode}`);
-    console.assert(res9.body.success === false, '9 Fail');
+    assert(res9.statusCode === 401, `9 Fail: expected 401 for invalid token, got ${res9.statusCode}`);
+    assert(res9.body.success === false, '9 Fail');
     console.log('PASS [9]: Request with invalid JWT token rejected with 401');
 
     // 10. Expired Token Rejection
@@ -191,8 +193,8 @@ const runAuthTests = async () => {
     const res10 = mockRes();
     authMiddleware(req10, res10, () => {});
 
-    console.assert(res10.statusCode === 401, `10 Fail: expected 401 for expired token, got ${res10.statusCode}`);
-    console.assert(res10.body.message === 'Token expired.', `10 Fail: expected "Token expired.", got ${res10.body.message}`);
+    assert(res10.statusCode === 401, `10 Fail: expected 401 for expired token, got ${res10.statusCode}`);
+    assert(res10.body.message === 'Token expired.', `10 Fail: expected "Token expired.", got ${res10.body.message}`);
     console.log('PASS [10]: Request with expired JWT token rejected with 401 "Token expired."');
 
     // 11. Missing JWT_SECRET Causes Error
@@ -208,13 +210,35 @@ const runAuthTests = async () => {
     } finally {
       process.env.JWT_SECRET = originalSecret;
     }
-    console.assert(errorThrown === true, '11 Fail: generateToken did not throw when JWT_SECRET missing');
+    assert(errorThrown === true, '11 Fail: generateToken did not throw when JWT_SECRET missing');
     console.log('PASS [11]: Missing JWT_SECRET causes secure config failure');
 
     console.log('\n--- ALL AUTHENTICATION TESTS PASSED SUCCESSFULLY! ---\n');
+  } catch (err) {
+    testError = err;
   } finally {
-    await tracker.cleanup({ UserModel });
-    await disconnectTestDb();
+    const cleanupErrors = [];
+    try {
+      await tracker.cleanup({ UserModel });
+    } catch (err) {
+      cleanupErrors.push(err);
+      console.error('[auth.test] Error during tracker cleanup:', err.message);
+    }
+    try {
+      await disconnectTestDb();
+    } catch (err) {
+      cleanupErrors.push(err);
+      console.error('[auth.test] Error during disconnect:', err.message);
+    }
+    if (testError) {
+      if (cleanupErrors.length > 0) {
+        console.error('[auth.test] Additional errors during cleanup:', cleanupErrors);
+      }
+      throw testError;
+    }
+    if (cleanupErrors.length > 0) {
+      throw cleanupErrors[0];
+    }
     console.log('Auth test database connection closed.');
   }
 };

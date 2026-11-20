@@ -1,3 +1,4 @@
+const assert = require('assert');
 const http = require('http');
 const { io: Client } = require('socket.io-client');
 
@@ -17,13 +18,10 @@ const runSocketTests = async () => {
   await connectTestDb();
   const tracker = createTestTracker();
 
-  // Setup HTTP server & Socket.IO server
-  const server = http.createServer(app);
-  initializeSocket(server);
-
-  await new Promise((resolve) => server.listen(0, resolve));
-  const port = server.address().port;
-  console.log(`Test Socket.IO server running on port ${port}`);
+  let server = null;
+  let clientSocketA = null;
+  let clientSocketB = null;
+  let testError = null;
 
   const mockRes = () => {
     const res = {};
@@ -38,23 +36,32 @@ const runSocketTests = async () => {
     return res;
   };
 
-  let clientSocketA = null;
-  let clientSocketB = null;
-
   try {
+    // Setup HTTP server & Socket.IO server
+    server = http.createServer(app);
+    initializeSocket(server);
+
+    await new Promise((resolve) => server.listen(0, resolve));
+    const port = server.address().port;
+    console.log(`Test Socket.IO server running on port ${port}`);
+
     console.log('\n--- Running Socket.IO & Realtime Sync Test Matrix (20-23) ---\n');
 
-    // Create User A and User B with tokens
+    // Create User A and User B with tokens (pre-track candidate emails for safety)
+    const emailA = `socketa-${Date.now()}@example.com`;
+    tracker.trackUser({ email: emailA });
     const resultA = await authService.registerUser({
       name: 'Socket User A',
-      email: `socketa-${Date.now()}@example.com`,
+      email: emailA,
       password: 'strongpassword123',
     });
     tracker.trackUser(resultA.user);
 
+    const emailB = `socketb-${Date.now()}@example.com`;
+    tracker.trackUser({ email: emailB });
     const resultB = await authService.registerUser({
       name: 'Socket User B',
-      email: `socketb-${Date.now()}@example.com`,
+      email: emailB,
       password: 'strongpassword123',
     });
     tracker.trackUser(resultB.user);
@@ -81,8 +88,8 @@ const runSocketTests = async () => {
       new Promise((res) => clientSocketB.on('connect', res)),
     ]);
 
-    console.assert(clientSocketA.connected === true, '20 Fail: Socket A not connected');
-    console.assert(clientSocketB.connected === true, '20 Fail: Socket B not connected');
+    assert(clientSocketA.connected === true, '20 Fail: Socket A not connected');
+    assert(clientSocketB.connected === true, '20 Fail: Socket B not connected');
     console.log('PASS [20]: Authenticated sockets connected and joined user rooms');
 
     // 21. Reminder delivered ONLY to correct user room
@@ -110,8 +117,8 @@ const runSocketTests = async () => {
     await processDueReminders();
     await new Promise((r) => setTimeout(r, 300));
 
-    console.assert(userAReminderReceived === true, '21 Fail: User A reminder not received');
-    console.assert(userBReminderReceived === false, '21 Fail: User B received User A reminder (cross-user leakage)');
+    assert(userAReminderReceived === true, '21 Fail: User A reminder not received');
+    assert(userBReminderReceived === false, '21 Fail: User B received User A reminder (cross-user leakage)');
     console.log('PASS [21]: Reminder delivered ONLY to owning user room (no global broadcast)');
 
     // 22. Focus completion emits productivity:updated
@@ -141,8 +148,8 @@ const runSocketTests = async () => {
     await focusController.createFocusSession(focusReqA, mockRes());
     await new Promise((r) => setTimeout(r, 200));
 
-    console.assert(productivityUpdatedTypeA === 'focus_completed', `22 Fail: expected focus_completed, got ${productivityUpdatedTypeA}`);
-    console.assert(productivityUpdatedTypeB === null, '22 Fail: User B received User A productivity update');
+    assert(productivityUpdatedTypeA === 'focus_completed', `22 Fail: expected focus_completed, got ${productivityUpdatedTypeA}`);
+    assert(productivityUpdatedTypeB === null, '22 Fail: User B received User A productivity update');
     console.log('PASS [22]: Focus session completion emits productivity:updated to owner socket');
 
     // 23. Task completion emits productivity:updated
@@ -162,7 +169,7 @@ const runSocketTests = async () => {
     await todoController.updateTodo(updateReqA, mockRes());
     await new Promise((r) => setTimeout(r, 200));
 
-    console.assert(productivityUpdatedTypeA === 'task_completed', `23 Fail: expected task_completed, got ${productivityUpdatedTypeA}`);
+    assert(productivityUpdatedTypeA === 'task_completed', `23 Fail: expected task_completed, got ${productivityUpdatedTypeA}`);
     console.log('PASS [23]: Task completion emits productivity:updated event');
 
     // 24. Invalid / Expired socket JWT token rejected on connect
@@ -186,7 +193,7 @@ const runSocketTests = async () => {
       });
     });
 
-    console.assert(connectErrorMsg !== null, '24 Fail: expired token socket connected successfully');
+    assert(connectErrorMsg !== null, '24 Fail: expired token socket connected successfully');
     invalidClientSocket.disconnect();
     console.log('PASS [24]: Expired socket token rejected on connection attempt');
 
@@ -203,7 +210,7 @@ const runSocketTests = async () => {
     });
 
     await new Promise((res) => expiringClientSocket.on('connect', res));
-    console.assert(expiringClientSocket.connected === true, '25 Fail: expiring socket did not connect');
+    assert(expiringClientSocket.connected === true, '25 Fail: expiring socket did not connect');
 
     let expiredEventReceived = false;
     expiringClientSocket.on('auth:expired', () => {
@@ -211,8 +218,8 @@ const runSocketTests = async () => {
     });
 
     await new Promise((res) => expiringClientSocket.on('disconnect', res));
-    console.assert(expiredEventReceived === true, '25 Fail: auth:expired event not received prior to disconnect');
-    console.assert(expiringClientSocket.connected === false, '25 Fail: socket remained connected after token expiry');
+    assert(expiredEventReceived === true, '25 Fail: auth:expired event not received prior to disconnect');
+    assert(expiringClientSocket.connected === false, '25 Fail: socket remained connected after token expiry');
     console.log('PASS [25]: Active socket automatically disconnects cleanly when token expires');
 
     // 26. Offline Catch-Up Reminder Test
@@ -243,29 +250,79 @@ const runSocketTests = async () => {
     // Allow 1.5s for catch-up setTimeout in socket connection handler to fire
     await new Promise((res) => setTimeout(res, 1500));
 
-    console.assert(catchUpReminderReceived === true, '26 Fail: offline due reminder not delivered on reconnect catch-up');
-    console.assert(catchUpTodoId === offlineDueTodo._id.toString(), '26 Fail: catch-up reminder ID mismatch');
+    assert(catchUpReminderReceived === true, '26 Fail: offline due reminder not delivered on reconnect catch-up');
+    assert(catchUpTodoId === offlineDueTodo._id.toString(), '26 Fail: catch-up reminder ID mismatch');
 
     const verifiedTodo = await TodoModel.findById(offlineDueTodo._id);
-    console.assert(verifiedTodo.reminderSent === true, '26 Fail: catch-up reminder not marked sent in DB');
+    assert(verifiedTodo.reminderSent === true, '26 Fail: catch-up reminder not marked sent in DB');
     console.log('PASS [26]: Offline due reminder delivered on socket reconnect and marked sent');
 
     console.log('\n--- ALL SOCKET & REALTIME SYNC TESTS PASSED SUCCESSFULLY! ---\n');
   } catch (err) {
-    console.error('SOCKET TEST MATRIX FAILURE:', err);
-    process.exit(1);
+    testError = err;
   } finally {
-    if (clientSocketA) clientSocketA.disconnect();
-    if (clientSocketB) clientSocketB.disconnect();
-    server.close();
-    await tracker.cleanup({ UserModel, TodoModel, FocusSessionModel });
-    await disconnectTestDb();
+    const cleanupErrors = [];
+
+    if (clientSocketA) {
+      try {
+        clientSocketA.disconnect();
+      } catch (err) {
+        cleanupErrors.push(err);
+        console.error('[socket.test] Error disconnecting clientSocketA:', err.message);
+      }
+    }
+
+    if (clientSocketB) {
+      try {
+        clientSocketB.disconnect();
+      } catch (err) {
+        cleanupErrors.push(err);
+        console.error('[socket.test] Error disconnecting clientSocketB:', err.message);
+      }
+    }
+
+    if (server && server.listening) {
+      try {
+        await new Promise((resolve) => server.close(resolve));
+      } catch (err) {
+        cleanupErrors.push(err);
+        console.error('[socket.test] Error closing HTTP server:', err.message);
+      }
+    }
+
+    try {
+      await tracker.cleanup({ UserModel, TodoModel, FocusSessionModel });
+    } catch (err) {
+      cleanupErrors.push(err);
+      console.error('[socket.test] Error during tracker cleanup:', err.message);
+    }
+
+    try {
+      await disconnectTestDb();
+    } catch (err) {
+      cleanupErrors.push(err);
+      console.error('[socket.test] Error during DB disconnect:', err.message);
+    }
+
+    if (testError) {
+      if (cleanupErrors.length > 0) {
+        console.error('[socket.test] Additional errors during cleanup:', cleanupErrors);
+      }
+      throw testError;
+    }
+
+    if (cleanupErrors.length > 0) {
+      throw cleanupErrors[0];
+    }
+
     console.log('Socket test database connection closed.');
   }
 };
 
 runSocketTests()
-  .then(() => process.exit(0))
+  .then(() => {
+    process.exit(0);
+  })
   .catch((err) => {
     console.error('SOCKET TEST MATRIX FAILURE:', err);
     process.exit(1);
