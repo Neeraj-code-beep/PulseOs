@@ -421,6 +421,19 @@ async function disconnectTestDb(force = false) {
   }
 }
 
+function extractEntityId(entity) {
+  if (!entity) return null;
+  if (entity._id) return entity._id.toString();
+  if (entity.id) return entity.id.toString();
+  if (typeof entity === 'string') {
+    return entity.trim();
+  }
+  if (mongoose.Types.ObjectId.isValid(entity) && entity.constructor && entity.constructor.name === 'ObjectId') {
+    return entity.toString();
+  }
+  return null;
+}
+
 /**
  * Creates an isolated tracker for scoped cleanup.
  * Instead of running collection-wide deleteMany({}), tests track the specific IDs
@@ -435,19 +448,21 @@ function createTestTracker() {
   return {
     trackUser(user) {
       if (!user) return;
-      const id = user._id || user.id || user;
-      if (id) userIds.add(id.toString());
-      if (user.email) userEmails.add(user.email.toLowerCase().trim());
+      const id = extractEntityId(user);
+      if (id) userIds.add(id);
+      if (typeof user === 'object' && user.email && typeof user.email === 'string') {
+        userEmails.add(user.email.toLowerCase().trim());
+      }
     },
     trackTodo(todo) {
       if (!todo) return;
-      const id = todo._id || todo.id || todo;
-      if (id) todoIds.add(id.toString());
+      const id = extractEntityId(todo);
+      if (id) todoIds.add(id);
     },
     trackSession(session) {
       if (!session) return;
-      const id = session._id || session.id || session;
-      if (id) sessionIds.add(id.toString());
+      const id = extractEntityId(session);
+      if (id) sessionIds.add(id);
     },
     async cleanup({ UserModel, TodoModel, FocusSessionModel } = {}) {
       const uIds = Array.from(userIds);

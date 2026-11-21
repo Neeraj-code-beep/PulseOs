@@ -552,7 +552,7 @@ test('41. getNextBestAction & getNextActionRationale - Preserves full task prove
   const canonicalTask = {
     _id: 'task-canonical',
     title: 'Clean Canonical Task',
-    dueDate: '2026-11-20T00:00:00.000Z',
+    dueDate: '2099-11-20T00:00:00.000Z',
     dueDateFormatVersion: 2,
     priority: 'high',
     completed: false,
@@ -561,7 +561,7 @@ test('41. getNextBestAction & getNextActionRationale - Preserves full task prove
   const legacyTask = {
     _id: 'task-legacy',
     title: 'Legacy Offset Task',
-    dueDate: '2026-11-19T18:30:00.000Z',
+    dueDate: '2099-11-19T18:30:00.000Z',
     dueDateFormatVersion: null,
     priority: 'medium',
     completed: false,

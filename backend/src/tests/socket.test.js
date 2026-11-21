@@ -13,6 +13,11 @@ const focusController = require('../controllers/focus.controller');
 const { processDueReminders } = require('../scheduler/reminder.scheduler');
 const { connectTestDb, disconnectTestDb, createTestTracker } = require('./testDbGuard');
 
+// Ensure a safe JWT secret exists for isolated testing if not set
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'test_jwt_secret_pulseos_1234567890';
+}
+
 const runSocketTests = async () => {
   console.log('Connecting to isolated DB for Socket.IO test suite...');
   await connectTestDb();
