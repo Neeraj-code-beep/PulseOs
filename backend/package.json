@@ -9,7 +9,7 @@
     "test": "npm run test:unit",
     "test:unit": "node src/tests/testDbGuard.test.js && node src/tests/health.test.js && node src/tests/security.test.js && node src/tests/ai.test.js && node src/tests/assertionFailure.test.js",
     "test:db-check": "node src/tests/checkDbReady.js",
-    "test:integration": "npm run test:db-check && node src/tests/auth.test.js && node src/tests/ownership.test.js && node src/tests/analytics.test.js && node src/tests/aiPlan.test.js && node src/tests/socket.test.js"
+    "test:integration": "npm run test:db-check && node src/tests/auth.test.js && node src/tests/ownership.test.js && node src/tests/analytics.test.js && node src/tests/aiPlan.test.js && node src/tests/socket.test.js && node src/tests/taskLifecycle.test.js"
   },
   "keywords": [],
   "author": "",
